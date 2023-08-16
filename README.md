@@ -1,4 +1,6 @@
 # scope
+[![Documentation Status](https://readthedocs.org/projects/scope-astr/badge/?version=latest)](https://scope-astr.readthedocs.io/en/latest/?badge=latest)
+
 Simulating cross-correlation of planetary emission.
 
 # installation
