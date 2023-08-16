@@ -1,5 +1,9 @@
 # scope
-[![Documentation Status](https://readthedocs.org/projects/scope-astr/badge/?version=latest)](https://scope-astr.readthedocs.io/en/latest/?badge=latest)
+[![Documentation Status](https://readthedocs.org/projects/scope-astr/badge/?version=latest)](https://scope-astr.readthedocs.io/en/latest/?badge=latest) 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit)](https://github.com/pre-commit/pre-commit)
+
 
 Simulating cross-correlation of planetary emission.
 
