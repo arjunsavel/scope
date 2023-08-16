@@ -1,29 +1,28 @@
-import pandas as pd
 import pickle
-import scipy.constants as constants
-from tqdm import tqdm
-from scipy.interpolate import splrep, splev
-from scipy import interpolate
-
-from scipy.ndimage import gaussian_filter1d
 from glob import glob
 
-import numpy as np
-
-import matplotlib.pyplot as plt
 import astropy.constants as const
-import jax.numpy as jnp
-import jax
-from constants import *
 import astropy.units as u
+import jax
+import jax.numpy as jnp
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import scipy.constants as constants
+from constants import *
+from scipy import interpolate
+from scipy.interpolate import splev, splrep
+from scipy.ndimage import gaussian_filter1d
+from tqdm import tqdm
 
 np.random.seed(42)
-start_clip=200
-end_clip=100
+start_clip = 200
+end_clip = 100
 
 # todo: download atran scripts
 # todo: fit wavelength solution stuff
 # todo: plot the maps
+
 
 def calc_doppler_shift(template_wave, template_flux, v):
     """
@@ -44,6 +43,7 @@ def calc_doppler_shift(template_wave, template_flux, v):
     shifted_wave = template_wave + delta_lam
     shifted_flux = np.interp(shifted_wave, template_wave, template_flux)
     return shifted_flux
+
 
 def calc_exposure_time(
     period=1.80988198,
@@ -181,12 +181,12 @@ def calc_exposure_time(
     return min_time, min_time_per_pixel, dphase_per_exp, n_exp
 
 
-
-
-
 # todo: own convolution
 def convolve_planet_spectrum(
-    planet_wave, planet_flux, resolution_model=250000, resolution_instrument=45000,
+    planet_wave,
+    planet_flux,
+    resolution_model=250000,
+    resolution_instrument=45000,
 ):
     """
     Convolves a planet with rotational and instrumental profile.
@@ -198,7 +198,6 @@ def convolve_planet_spectrum(
         planet_flux, ker_rot, mode="same"
     )  # convolving with rot kernel
 
-
     resolution_ratio = resolution_model / resolution_instrument
 
     xker = np.arange(41) - 20
@@ -207,11 +206,10 @@ def convolve_planet_spectrum(
     )  # 5.5 is FWHM of resolution element in model wavelength grid "coords"
     yker = np.exp(-0.5 * (xker / sigma) ** 2.0)  # making a gaussian
     yker /= yker.sum()  # normalize so that the convolution is mathmatically correct.
-    planet_flux_conv = (
-        np.convolve(Fp_conv_rot, yker, mode="same") * scale
-    )
+    planet_flux_conv = np.convolve(Fp_conv_rot, yker, mode="same") * scale
 
     return planet_flux_conv, yker
+
 
 def calc_rvs(v_sys, v_sys_measured, Kp, Kstar, phases):
     """
@@ -238,14 +236,13 @@ def calc_rvs(v_sys, v_sys_measured, Kp, Kstar, phases):
         Radial velocities of the star. Measured in m/s
 
     """
-    v_sys_tot = v_sys + v_sys_measured # total offset
-    rv_planet = (
-            v_sys_tot + Kp * np.sin(2.0 * np.pi * phases) * 1e3  # measured in m/s
-    )
+    v_sys_tot = v_sys + v_sys_measured  # total offset
+    rv_planet = v_sys_tot + Kp * np.sin(2.0 * np.pi * phases) * 1e3  # measured in m/s
 
-    rv_star = (v_sys_tot - Kstar * np.sin(2.0 * np.pi * phases)) * 1e3  # measured in m/s. note opposite sign!
+    rv_star = (
+        v_sys_tot - Kstar * np.sin(2.0 * np.pi * phases)
+    ) * 1e3  # measured in m/s. note opposite sign!
     return rv_planet, rv_star
-
 
 
 def get_star_spline(star_wave, star_flux, planet_wave, yker, smooth=True):
@@ -284,9 +281,6 @@ def get_star_spline(star_wave, star_flux, planet_wave, yker, smooth=True):
     return star_flux
 
 
-
-
-
 def change_wavelength_solution(wl_cube_model, flux_cube_model, doppler_shifts):
     """
     Takes a finalized wavelength cube and makes the wavelength solution for each exposure just slightly wrong.
@@ -309,18 +303,17 @@ def change_wavelength_solution(wl_cube_model, flux_cube_model, doppler_shifts):
 
     # iterate through each exposure
     for exp, doppler_shift in enumerate(doppler_shifts):
-        doppler_shift *= 1e3 # convert to m/s
+        doppler_shift *= 1e3  # convert to m/s
 
         # iterate through each exposure
         for order in range(n_order):
             wl_grid = wl_cube_model[order]
             flux = flux_cube_model[order][exp]
-            flux_cube_model[order][exp] = calc_doppler_shift(wl_grid,flux, doppler_shift)
+            flux_cube_model[order][exp] = calc_doppler_shift(
+                wl_grid, flux, doppler_shift
+            )
 
     return flux_cube_model
-
-
-
 
 
 def add_blaze_function(wl_cube_model, flux_cube_model, n_order, n_exp):
@@ -352,7 +345,7 @@ def add_blaze_function(wl_cube_model, flux_cube_model, n_order, n_exp):
     K_blaze_cube = detrend_cube(K_blaze_cube, n_orders_k, n_exp)
     H_blaze_cube = detrend_cube(H_blaze_cube, n_orders_h, n_exp)
 
-    for order in tqdm(range(n_order), desc='adding blaze function'):
+    for order in tqdm(range(n_order), desc="adding blaze function"):
         flux_cube_model_slice = flux_cube_model[order, :, :]
         if order >= n_orders_k:
             blaze_cube = H_blaze_cube
@@ -363,8 +356,6 @@ def add_blaze_function(wl_cube_model, flux_cube_model, n_order, n_exp):
         flux_cube_model_slice = flux_cube_model_slice * blaze_cube[order_used][100:-100]
         flux_cube_model[order, :, :] = flux_cube_model_slice
     return flux_cube_model
-
-
 
 
 def detrend_cube(cube, n_order, n_exp):

@@ -1,6 +1,7 @@
 """
 Add noise to simulated data.
 """
+import numpy as np
 
 
 def add_constant_noise(flux_cube_model, wl_grid, SNR):
@@ -17,9 +18,11 @@ def add_constant_noise(flux_cube_model, wl_grid, SNR):
     -------
         :noisy_flux: (array) flux cube model with constant noise added.
     """
-    n_photons = SNR ** 2
+    n_photons = SNR**2
     # SNR**2 is the total number of photons.
-    flux_cube = flux_cube_model.copy() * n_photons  # now scaled by number of photons. it's the maximum
+    flux_cube = (
+        flux_cube_model.copy() * n_photons
+    )  # now scaled by number of photons. it's the maximum
 
     noise_matrix = np.random.normal(loc=0, scale=1, size=flux_cube_model.shape)
     noise_matrix_scaled = noise_matrix * np.sqrt(flux_cube)
@@ -43,7 +46,7 @@ def add_quadratic_noise(flux_cube_model, wl_grid, SNR, IGRINS=False, **kwargs):
         :noisy_flux: (array) flux cube model with quadratic noise added.
     """
     if IGRINS:
-        A_a, A_b, A_c, B_a, B_b, B_c = np.loadtxt('igrins_median_snr.txt')
+        A_a, A_b, A_c, B_a, B_b, B_c = np.loadtxt("igrins_median_snr.txt")
         # this is scaled to a mean SNR of 250.
         noisy_flux = np.ones_like(flux_cube_model) * 0
         wl_cutoff = 1.9
@@ -52,8 +55,8 @@ def add_quadratic_noise(flux_cube_model, wl_grid, SNR, IGRINS=False, **kwargs):
         A_wl = medians[medians < wl_cutoff]
         B_wl = medians[medians > wl_cutoff]
 
-        A_SNRs = A_a + A_b * A_wl + A_c * A_wl ** 2
-        B_SNRs = B_a + B_b * B_wl + B_c * B_wl ** 2
+        A_SNRs = A_a + A_b * A_wl + A_c * A_wl**2
+        B_SNRs = B_a + B_b * B_wl + B_c * B_wl**2
 
         # need to scale these to the required SNR.
         A_SNRs *= SNR / 250
@@ -66,10 +69,12 @@ def add_quadratic_noise(flux_cube_model, wl_grid, SNR, IGRINS=False, **kwargs):
                     order_snr = A_SNRs[order - len(B_SNRs)]
                 else:  # second band
                     order_snr = B_SNRs[order]
-                noisy_flux[order][exposure] = add_constant_noise(flux_cube_model[order][exposure], wl_grid, order_snr)
+                noisy_flux[order][exposure] = add_constant_noise(
+                    flux_cube_model[order][exposure], wl_grid, order_snr
+                )
 
     else:
-        raise NotImplementedError('Only IGRINS data is currently supported.')
+        raise NotImplementedError("Only IGRINS data is currently supported.")
 
     return noisy_flux
 
@@ -95,10 +100,10 @@ def add_custom_noise(SNR):
     """
     Adds custom noise to the flux cube model.
     """
-    raise NotImplementedError
+    raise NotImplementedError("Custom noise is not yet implemented.")
 
 
-def add_noise_cube(flux_cube_model, wl_grid, SNR, noise_model='constant', **kwargs):
+def add_noise_cube(flux_cube_model, wl_grid, SNR, noise_model="constant", **kwargs):
     """
     Per the equation in Brogi + Line 19.
     Assumes that the flux cube is scaled 0 to 1.
@@ -118,12 +123,16 @@ def add_noise_cube(flux_cube_model, wl_grid, SNR, noise_model='constant', **kwar
         :noisy_flux: (array) flux cube model with noise added.
     """
 
-    noise_models = {'constant': add_constant_noise,
-                    'IGRINS': add_igrins_noise,
-                    'custom_quadratic': add_quadratic_noise,
-                    'custom': add_custom_noise}
+    noise_models = {
+        "constant": add_constant_noise,
+        "IGRINS": add_igrins_noise,
+        "custom_quadratic": add_quadratic_noise,
+        "custom": add_custom_noise,
+    }
     if noise_model not in noise_models.keys():
-        raise ValueError("Noise model can only be constant, IGRINS, custom_quadratic, or custom.")
+        raise ValueError(
+            "Noise model can only be constant, IGRINS, custom_quadratic, or custom."
+        )
 
     if np.max(flux_cube_model) > 2:  # generously
         raise ValueError(
