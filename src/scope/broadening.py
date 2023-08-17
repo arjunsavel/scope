@@ -103,6 +103,7 @@ def gaussian_term(lon, lat, offset, sigma, amp):
 def gaussian_term_1d(lat, offset, sigma, amp):
     """
     the gaussian term. this time there's no longitude dependence!
+
     Inputs
     ------
         :lat: latitude in radians
