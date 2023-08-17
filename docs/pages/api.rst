@@ -27,7 +27,7 @@ Fitting
 Obs simulator
 ------------------
 
-.. automodule:: scope.hires_obs_simulator
+.. automodule:: scope.utils
     :members:
     :undoc-members:
     :show-inheritance:

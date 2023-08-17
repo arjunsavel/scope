@@ -3,6 +3,7 @@ scipy
 jaxlib
 emcee
 pandas
+schwimmbad
 jax
 exoplanet
 scipy
