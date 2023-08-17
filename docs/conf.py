@@ -42,6 +42,7 @@ MOCK_MODULES = [
     "jax.numpy",
     "numba",
     "schwimmbad",
+    "astropy",
     "astropy.constants",
 ]
 for mod_name in MOCK_MODULES:
