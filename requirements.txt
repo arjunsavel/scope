@@ -6,3 +6,4 @@ scipy
 tqdm
 numba
 scikit-learn
+markupsafe==2.0.1
