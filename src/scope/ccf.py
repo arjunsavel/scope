@@ -7,7 +7,7 @@ import jax.numpy as jnp
 def jit(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
-        return jax.jit(classmethod(f(*args, **kwargs)))
+        return jax.jit(f(*args, **kwargs))
 
     return wrapper
 
