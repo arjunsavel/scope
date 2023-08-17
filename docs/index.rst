@@ -1,6 +1,6 @@
 
 
-Welcome to SImMER's documentation!
+Welcome to scope's documentation!
 ==================================
 
 .. toctree::
