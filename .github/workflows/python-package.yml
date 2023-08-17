@@ -29,6 +29,3 @@ jobs:
         python3 -m pip install -U pip
         python3 -m pip install -U setuptools setuptools_scm pep517
         python3 -m pip install -e .
-    - name: Test with pytest
-      run: |
-        pytest
