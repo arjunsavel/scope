@@ -4,6 +4,7 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit)](https://github.com/pre-commit/pre-commit)
 [![CodeQL](https://github.com/arjunsavel/scope/actions/workflows/codeql.yml/badge.svg)](https://github.com/arjunsavel/scope/actions/workflows/codeql.yml)
+[![Tests](https://github.com/arjunsavel/scope/actions/workflows/python-package.yml/badge.svg)](https://github.com/arjunsavel/scope/actions/workflows/python-package.yml)
 
 
 Simulating cross-correlation of planetary emission.
