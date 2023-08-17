@@ -1,5 +1,7 @@
 numpy
 scipy
+jaxlib
+emcee
 jax
 exoplanet
 scipy
