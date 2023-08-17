@@ -265,7 +265,6 @@ if __name__ == "__main__":
     Rvel = np.load(
         "data/rvel.pic", allow_pickle=True
     )  # Time-resolved Earth-star velocity
-    y
 
     # todo: add data in
     # so if I want to change my model, I just alter this!
