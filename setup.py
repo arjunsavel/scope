@@ -26,13 +26,14 @@ CLASSIFIERS = [
 # todo: pin to requirements
 INSTALL_REQUIRES = [
     "numpy",
+    "astropy>5.1",
     "scipy",
     "jax",
     "exoplanet",
     "scipy",
     "tqdm",
     "numba",
-    "scikit-learn"
+    "scikit-learn>=1.3.0"
 ]
 
 ###################################################################
