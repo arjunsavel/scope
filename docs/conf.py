@@ -81,7 +81,7 @@ This notebook is available at
 https://github.com/arjunsavel/scope/tree/main/docs/{{ env.doc2path(env.docname, base=None) }}
 """
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ["_templates"]
+# templates_path = ["_templates"]
 
 napoleon_google_docstring = False
 napoleon_use_param = False
