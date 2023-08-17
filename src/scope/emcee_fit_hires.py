@@ -13,6 +13,14 @@ np.random.seed(42)
 def log_prob(x):
     """
     just add the log likelihood and the log prob.
+
+    Inputs
+    ------
+        :x: (array) array of parameters
+
+    Outputs
+    -------
+        :log_prob: (float) log probability.
     """
     Kp, Vsys, log_scale = x
     scale = np.power(10, log_scale)
@@ -41,6 +49,17 @@ def log_prob(x):
 # van Sluijs+22 fit for log10 a. so do Brogi et al.
 # @numba.njit
 def prior(x):
+    """
+    Prior on the parameters. Only uniform!
+
+    Inputs
+    ------
+        :x: (array) array of parameters
+
+    Outputs
+    -------
+        :prior_val: (float) log prior value.
+    """
     Kp, Vsys, log_scale = x
     # do I sample in log_scale?
     if 146.0 < Kp < 246.0 and -50 < Vsys < 50 and -1 < log_scale < 1:
@@ -60,6 +79,21 @@ def sample(
 ):
     """
     Samples the likelihood. right now, it needs an instantiated best-fit value.
+
+    Inputs
+    ------
+        :nchains: (int) number of chains
+        :nsample: (int) number of samples
+        :A_noplanet: (array) array of the no planet spectrum
+        :fTemp: (array) array of the stellar spectrum
+        :do_pca: (bool) whether to do PCA
+        :best_kp: (float) best-fit planet velocity
+        :best_vsys: (float) best-fit system velocity
+        :best_log_scale: (float) best-fit log scale
+
+    Outputs
+    -------
+        :sampler: (emcee.EnsembleSampler) the sampler object.
     """
     # todo: make the likelhiood function based on the sampling parameters.
 
