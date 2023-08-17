@@ -9,19 +9,14 @@ def calc_ccf(model_flux, data_arr_slice, n_pixel):
 
     Inputs
     ------
-    model_flux: jnp.ndarray
-        The model flux, normalized and such.
-    data_arr_slice: jnp.ndarray
-        The data slice, normalized and such.
-    n_pixels: int
-        The number of pixels in the data slice.
+        :model_flux: (jnp.ndarray) The model flux, normalized and such.
+        :data_arr_slice: (jnp.ndarray) The data slice, normalized and such.
+        :n_pixels: (int) The number of pixels in the data slice.
 
     Outputs
     -------
-    logl: float
-        The log-likelihood of the data given the model.
-    CCF: float
-        The CCF between the model and the data.
+        :logl: (float) The log-likelihood of the data given the model.
+        :CCF: (float) The CCF between the model and the data.
     """
     model_vector = jnp.subtract(
         model_flux, jnp.vstack(jnp.mean(model_flux, axis=1))
