@@ -17,6 +17,7 @@ def calc_ccf(model_flux, data_arr_slice, n_pixel):
     -------
         :logl: (float) The log-likelihood of the data given the model.
         :CCF: (float) The CCF between the model and the data.
+
     """
     model_vector = jnp.subtract(
         model_flux, jnp.vstack(jnp.mean(model_flux, axis=1))
