@@ -76,17 +76,19 @@ def I_darken_disk(x, y, epsilon):
 @njit
 def gaussian_term(lon, lat, offset, sigma, amp):
     """
-    the gaussian term
+    the gaussian term.
+
     Inputs
     ------
-        :lat:
-        :lon:
-        :offset:
-        :sigma:
-        :amp:
+        :lat: latitude in radians
+        :lon: longitude in radians
+        :offset: the offset of the gaussian
+        :sigma: the sigma of the gaussian
+        :amp:  the amplitude of the gaussian
 
     Outputs
     -------
+        :res1: the gaussian term.
 
     """
     return (
@@ -103,15 +105,15 @@ def gaussian_term_1d(lat, offset, sigma, amp):
     the gaussian term. this time there's no longitude dependence!
     Inputs
     ------
-        :lat:
-        :lon:
-        :offset:
-        :sigma:
-        :amp:
+        :lat: latitude in radians
+        :lon: longitude in radians
+        :offset: the offset of the gaussian
+        :sigma: the sigma of the gaussian
+        :amp: the amplitude of the gaussian
 
     Outputs
     -------
-
+        :res1: the gaussian term.
     """
     return (
         amp
