@@ -1,8 +1,18 @@
+from functools import wraps
+
 import jax
 import jax.numpy as jnp
 
 
-@jax.jit
+def jit(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        return jax.jit(classmethod(f(*args, **kwargs)))
+
+    return wrapper
+
+
+@jit
 def calc_ccf(model_flux, data_arr_slice, n_pixel):
     """
     Calculates the CCF between a model and a data slice.
