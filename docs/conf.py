@@ -42,6 +42,7 @@ MOCK_MODULES = [
     "jax",
     "jax.numpy",
     "pandas",
+    "scipy.constants",
     "numba",
     "schwimmbad",
     "astropy",
