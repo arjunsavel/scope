@@ -2,7 +2,7 @@ API documentation
 =================
 
 Noise
-------
+-------
 
 .. automodule:: scope.noise
     :members:
@@ -10,7 +10,7 @@ Noise
     :show-inheritance:
 
 Broadening
-------
+-----------
 
 .. automodule:: scope.broadening
     :members:
@@ -18,7 +18,7 @@ Broadening
     :show-inheritance:
 
 Fitting
-------
+--------
 .. automodule:: scope.emcee_fit_hires
     :members:
     :undoc-members:
