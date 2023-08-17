@@ -249,52 +249,50 @@ def calc_log_likelihood(
     return logL, CCF  # returning CCF and logL values
 
 
-# todo: vars
-Kparr = np.linspace(93.06, 292.06, 200)
-Vsys_all = np.arange(-100, 100)
-n_order, n_exposure, n_pixel = (44, 79, 1848)
-scale = 1.0
-mike_wave, mike_cube = np.load(
-    "data/data_RAW_20201214_wl_algn_03.pic", allow_pickle=True
-)
-
-
-wl_cube_model = mike_wave.copy().astype(np.float64)
-
-phases = np.load("data/phases.pic", allow_pickle=True)  # Time-resolved phases
-Rvel = np.load("data/rvel.pic", allow_pickle=True)  # Time-resolved Earth-star velocity
-y
-
-# todo: add data in
-# so if I want to change my model, I just alter this!
-wl_model, Fp, Fstar = np.load("data/best_fit_spectrum.pic", allow_pickle=True)
-
-wl_model = wl_model.astype(np.float64)
-
-Rp = 1.21  # Jupiter radii
-Rp_solar = Rp * rjup_rsun  # convert from jupiter radii to solar radii
-Rstar = 0.955  # solar radii
-Kp = 192.02
-
-# rotational convolution
-v_rot = 4.5
-Fp_conv_rot = broaden_spectrum(wl_model, Fp, v_rot)
-Fp_conv_rot_model = broaden_spectrum(wl_model, Fp, v_rot)
-
-# instrument profile convolution
-xker = np.arange(41) - 20
-sigma = 5.5 / (2.0 * np.sqrt(2.0 * np.log(2.0)))  # nominal
-yker = np.exp(-0.5 * (xker / sigma) ** 2.0)
-yker /= yker.sum()
-Fp_conv = np.convolve(Fp_conv_rot, yker, mode="same")
-Fp_conv_model = np.convolve(Fp_conv_rot_model, yker, mode="same")
-
-
-star_wave, star_flux = np.loadtxt("data/PHOENIX_5605_4.33.txt").T
-Fstar_conv = get_star_spline(star_wave, star_flux, wl_model, yker, smooth=False)
-
-
 if __name__ == "__main__":
+    # todo: wrap this in a function? with paths and everything!
+    Kparr = np.linspace(93.06, 292.06, 200)
+    Vsys_all = np.arange(-100, 100)
+    n_order, n_exposure, n_pixel = (44, 79, 1848)
+    scale = 1.0
+    mike_wave, mike_cube = np.load(
+        "data/data_RAW_20201214_wl_algn_03.pic", allow_pickle=True
+    )
+
+    wl_cube_model = mike_wave.copy().astype(np.float64)
+
+    phases = np.load("data/phases.pic", allow_pickle=True)  # Time-resolved phases
+    Rvel = np.load(
+        "data/rvel.pic", allow_pickle=True
+    )  # Time-resolved Earth-star velocity
+    y
+
+    # todo: add data in
+    # so if I want to change my model, I just alter this!
+    wl_model, Fp, Fstar = np.load("data/best_fit_spectrum.pic", allow_pickle=True)
+
+    wl_model = wl_model.astype(np.float64)
+
+    Rp = 1.21  # Jupiter radii
+    Rp_solar = Rp * rjup_rsun  # convert from jupiter radii to solar radii
+    Rstar = 0.955  # solar radii
+    Kp = 192.02
+
+    # rotational convolution
+    v_rot = 4.5
+    Fp_conv_rot = broaden_spectrum(wl_model, Fp, v_rot)
+    Fp_conv_rot_model = broaden_spectrum(wl_model, Fp, v_rot)
+
+    # instrument profile convolution
+    xker = np.arange(41) - 20
+    sigma = 5.5 / (2.0 * np.sqrt(2.0 * np.log(2.0)))  # nominal
+    yker = np.exp(-0.5 * (xker / sigma) ** 2.0)
+    yker /= yker.sum()
+    Fp_conv = np.convolve(Fp_conv_rot, yker, mode="same")
+    Fp_conv_model = np.convolve(Fp_conv_rot_model, yker, mode="same")
+
+    star_wave, star_flux = np.loadtxt("data/PHOENIX_5605_4.33.txt").T
+    Fstar_conv = get_star_spline(star_wave, star_flux, wl_model, yker, smooth=False)
     ind = eval(sys.argv[1])
     param_dict = parameter_list[ind]
 
