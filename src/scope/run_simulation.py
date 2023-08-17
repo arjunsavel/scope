@@ -5,40 +5,10 @@ from grid import *
 from tellurics import *
 
 from src.scope.ccf import *
-from src.scope.hires_obs_simulator import *
 from src.scope.noise import *
+from src.scope.utils import *
 
 np.random.seed(42)
-
-
-def perform_pca(input_matrix, n_princ_comp, return_noplanet=False):
-    """
-    Perform PCA using SVD.
-
-    SVD is written as A = USV^H, where ^H is the Hermitian operator.
-
-    Inputs
-    ------
-        :input_matrix:
-        :n_princ_comp: number of principle components to keep
-    """
-    u, singular_values, vh = np.linalg.svd(
-        input_matrix, full_matrices=False
-    )  # decompose
-
-    if return_noplanet:
-        s_high_variance = singular_values.copy()
-        s_high_variance[n_princ_comp:] = 0.0  # keeping the high-variance terms here
-        s_matrix = np.diag(s_high_variance)
-        A_noplanet[j] = np.dot(u, np.dot(s_matrix, vh))
-
-    singular_values[:n_princ_comp] = 0.0  # zero out the high-variance terms here
-    s_matrix = np.diag(singular_values)
-    arr_planet = np.dot(u, np.dot(s_matrix, vh))
-
-    if return_noplanet:
-        return arr_planet, A_noplanet
-    return arr_planet
 
 
 def make_data(
@@ -104,11 +74,7 @@ def make_data(
     )  # will store planet and star signal
     A_noplanet = np.zeros((n_order, n_exposure, n_pixel))
     for order in range(n_order):
-        wlgrid_order = np.copy(
-            wlgrid[
-                order,
-            ]
-        )  # Cropped wavelengths
+        wlgrid_order = np.copy(wlgrid[order,])  # Cropped wavelengths
         for exposure in range(n_exposure):
             flux_planet = calc_doppler_shift(
                 wlgrid_order, Fp_conv * Rp_solar**2, rv_planet[exposure]
@@ -119,11 +85,17 @@ def make_data(
             )
         if star:
             if observation == "emission":
-                flux_cube[order, exposure,] = (
+                flux_cube[
+                    order,
+                    exposure,
+                ] = (
                     flux_planet + flux_star  # now want to get the star in there
                 )
             elif observation == "transmission":
-                flux_cube[order, exposure,] = flux_star * (
+                flux_cube[
+                    order,
+                    exposure,
+                ] = flux_star * (
                     1 - flux_planet
                 )  # now want to get the star in there
             else:
@@ -218,8 +190,6 @@ def make_data(
     )  # returning CCF and logL values
 
 
-# every fTemp that's returned is going to be centered on 0. so how does that telluric removal work?
-
 # @njit
 def calc_log_likelihood(
     v_sys,
@@ -247,11 +217,7 @@ def calc_log_likelihood(
     )  # measured in m/s
 
     for order in range(n_order):
-        wlgrid_order = np.copy(
-            wlgrid[
-                order,
-            ]
-        )  # Cropped wavelengths
+        wlgrid_order = np.copy(wlgrid[order,])  # Cropped wavelengths
         model_flux_cube = np.zeros(
             (n_exposure, n_pixel)
         )  # "shifted" model spectra array at each phase
@@ -265,13 +231,9 @@ def calc_log_likelihood(
             )
 
             if star and observation == "emission":
-                model_flux_cube[exposure,] = (
-                    flux_planet / flux_star + 1.0
-                )
+                model_flux_cube[exposure,] = flux_planet / flux_star + 1.0
             else:  # in transmission, after we "divide out" (with PCA) the star and tellurics, we're left with flux_planet...kinda
-                model_flux_cube[exposure,] = (
-                    1 - flux_planet
-                )
+                model_flux_cube[exposure,] = 1 - flux_planet
 
         # ok now do the PCA. where does it fall apart?
         if do_pca:
@@ -292,44 +254,40 @@ Kparr = np.linspace(93.06, 292.06, 200)
 Vsys_all = np.arange(-100, 100)
 n_order, n_exposure, n_pixel = (44, 79, 1848)
 scale = 1.0
-with open("data_RAW_20201214_wl_algn_03.pic", "rb") as f:
-    mike_wave, mike_cube = pickle.load(f, encoding="latin1")
+mike_wave, mike_cube = np.load(
+    "data/data_RAW_20201214_wl_algn_03.pic", allow_pickle=True
+)
+
 
 wl_cube_model = mike_wave.copy().astype(np.float64)
 
-
-phases = pickle.load(open("ph.pic", "rb"), encoding="latin1")  # Time-resolved phases
-Rvel = pickle.load(
-    open("rvel.pic", "rb"), encoding="latin1"
-)  # +30.  # Time-resolved Earth-star velocity
+phases = np.load("data/phases.pic", allow_pickle=True)  # Time-resolved phases
+Rvel = np.load("data/rvel.pic", allow_pickle=True)  # Time-resolved Earth-star velocity
+y
 
 # todo: add data in
 # so if I want to change my model, I just alter this!
-wl_model, Fp, Fstar = pickle.load(
-    open("data/best_fit_spectrum.pic", "rb"), encoding="latin1"
-)  # the model you generated in call_pymultinest.py
-wl_model, Fp_model, Fstar = pickle.load(
-    open("data/best_fit_spectrum.pic", "rb"), encoding="latin1"
-)  # the model you generated in call_pymultinest.py
+wl_model, Fp, Fstar = np.load("data/best_fit_spectrum.pic", allow_pickle=True)
+
 wl_model = wl_model.astype(np.float64)
-# "/mnt/home/asavel/CODE_FOR_PAPER/RETRIEVAL/FIDUCIAL_RUN/best_fit_spectrum_just_hcn_-1_dex.pic"
+
 Rp = 1.21  # Jupiter radii
 Rp_solar = Rp * rjup_rsun  # convert from jupiter radii to solar radii
 Rstar = 0.955  # solar radii
 Kp = 192.02
-##rotational coonvolutiono
+
+# rotational convolution
 v_rot = 4.5
 Fp_conv_rot = broaden_spectrum(wl_model, Fp, v_rot)
 Fp_conv_rot_model = broaden_spectrum(wl_model, Fp, v_rot)
 
-# instrument profile convolustion
+# instrument profile convolution
 xker = np.arange(41) - 20
 sigma = 5.5 / (2.0 * np.sqrt(2.0 * np.log(2.0)))  # nominal
 yker = np.exp(-0.5 * (xker / sigma) ** 2.0)
 yker /= yker.sum()
 Fp_conv = np.convolve(Fp_conv_rot, yker, mode="same")
 Fp_conv_model = np.convolve(Fp_conv_rot_model, yker, mode="same")
-# Fstar_conv=np.convolve(Fstar,yker,mode='same')
 
 
 star_wave, star_flux = np.loadtxt("data/PHOENIX_5605_4.33.txt").T
@@ -337,7 +295,6 @@ Fstar_conv = get_star_spline(star_wave, star_flux, wl_model, yker, smooth=False)
 
 
 if __name__ == "__main__":
-
     ind = eval(sys.argv[1])
     param_dict = parameter_list[ind]
 

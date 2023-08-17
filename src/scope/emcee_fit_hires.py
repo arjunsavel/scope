@@ -2,9 +2,9 @@ import pickle
 import sys
 
 import emcee
-from hires_obs_simulator import *
 from run_simulation import *
 from schwimmbad import MPIPool  # todo: add these as dependencies...?
+from utils import *
 
 do_pca = True
 np.random.seed(42)
@@ -38,7 +38,7 @@ def log_prob(x):
     )
 
 
-# van Sluijs+22 fit for log10 a. so do brogi et al.
+# van Sluijs+22 fit for log10 a. so do Brogi et al.
 # @numba.njit
 def prior(x):
     Kp, Vsys, log_scale = x
@@ -83,7 +83,6 @@ def sample(
 
 
 if __name__ == "__main__":
-
     # ind = eval(sys.argv[1])
     ind = 111  # SNR = 60, blaze, tell, star, 4 PCA components
     param_dict = parameter_list[ind]

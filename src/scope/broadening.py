@@ -2,11 +2,7 @@
 file to calculate the intensity map and broadening said map. and the velocity profile.
 """
 
-from functools import partial
-
-import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 from numba import njit
 
 

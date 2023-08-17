@@ -24,6 +24,36 @@ end_clip = 100
 # todo: plot the maps
 
 
+def perform_pca(input_matrix, n_princ_comp, return_noplanet=False):
+    """
+    Perform PCA using SVD.
+
+    SVD is written as A = USV^H, where ^H is the Hermitian operator.
+
+    Inputs
+    ------
+        :input_matrix:
+        :n_princ_comp: number of principle components to keep
+    """
+    u, singular_values, vh = np.linalg.svd(
+        input_matrix, full_matrices=False
+    )  # decompose
+
+    if return_noplanet:
+        s_high_variance = singular_values.copy()
+        s_high_variance[n_princ_comp:] = 0.0  # keeping the high-variance terms here
+        s_matrix = np.diag(s_high_variance)
+        A_noplanet[j] = np.dot(u, np.dot(s_matrix, vh))
+
+    singular_values[:n_princ_comp] = 0.0  # zero out the high-variance terms here
+    s_matrix = np.diag(singular_values)
+    arr_planet = np.dot(u, np.dot(s_matrix, vh))
+
+    if return_noplanet:
+        return arr_planet, A_noplanet
+    return arr_planet
+
+
 def calc_doppler_shift(template_wave, template_flux, v):
     """
     Doppler shifts a spectrum. Evaluates the flux at a different grid.

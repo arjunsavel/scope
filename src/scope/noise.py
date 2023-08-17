@@ -2,6 +2,7 @@
 Add noise to simulated data.
 """
 import numpy as np
+from utils import *
 
 
 def add_constant_noise(flux_cube_model, wl_grid, SNR):
