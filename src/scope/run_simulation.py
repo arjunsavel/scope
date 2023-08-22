@@ -217,6 +217,54 @@ def calc_log_likelihood(
     star=False,
     observation="emission",
 ):
+    """
+    Calculates the log likelihood and cross-correlation function of the data given the model parameters.
+
+    Inputs
+    ------
+          :v_sys: float
+            Systemic velocity of the system in m/s
+            :Kp: float
+            Planet semi-amplitude in m/s
+            :scale: float
+            Planet-to-star flux ratio
+            :wlgrid: array
+            Wavelength grid
+            :Fp_conv: array
+            Planet spectrum convolved with the instrumental profile
+            :Fstar_conv: array
+            Stellar spectrum convolved with the instrumental profile
+            :flux_cube: array
+            Data cube
+            :n_order: int
+            Number of orders
+            :n_exposure: int
+            Number of exposures
+            :n_pixel: int
+            Number of pixels
+            :phases: array
+            Orbital phases
+            :Rp_solar: float
+            Planet radius in solar radii
+            :Rstar: float
+            Stellar radius in solar radii
+            :A_noplanet: array
+            Array of the non-planet component of the data cube
+            :do_pca: bool
+            Whether to perform PCA on the data cube
+            :n_princ_comp: int
+            Number of principal components to use in the PCA
+            :star: bool
+            Whether to include the stellar component in the simulation.
+            :observation: str
+            Type of observation. Currently supported: 'emission', 'transmission'
+    Outputs
+    -------
+            :logL: float
+            Log likelihood of the data given the model parameters
+            :ccf: array
+            Cross-correlation function of the data given the model parameters
+    """
     Kstar = 0.3229 * 1.0
 
     v_sys_measured = (
@@ -263,6 +311,30 @@ def calc_log_likelihood(
 def run_simulation(
     grid_ind, planet_spectrum_path, star_spectrum_path, phases, observation="emission"
 ):
+    """
+    Run a simulation of the data, given a grid index and some paths. Side effects:
+    writes some files in the output directory.
+
+    Inputs
+    ------
+    grid_ind: int
+        The index of the grid to use.
+    planet_spectrum_path: str
+        The path to the planet spectrum.
+    star_spectrum_path: str
+        The path to the star spectrum.
+    phases: array-like
+        The phases of the observations.
+    observation: str
+        Type of observation to simulate. Currently supported: emission, transmission.
+
+    Outputs
+    -------
+    None
+
+
+
+    """
     # todo: wrap this in a function? with paths and everything!
     Kp_array = np.linspace(93.06, 292.06, 200)
     v_sys_array = np.arange(-100, 100)
