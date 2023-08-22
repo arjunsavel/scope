@@ -1,15 +1,9 @@
 import pickle
-from glob import glob
 
-import astropy.constants as const
 import astropy.units as u
-import jax
-import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import numpy as np
-import scipy.constants as constants
 from constants import *
-from scipy import interpolate
 from scipy.interpolate import splev, splrep
 from scipy.ndimage import gaussian_filter1d
 from tqdm import tqdm
