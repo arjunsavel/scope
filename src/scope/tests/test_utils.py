@@ -19,10 +19,12 @@ class Testdetrend_cube(unittest.TestCase):
 
     def test_cube_normalized_min_still_min(self):
         orig_min_arr = np.argmin(self.test_cube, axis=0)
+        n_order, n_exp, n_pix = self.test_cube.shape
         detrended_cube = detrend_cube(self.test_cube, n_order, n_exp)
         self.assertTrue(orig_min_arr == np.argmin(detrended_cube, axis=0))
 
     def test_cube_normalized_max_still_max(self):
         orig_min_arr = np.argmax(self.test_cube, axis=0)
+        n_order, n_exp, n_pix = self.test_cube.shape
         detrended_cube = detrend_cube(self.test_cube, n_order, n_exp)
         self.assertTrue(orig_min_arr == np.argmax(detrended_cube, axis=0))
