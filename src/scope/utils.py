@@ -3,10 +3,11 @@ import pickle
 import astropy.units as u
 import matplotlib.pyplot as plt
 import numpy as np
-from constants import *
 from scipy.interpolate import splev, splrep
 from scipy.ndimage import gaussian_filter1d
 from tqdm import tqdm
+
+from scope.constants import *
 
 np.random.seed(42)
 start_clip = 200
