@@ -14,6 +14,14 @@ np.random.seed(42)
 def make_data(
     scale,
     wlgrid,
+    Fp_conv,
+    Fstar_conv,
+    n_order,
+    n_exposure,
+    n_pixel,
+    phases,
+    Rp_solar,
+    Rstar,
     do_pca=True,
     blaze=False,
     do_airmass_detrending=False,
@@ -102,11 +110,11 @@ def make_data(
                 flux_cube[
                     order,
                     exposure,
-                ] = Fp
+                ] = flux_planet
 
     if tellurics:
         flux_cube = add_tellurics(
-            wl_cube_model,
+            wlgrid,
             flux_cube,
             n_order,
             n_exposure,
@@ -117,7 +125,7 @@ def make_data(
         # these spline fits aren't perfect. we mask negative values to 0.
         just_tellurics = np.ones_like(flux_cube)
         just_tellurics = add_tellurics(
-            wl_cube_model,
+            wlgrid,
             just_tellurics,
             n_order,
             n_exposure,
@@ -128,7 +136,7 @@ def make_data(
         flux_cube[flux_cube < 0.0] = 0.0
         just_tellurics[just_tellurics < 0.0] = 0.0
     if blaze:
-        flux_cube = add_blaze_function(wl_cube_model, flux_cube, n_order, n_exposure)
+        flux_cube = add_blaze_function(wlgrid, flux_cube, n_order, n_exposure)
         flux_cube[flux_cube < 0.0] = 0.0
     flux_cube = detrend_cube(
         flux_cube, n_order, n_exposure
@@ -138,15 +146,13 @@ def make_data(
             noise_model = "IGRINS"
         else:
             noise_model = "constant"
-        flux_cube = add_noise_cube(
-            flux_cube, wl_cube_model, SNR, noise_model=noise_model
-        )
+        flux_cube = add_noise_cube(flux_cube, wlgrid, SNR, noise_model=noise_model)
 
     if wav_error:
         doppler_shifts = np.loadtxt(
             "data/doppler_shifts_w77ab.txt"
         )  # todo: create this!
-        flux_cube = change_wavelength_solution(wl_cube_model, flux_cube, doppler_shifts)
+        flux_cube = change_wavelength_solution(wlgrid, flux_cube, doppler_shifts)
     flux_cube_nopca = flux_cube.copy()
     if do_pca:
         for j in range(n_order):
@@ -196,10 +202,15 @@ def calc_log_likelihood(
     Kp,
     scale,
     wlgrid,
+    Fp_conv,
+    Fstar_conv,
     flux_cube,
     n_order,
     n_exposure,
     n_pixel,
+    phases,
+    Rp_solar,
+    Rstar,
     A_noplanet=1,
     do_pca=False,
     n_princ_comp=4,
@@ -249,10 +260,12 @@ def calc_log_likelihood(
     return logL, CCF  # returning CCF and logL values
 
 
-if __name__ == "__main__":
+def run_simulation(
+    grid_ind, planet_spectrum_path, star_spectrum_path, phases, observation="emission"
+):
     # todo: wrap this in a function? with paths and everything!
-    Kparr = np.linspace(93.06, 292.06, 200)
-    Vsys_all = np.arange(-100, 100)
+    Kp_array = np.linspace(93.06, 292.06, 200)
+    v_sys_array = np.arange(-100, 100)
     n_order, n_exposure, n_pixel = (44, 79, 1848)
     scale = 1.0
     mike_wave, mike_cube = np.load(
@@ -261,14 +274,13 @@ if __name__ == "__main__":
 
     wl_cube_model = mike_wave.copy().astype(np.float64)
 
-    phases = np.load("data/phases.pic", allow_pickle=True)  # Time-resolved phases
     Rvel = np.load(
         "data/rvel.pic", allow_pickle=True
     )  # Time-resolved Earth-star velocity
 
     # todo: add data in
     # so if I want to change my model, I just alter this!
-    wl_model, Fp, Fstar = np.load("data/best_fit_spectrum.pic", allow_pickle=True)
+    wl_model, Fp = np.load(planet_spectrum_path, allow_pickle=True)
 
     wl_model = wl_model.astype(np.float64)
 
@@ -280,7 +292,6 @@ if __name__ == "__main__":
     # rotational convolution
     v_rot = 4.5
     Fp_conv_rot = broaden_spectrum(wl_model, Fp, v_rot)
-    Fp_conv_rot_model = broaden_spectrum(wl_model, Fp, v_rot)
 
     # instrument profile convolution
     xker = np.arange(41) - 20
@@ -288,12 +299,13 @@ if __name__ == "__main__":
     yker = np.exp(-0.5 * (xker / sigma) ** 2.0)
     yker /= yker.sum()
     Fp_conv = np.convolve(Fp_conv_rot, yker, mode="same")
-    Fp_conv_model = np.convolve(Fp_conv_rot_model, yker, mode="same")
 
-    star_wave, star_flux = np.loadtxt("data/PHOENIX_5605_4.33.txt").T
+    star_wave, star_flux = np.loadtxt(
+        star_spectrum_path
+    ).T  # Phoenix stellar model packing
     Fstar_conv = get_star_spline(star_wave, star_flux, wl_model, yker, smooth=False)
-    ind = eval(sys.argv[1])
-    param_dict = parameter_list[ind]
+
+    param_dict = parameter_list[grid_ind]
 
     (
         blaze,
@@ -323,6 +335,13 @@ if __name__ == "__main__":
     A_noplanet, flux_cube, flux_cube_nopca, just_tellurics = make_data(
         scale,
         wl_cube_model,
+        Fp_conv,
+        Fstar_conv,
+        n_order,
+        n_exposure,
+        n_pixel,
+        Rp_solar,
+        Rstar,
         do_pca=False,
         do_airmass_detrending=True,
         blaze=blaze,
@@ -330,12 +349,13 @@ if __name__ == "__main__":
         tellurics=telluric,
         Vsys=0,
         star=star,
-        Kp=192.06,
+        Kp=Kp,
         SNR=SNR,
         tell_type=tell_type,
         time_dep_tell=time_dep_tell,
         wav_error=wav_error,
         order_dep_throughput=order_dep_throughput,
+        observation=observation,
     )
     with open(
         f"output/simdata_{n_princ_comp}_NPC_{blaze}_blaze_{star}_star_{telluric}_telluric_{SNR}_SNR_{tell_type}_{time_dep_tell}_{wav_error}_{order_dep_throughput}_newerrun_cranked_tell_bett_airm.txt",
@@ -357,19 +377,24 @@ if __name__ == "__main__":
     if tellurics:
         with open(f"output/just_tellurics_vary_airmass.txt", "wb") as f:
             pickle.dump(just_tellurics, f)
-    for i, KP in tqdm(
-        enumerate(Kparr[50:150][::2]), total=50, desc="looping PCA over Kp"
+    for i, Kp in tqdm(
+        enumerate(Kp_array[50:150][::2]), total=50, desc="looping PCA over Kp"
     ):
-        for j, vsys in enumerate(Vsys_all[50:150][::2]):
+        for j, v_sys in enumerate(v_sys_array[50:150][::2]):
             res = calc_log_likelihood(
-                vsys,
-                KP,
+                v_sys,
+                Kp,
                 scale,
                 wl_cube_model,
-                fTemp,
+                Fp_conv,
+                Fstar_conv,
+                flux_cube,
                 n_order,
                 n_exposure,
                 n_pixel,
+                phases,
+                Rp_solar,
+                Rstar,
                 do_pca=True,
                 NPC=n_princ_comp,
                 A_noplanet=A_noplanet,
@@ -386,3 +411,8 @@ if __name__ == "__main__":
         f"output/ccfs_{n_princ_comp}_NPC_{blaze}_blaze_{star}_star_{telluric}_telluric_{SNR}_SNR_{tell_type}_{time_dep_tell}_{wav_error}_{order_dep_throughput}_newerrun_cranked_tell_bett_airm.txt",
         ccfs,
     )
+
+
+if __name__ == "__main__":
+    ind = eval(sys.argv[1])
+    run_simulation(ind)
