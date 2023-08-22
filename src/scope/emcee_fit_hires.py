@@ -2,9 +2,10 @@ import pickle
 import sys
 
 import emcee
-from run_simulation import *
 from schwimmbad import MPIPool  # todo: add these as dependencies...?
 from utils import *
+
+from scope.run_simulation import *
 
 do_pca = True
 np.random.seed(42)

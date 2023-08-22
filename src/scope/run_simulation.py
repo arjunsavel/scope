@@ -1,12 +1,11 @@
 import sys
 
-from broadening import *
-from grid import *
-from tellurics import *
-
-from src.scope.ccf import *
-from src.scope.noise import *
-from src.scope.utils import *
+from scope.broadening import *
+from scope.ccf import *
+from scope.grid import *
+from scope.noise import *
+from scope.tellurics import *
+from scope.utils import *
 
 np.random.seed(42)
 
