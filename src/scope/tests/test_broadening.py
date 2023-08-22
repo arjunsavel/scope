@@ -2,13 +2,6 @@ import unittest
 
 from scope.broadening import *
 
-"""
-tests to create
- - benchmark against Mike's result. (cannot be open sourced w/o checking!)
- - individual functions make good output
- - think about physical limiting cases.
-"""
-
 
 class TestTheta(unittest.TestCase):
     def test_get_theta_zero(self):
