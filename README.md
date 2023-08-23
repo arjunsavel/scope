@@ -6,6 +6,7 @@
 [![CodeQL](https://github.com/arjunsavel/scope/actions/workflows/codeql.yml/badge.svg)](https://github.com/arjunsavel/scope/actions/workflows/codeql.yml)
 [![Tests](https://github.com/arjunsavel/scope/actions/workflows/python-package.yml/badge.svg)](https://github.com/arjunsavel/scope/actions/workflows/python-package.yml)
 [![codecov](https://codecov.io/gh/arjunsavel/scope/graph/badge.svg?token=2Q1NPQ4817)](https://codecov.io/gh/arjunsavel/scope)
+[![Maintainability](https://api.codeclimate.com/v1/badges/d70a25a6766ee132bd94/maintainability)](https://codeclimate.com/github/arjunsavel/scope/maintainability)
 
 
 Simulating cross-correlation of planetary emission.
