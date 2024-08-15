@@ -12,7 +12,7 @@ def jit(f):
     return wrapper
 
 
-@jit
+# @jit
 def calc_ccf(model_flux, data_arr_slice, n_pixel):
     """
     Calculates the CCF between a model and a data slice.

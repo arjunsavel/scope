@@ -414,11 +414,11 @@ def detrend_cube(cube, n_order, n_exp, blaze=False):
     if not blaze:
         for order in progress:
             for exp in range(n_exp):
-                detrend_array(cube[order, exp])
+                cube[order, exp] = detrend_array(cube[order, exp])
 
     else:
         for order in progress:
-            detrend_array(cube[order])
+            cube[order] = detrend_array(cube[order])
 
     return cube
 
