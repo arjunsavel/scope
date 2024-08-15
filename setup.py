@@ -35,7 +35,9 @@ INSTALL_REQUIRES = [
     "numba",
     "scikit-learn>=1.3.0",
     "matplotlib",
-    "pandas"
+    "pandas",
+    "exoplanet-core",
+    "pymc>=4",
 ]
 
 ###################################################################
