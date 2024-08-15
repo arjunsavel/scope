@@ -34,7 +34,7 @@ INSTALL_REQUIRES = [
     "tqdm",
     "numba",
     "scikit-learn>=1.3.0",
-    "matplotlib-base"
+    "matplotlib"
 ]
 
 ###################################################################
