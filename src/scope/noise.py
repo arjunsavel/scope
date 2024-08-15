@@ -63,6 +63,7 @@ def add_quadratic_noise(flux_cube_model, wl_grid, SNR, IGRINS=False, **kwargs):
         # need to scale these to the required SNR.
         A_SNRs *= SNR / 250
         B_SNRs *= SNR / 250
+        noisy_flux = np.ones_like(flux_cube_model) * 0
 
         # iterate through each exposure
         for exposure in range(flux_cube_model.shape[1]):
@@ -71,9 +72,18 @@ def add_quadratic_noise(flux_cube_model, wl_grid, SNR, IGRINS=False, **kwargs):
                     order_snr = A_SNRs[order - len(B_SNRs)]
                 else:  # second band
                     order_snr = B_SNRs[order]
-                noisy_flux[order][exposure] = add_constant_noise(
-                    flux_cube_model[order][exposure], wl_grid, order_snr
+                flux_level = (
+                    (order_snr**2)
+                    * flux_cube_model[order][exposure]
+                    / np.nanmax(flux_cube_model[order][exposure])
                 )
+                noisy_flux[order][exposure] = np.random.poisson(flux_level)
+
+                # a few quick checks to make sure that nothing has gone wrong with adding noise
+                noisy_flux[order][exposure][noisy_flux[order][exposure] < 0.0] = 0.0
+                noisy_flux[order][exposure][
+                    ~np.isfinite(noisy_flux[order][exposure])
+                ] = 0.0
 
     else:
         raise NotImplementedError("Only IGRINS data is currently supported.")
@@ -134,11 +144,6 @@ def add_noise_cube(flux_cube_model, wl_grid, SNR, noise_model="constant", **kwar
     if noise_model not in noise_models.keys():
         raise ValueError(
             "Noise model can only be constant, IGRINS, custom_quadratic, or custom."
-        )
-
-    if np.max(flux_cube_model) > 2:  # generously
-        raise ValueError(
-            "Cannot add noise the way you want — this is not a normalized flux cube!"
         )
 
     noise_func = noise_models[noise_model]
