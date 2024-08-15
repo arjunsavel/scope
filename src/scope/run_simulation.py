@@ -1,4 +1,11 @@
+# import sys,os
+# sys.path.append(os.path.realpath('..'))
+# sys.path.append(os.path.realpath('.'))
+import os
 import sys
+
+import jax
+import numpy as np
 
 from scope.broadening import *
 from scope.ccf import *
@@ -7,12 +14,15 @@ from scope.noise import *
 from scope.tellurics import *
 from scope.utils import *
 
+abs_path = os.path.dirname(__file__)
+
 np.random.seed(42)
 
 
 def make_data(
     scale,
     wlgrid,
+    wl_model,
     Fp_conv,
     Fstar_conv,
     n_order,
@@ -84,11 +94,11 @@ def make_data(
         wlgrid_order = np.copy(wlgrid[order,])  # Cropped wavelengths
         for exposure in range(n_exposure):
             flux_planet = calc_doppler_shift(
-                wlgrid_order, Fp_conv * Rp_solar**2, rv_planet[exposure]
+                wlgrid_order, wl_model, Fp_conv * Rp_solar**2, rv_planet[exposure]
             )
             flux_planet *= scale  # apply scale factor
             flux_star = calc_doppler_shift(
-                wlgrid_order, Fstar_conv * Rstar**2, rv_star[exposure]
+                wlgrid_order, wl_model, Fstar_conv * Rstar**2, rv_star[exposure]
             )
         if star:
             if observation == "emission":
@@ -110,6 +120,14 @@ def make_data(
                     order,
                     exposure,
                 ] = flux_planet
+
+    throughput_baselines = np.loadtxt(abs_path + "/data/throughputs.txt")
+    for i in range(flux_cube.shape[1]):
+        throughput_baseline = throughput_baselines[i]
+        throughput_factor = throughput_baseline / np.nanpercentile(
+            flux_cube[:, i, :], 90
+        )
+        flux_cube[:, i, :] *= throughput_factor
 
     if tellurics:
         flux_cube = add_tellurics(
@@ -137,9 +155,7 @@ def make_data(
     if blaze:
         flux_cube = add_blaze_function(wlgrid, flux_cube, n_order, n_exposure)
         flux_cube[flux_cube < 0.0] = 0.0
-    flux_cube = detrend_cube(
-        flux_cube, n_order, n_exposure
-    )  # TODO: think about mean subtraction vs. division here? also, this is basically the wavelength-calibration step!
+    flux_cube[np.isnan(flux_cube)] = 0.0
     if SNR > 0:  # 0 means don't add noise!
         if order_dep_throughput:
             noise_model = "IGRINS"
@@ -155,8 +171,10 @@ def make_data(
     flux_cube_nopca = flux_cube.copy()
     if do_pca:
         for j in range(n_order):
+            flux_cube[j] -= np.mean(flux_cube[j])
+            flux_cube[j] /= np.std(flux_cube[j])
             flux_cube[j], A_noplanet[j] = perform_pca(
-                flux_cube, n_princ_comp, return_noplanet=True
+                flux_cube[j], n_princ_comp, return_noplanet=True
             )
             # todo: think about the svd
             # todo: redo all analysis centering on 0?
@@ -195,12 +213,13 @@ def make_data(
     )  # returning CCF and logL values
 
 
-# @njit
+@njit
 def calc_log_likelihood(
     v_sys,
     Kp,
     scale,
     wlgrid,
+    wl_model,
     Fp_conv,
     Fstar_conv,
     flux_cube,
@@ -210,8 +229,8 @@ def calc_log_likelihood(
     phases,
     Rp_solar,
     Rstar,
-    A_noplanet=1,
-    do_pca=False,
+    A_noplanet,
+    do_pca=True,
     n_princ_comp=4,
     star=False,
     observation="emission",
@@ -264,6 +283,7 @@ def calc_log_likelihood(
             :ccf: array
             Cross-correlation function of the data given the model parameters
     """
+    # pdb.set_trace()
     Kstar = 0.3229 * 1.0
 
     v_sys_measured = (
@@ -273,7 +293,8 @@ def calc_log_likelihood(
     rv_planet, rv_star = calc_rvs(
         v_sys, v_sys_measured, Kp, Kstar, phases
     )  # measured in m/s
-
+    CCF = 0.0
+    logL_Matteo = 0.0
     for order in range(n_order):
         wlgrid_order = np.copy(wlgrid[order,])  # Cropped wavelengths
         model_flux_cube = np.zeros(
@@ -281,11 +302,11 @@ def calc_log_likelihood(
         )  # "shifted" model spectra array at each phase
         for exposure in range(n_exposure):
             flux_planet = calc_doppler_shift(
-                wlgrid_order, Fp_conv * Rp_solar**2, rv_planet[exposure]
+                wlgrid_order, wl_model, Fp_conv * Rp_solar**2, rv_planet[exposure]
             )
             flux_planet *= scale  # apply scale factor
             flux_star = calc_doppler_shift(
-                wlgrid_order, Fstar_conv * Rstar**2, rv_star[exposure]
+                wlgrid_order, wl_model, Fstar_conv * Rstar**2, rv_star[exposure]
             )
 
             if star and observation == "emission":
@@ -296,19 +317,85 @@ def calc_log_likelihood(
         # ok now do the PCA. where does it fall apart?
         if do_pca:
             # process the model same as the "data"!
-            model_flux_cube *= A_noplanet[j]
-            model_flux_cube = do_pca(model_flux_cube, n_princ_comp, False)
+            model_flux_cube *= A_noplanet[order]
+            model_flux_cube = perform_pca(model_flux_cube, n_princ_comp, False)
+        I = np.ones(n_pixel)
+        for i in range(n_exposure):
+            gVec = np.copy(model_flux_cube[i,])
+            gVec -= (gVec.dot(I)) / float(n_pixel)  # mean subtracting here...
+            sg2 = (gVec.dot(gVec)) / float(n_pixel)
 
-        # todo: airmass detrending reprocessing
-        logL_arr, CCF_arr = calc_ccf_map(model_flux_cube, flux_cube, n_pixel)
-        logL = logL_arr.sum()
-        CCF = CCF_arr.sum()
+            fVec = np.copy(
+                flux_cube[order][i,]
+            )  # already mean-subtracted! needed for the previous PCA! or...can I do the PCA without normalizing first? TODO
+            # fVec-=(fVec.dot(I))/float(Npix)
+            sf2 = (fVec.dot(fVec)) / float(n_pixel)
 
-    return logL, CCF  # returning CCF and logL values
+            R = (fVec.dot(gVec)) / float(n_pixel)  # cross-covariance
+            CC = R / np.sqrt(sf2 * sg2)  # cross-correlation
+            CCF += CC
+            logL_Matteo += -0.5 * n_pixel * np.log(sf2 + sg2 - 2.0 * R)
+
+        # # todo: airmass detrending reprocessing
+        # logL_arr, CCF_arr = calc_ccf_map(model_flux_cube, flux_cube, n_pixel)
+        # logL = logL_arr.sum()
+        # CCF = CCF_arr.sum()
+
+    return logL_Matteo, CCF  # returning CCF and logL values
+
+
+def unpack_grid(grid_ind, parameter_list):
+    param_dict = parameter_list[grid_ind]
+
+    (
+        blaze,
+        n_princ_comp,
+        star,
+        SNR,
+        telluric,
+        tell_type,
+        time_dep_tell,
+        wav_error,
+        order_dep_throughput,
+    ) = (
+        param_dict["blaze"],
+        param_dict["n_princ_comp"],
+        param_dict["star"],
+        param_dict["SNR"],
+        param_dict["telluric"],
+        param_dict["telluric_type"],
+        param_dict["time_dep_telluric"],
+        param_dict["wav_error"],
+        param_dict["order_dep_throughput"],
+    )
+    return (
+        blaze,
+        n_princ_comp,
+        star,
+        SNR,
+        telluric,
+        tell_type,
+        time_dep_tell,
+        wav_error,
+        order_dep_throughput,
+    )
 
 
 def run_simulation(
-    grid_ind, planet_spectrum_path, star_spectrum_path, phases, observation="emission"
+    planet_spectrum_path,
+    star_spectrum_path,
+    phases,
+    data_cube_path,
+    observation="emission",
+    blaze=True,
+    n_princ_comp=4,
+    star=True,
+    SNR=250,
+    telluric=True,
+    tell_type="data-driven",
+    time_dep_tell=False,
+    wav_error=False,
+    order_dep_throughput=True,
 ):
     """
     Run a simulation of the data, given a grid index and some paths. Side effects:
@@ -339,19 +426,17 @@ def run_simulation(
     v_sys_array = np.arange(-100, 100)
     n_order, n_exposure, n_pixel = (44, 79, 1848)
     scale = 1.0
-    mike_wave, mike_cube = np.load(
-        "data/data_RAW_20201214_wl_algn_03.pic", allow_pickle=True
-    )
+    mike_wave, mike_cube = pickle.load(open(data_cube_path, "rb"), encoding="latin1")
 
     wl_cube_model = mike_wave.copy().astype(np.float64)
 
-    Rvel = np.load(
-        "data/rvel.pic", allow_pickle=True
-    )  # Time-resolved Earth-star velocity
+    # Rvel = np.load(
+    #     "data/rvel.pic", allow_pickle=True
+    # )  # Time-resolved Earth-star velocity
 
     # todo: add data in
     # so if I want to change my model, I just alter this!
-    wl_model, Fp = np.load(planet_spectrum_path, allow_pickle=True)
+    wl_model, Fp, Fstar = np.load(planet_spectrum_path)
 
     wl_model = wl_model.astype(np.float64)
 
@@ -362,7 +447,7 @@ def run_simulation(
 
     # rotational convolution
     v_rot = 4.5
-    Fp_conv_rot = broaden_spectrum(wl_model, Fp, v_rot)
+    Fp_conv_rot = broaden_spectrum(wl_model / 1e6, Fp, 0, vl=v_rot)
 
     # instrument profile convolution
     xker = np.arange(41) - 20
@@ -376,49 +461,27 @@ def run_simulation(
     ).T  # Phoenix stellar model packing
     Fstar_conv = get_star_spline(star_wave, star_flux, wl_model, yker, smooth=False)
 
-    param_dict = parameter_list[grid_ind]
-
-    (
-        blaze,
-        n_princ_comp,
-        star,
-        SNR,
-        telluric,
-        tell_type,
-        time_dep_tell,
-        wav_error,
-        order_dep_throughput,
-    ) = (
-        param_dict["blaze"],
-        param_dict["n_princ_comp"],
-        param_dict["star"],
-        param_dict["SNR"],
-        param_dict["telluric"],
-        param_dict["telluric_type"],
-        param_dict["time_dep_telluric"],
-        param_dict["wav_error"],
-        param_dict["order_dep_throughput"],
-    )
-
     lls, ccfs = np.zeros((50, 50)), np.zeros((50, 50))
 
     # redoing the grid. how close does PCA get to a tellurics-free signal detection?
     A_noplanet, flux_cube, flux_cube_nopca, just_tellurics = make_data(
         scale,
         wl_cube_model,
+        wl_model,
         Fp_conv,
         Fstar_conv,
         n_order,
         n_exposure,
         n_pixel,
+        phases,
         Rp_solar,
         Rstar,
-        do_pca=False,
+        do_pca=True,
         do_airmass_detrending=True,
         blaze=blaze,
         n_princ_comp=n_princ_comp,
         tellurics=telluric,
-        Vsys=0,
+        v_sys=0,
         star=star,
         Kp=Kp,
         SNR=SNR,
@@ -428,35 +491,40 @@ def run_simulation(
         order_dep_throughput=order_dep_throughput,
         observation=observation,
     )
+    # pdb.set_trace()
     with open(
-        f"output/simdata_{n_princ_comp}_NPC_{blaze}_blaze_{star}_star_{telluric}_telluric_{SNR}_SNR_{tell_type}_{time_dep_tell}_{wav_error}_{order_dep_throughput}_newerrun_cranked_tell_bett_airm.txt",
+        abs_path
+        + f"/output/simdata_{n_princ_comp}_NPC_{blaze}_blaze_{star}_star_{telluric}_telluric_{SNR}_SNR_{tell_type}_{time_dep_tell}_{wav_error}_{order_dep_throughput}_newerrun_cranked_tell_bett_airm.txt",
         "wb",
     ) as f:
         pickle.dump(flux_cube, f)
     with open(
-        f"output/nopca_simdata_{n_princ_comp}_NPC_{blaze}_blaze_{star}_star_{telluric}_telluric_{SNR}_SNR_{tell_type}_{time_dep_tell}_{wav_error}_{order_dep_throughput}_newerrun_cranked_tell_bett_airm.txt",
+        abs_path
+        + f"/output/nopca_simdata_{n_princ_comp}_NPC_{blaze}_blaze_{star}_star_{telluric}_telluric_{SNR}_SNR_{tell_type}_{time_dep_tell}_{wav_error}_{order_dep_throughput}_newerrun_cranked_tell_bett_airm.txt",
         "wb",
     ) as f:
         pickle.dump(flux_cube_nopca, f)
     with open(
-        f"output/A_noplanet_{n_princ_comp}_NPC_{blaze}_blaze_{star}_star_{telluric}_telluric_{SNR}_SNR_{tell_type}_{time_dep_tell}_{wav_error}_{order_dep_throughput}_newerrun_cranked_tell_bett_airm.txt",
+        abs_path
+        + f"/output/A_noplanet_{n_princ_comp}_NPC_{blaze}_blaze_{star}_star_{telluric}_telluric_{SNR}_SNR_{tell_type}_{time_dep_tell}_{wav_error}_{order_dep_throughput}_newerrun_cranked_tell_bett_airm.txt",
         "wb",
     ) as f:
         pickle.dump(A_noplanet, f)
 
     # only save if tellurics are True. Otherwise, this will be cast to an array of ones.
     if tellurics:
-        with open(f"output/just_tellurics_vary_airmass.txt", "wb") as f:
+        with open(abs_path + f"/output/just_tellurics_vary_airmass.txt", "wb") as f:
             pickle.dump(just_tellurics, f)
-    for i, Kp in tqdm(
+    for l, Kp in tqdm(
         enumerate(Kp_array[50:150][::2]), total=50, desc="looping PCA over Kp"
     ):
-        for j, v_sys in enumerate(v_sys_array[50:150][::2]):
+        for k, v_sys in enumerate(v_sys_array[50:150][::2]):
             res = calc_log_likelihood(
                 v_sys,
                 Kp,
                 scale,
                 wl_cube_model,
+                wl_model,
                 Fp_conv,
                 Fstar_conv,
                 flux_cube,
@@ -467,19 +535,21 @@ def run_simulation(
                 Rp_solar,
                 Rstar,
                 do_pca=True,
-                NPC=n_princ_comp,
+                n_princ_comp=n_princ_comp,
                 A_noplanet=A_noplanet,
                 star=star,
             )
-            lls[i, j] = res[0]
-            ccfs[i, j] = res[1]
+            lls[l, k] = res[0]
+            ccfs[l, k] = res[1]
 
     np.savetxt(
-        f"output/lls_{n_princ_comp}_NPC_{blaze}_blaze_{star}_star_{telluric}_telluric_{SNR}_SNR_{tell_type}_{time_dep_tell}_{wav_error}_{order_dep_throughput}_newerrun_cranked_tell_bett_airm.txt",
+        abs_path
+        + f"/output/lls_{n_princ_comp}_NPC_{blaze}_blaze_{star}_star_{telluric}_telluric_{SNR}_SNR_{tell_type}_{time_dep_tell}_{wav_error}_{order_dep_throughput}_newerrun_cranked_tell_bett_airm.txt",
         lls,
     )
     np.savetxt(
-        f"output/ccfs_{n_princ_comp}_NPC_{blaze}_blaze_{star}_star_{telluric}_telluric_{SNR}_SNR_{tell_type}_{time_dep_tell}_{wav_error}_{order_dep_throughput}_newerrun_cranked_tell_bett_airm.txt",
+        abs_path
+        + f"/output/ccfs_{n_princ_comp}_NPC_{blaze}_blaze_{star}_star_{telluric}_telluric_{SNR}_SNR_{tell_type}_{time_dep_tell}_{wav_error}_{order_dep_throughput}_newerrun_cranked_tell_bett_airm.txt",
         ccfs,
     )
 
