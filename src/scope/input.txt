@@ -10,7 +10,7 @@
 ·········································
 Created: 2024-08-15
 Author: Arjun Savel!
-Planet: Kepler-16b
+Planet: GJ 1214b
 
 # Filepaths
 planet_spectrum_path   /path/to/planet/spectrum
@@ -18,13 +18,13 @@ star_spectrum_path     /path/to/star/spectrum
 data_cube_path         /path/to/data/cube
 
 # Astrophysical Parameters. Can specify DATABASE to pull based on name for parameters iwth [DB]
-Rp                     1.21          # planetary radius in Jupiter radii. [DB]
-Rstar                  0.955         # stellar radius, in solar radii. [DB]
-kp                     192.02        # expected planetary orbital velocity assuming circular orbit, in km/s.
-v_sys                  0.0           # systemic velocity, in km/s.  [DB]
-v_rot                  4.5           # equatorial rotational velocity. input NULL if you'd like to calculate from orbital parameters.
-P_rot                  16.0          # orbital period of the planet, in days. [DB]
-a                      0.704         # semi-major axis of the planet, in AU. [DB]
+Rp                  DATABASE          # planetary radius in Jupiter radii. [DB]
+Rstar                  DATABASE         # stellar radius, in solar radii. [DB]
+kp                     192.02        # expected planetary orbital velocity assuming circular orbit, in km/s. input NULL if you'd like to calculate from orbital parameters.
+v_sys                 DATABASE           # systemic velocity, in km/s.  [DB]
+v_rot                  NULL           # equatorial rotational velocity. input NULL if you'd like to calculate from orbital parameters.
+P_rot                  DATABASE          # orbital period of the planet, in days. [DB]
+a                      DATABASE         # semi-major axis of the planet, in AU. [DB]
 scale                  1.0           # scaling factor for the model spectrum.
 
 
@@ -35,13 +35,13 @@ order_dep_throughput   True          # whether to include order-dependent throug
 
 
 # Observation Parameters
-observation            emission      # type of observation to perform. supported observations are ``emission`` and ``transmission``.
-phase_start            0.0           # phase of the beginning of the observations. 0 is center of transit, 0.5 is secondary eclipse.
-phase_end              1.0           # phase of the end of the observations. 0 is center of transit, 0.5 is secondary eclipse.
-n_exposures            1             # number of exposures to simulate. sets the phases of the exposures.
+observation            transmission      # type of observation to perform. supported observations are ``emission`` and ``transmission``.
+phase_start            -0.011464100685159746           # phase of the beginning of the observations. 0 is center of transit, 0.5 is secondary eclipse.
+phase_end              0.011464100685159746           # phase of the end of the observations. 0 is center of transit, 0.5 is secondary eclipse.
+n_exposures            10             # number of exposures to simulate. sets the phases of the exposures.
 star                   True          # whether to include the star in the simulation. In general, you'd like to!
 telluric               True          # whether to include tellurics in the simulation. In general, you'd like to!
-SNR                    250           # signal-to-noise ratio of the observations, per pixel. I.e., what sets the photon counts at the detector.
+SNR                    110           # signal-to-noise ratio of the observations, per pixel. I.e., what sets the photon counts at the detector.
 tell_type              data-driven   # type of telluric simulation. supported modes are ``ATRAN`` and ``data-driven``.
 time_dep_tell          False         # whether the tellurics are time-dependent or not.
 

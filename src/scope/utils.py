@@ -4,6 +4,7 @@ import pickle
 import astropy.units as u
 import matplotlib.pyplot as plt
 import numpy as np
+from exoplanet.orbits.keplerian import KeplerianOrbit
 from numba import njit
 from scipy.interpolate import splev, splrep
 from scipy.ndimage import gaussian_filter1d
@@ -123,12 +124,12 @@ def calc_exposure_time(
         b=b,
         omega=np.radians(peri),  # periastron, radians
         Omega=np.radians(peri),  # periastron, radians
-        m_planet=m_planet * 0.0009543,
+        m_planet=mplanet * 0.0009543,
     )
     t = np.linspace(0, period * 1.1, 1000)  # days
-    vel = np.array(theano.function([], orbit.get_relative_velocity(t))())
+    z_vel = orbit.get_relative_velocity(t)[2].eval()
 
-    z_vel = vel[2] * 695700 / 86400  # km / s
+    z_vel *= 695700 / 86400  # km / s
 
     phases = t / period
     if plot:
@@ -199,17 +200,23 @@ def calc_exposure_time(
 
     res_crossing_time_transit = res_crossing_time[during_transit]
 
-    min_time = np.min(res_crossing_time_transit)
+    max_time = np.min(res_crossing_time_transit)
 
-    min_time_per_pixel = min_time / pix_per_res
+    max_time_per_pixel = max_time / pix_per_res
     period = period * u.day
     dphase_per_exp = (np.min(res_crossing_time_transit) / period).si
-    transit_dur = 30  # degrees. todo: calculate.
+
+    transit_dur = (0.86966 / 24) / period.value  # degrees. todo: calculate.
+    print(transit_dur)
+    print(0.86966 * 60 * 60)  # this is how many seconds long it is
     n_exp = transit_dur / dphase_per_exp
 
     # then query https://igrins-jj.firebaseapp.com/etc/simple:
     # this gives us, for the given exposure time, what the SNR is going to be.
-    return min_time, min_time_per_pixel, dphase_per_exp, n_exp
+    # well that's more the maximum time
+    # so that's the maximum time, but we want more than that many exposures.
+    # don't have to worry about pixel-crossing time.
+    return max_time, max_time_per_pixel, dphase_per_exp, n_exp
 
 
 # todo: own convolution
