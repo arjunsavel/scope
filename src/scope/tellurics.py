@@ -2,9 +2,15 @@
 Read in and apply tellurics to simulated data.
 """
 
+import os
+from glob import glob
+
 import numpy as np
 import pandas as pd
-from glob import glob
+from scipy import interpolate
+
+abs_path = os.path.dirname(__file__)
+
 
 def read_atran(path):
     """
@@ -29,6 +35,7 @@ def read_atran(path):
 
     return atran
 
+
 def read_atran_pair(path1, path2):
     """
     reads and concatenates an ATRAN file pair.
@@ -42,21 +49,24 @@ def read_atran_pair(path1, path2):
     )
     return atran_40
 
+
 def find_closest_atran_angle(zenith_angle):
     """
     Parses through the available ATRAN files and finds the one with the zenith angle closest to the desired.
     """
-    files = glob('data/atran*obslat*')
-    zenith_paths = np.array([eval(file.split('_')[1]) for file in files])
+    files = glob("data/atran*obslat*")
+    zenith_paths = np.array([eval(file.split("_")[1]) for file in files])
     closest_ind = np.argmin(abs(zenith_paths - zenith_angle))
     closest_zenith = zenith_paths[closest_ind]
     return closest_zenith
 
 
-def add_tellurics_atran(wl_cube_model, flux_cube_model, n_order, n_exp, vary_airmass=False):
+def add_tellurics_atran(
+    wl_cube_model, flux_cube_model, n_order, n_exp, vary_airmass=False
+):
     if vary_airmass:
         # assume now that I'm just using the same airmasses as before.
-        zenith_angles = np.loadtxt('zenith_angles_w77ab.txt')
+        zenith_angles = np.loadtxt("zenith_angles_w77ab.txt")
 
         # these are the beginning and ends of the two different ATRAN chunks.
         w_start_1 = 1.1
@@ -64,11 +74,11 @@ def add_tellurics_atran(wl_cube_model, flux_cube_model, n_order, n_exp, vary_air
         w_start_2 = 2
         w_end_2 = 3
 
-        tell_splines = [] # will want one of these for each exposure.
+        tell_splines = []  # will want one of these for each exposure.
         for zenith_angle in zenith_angles:
             zenith_path = find_closest_atran_angle(zenith_angle)
-            path1 = f'data/atran_{zenith_path}_zenith_39_obslat_{w_start_1}_{w_end_1}_wave.dat'
-            path2 = f'data/atran_{zenith_path}_zenith_39_obslat_{w_start_2}_{w_end_2}_wave.dat'
+            path1 = f"data/atran_{zenith_path}_zenith_39_obslat_{w_start_1}_{w_end_1}_wave.dat"
+            path2 = f"data/atran_{zenith_path}_zenith_39_obslat_{w_start_2}_{w_end_2}_wave.dat"
             atran_40 = read_atran_pair(path1, path2)
             tell_spline = interpolate.splrep(atran_40.wav, atran_40.depth, s=0.0)
             tell_splines += [tell_spline]
@@ -96,7 +106,9 @@ def add_tellurics_atran(wl_cube_model, flux_cube_model, n_order, n_exp, vary_air
     return flux_cube_model
 
 
-def calc_weighted_vector_insim(vals, eigenvector, relationships, provided_relationships=False):
+def calc_weighted_vector_insim(
+    vals, eigenvector, relationships, provided_relationships=False
+):
     """
     Calculates the weighted vector for a given set of eigenvalues and eigenvectors.
 
@@ -113,13 +125,13 @@ def calc_weighted_vector_insim(vals, eigenvector, relationships, provided_relati
         :relationships: (list of arrays) relationships between eigenvectors and the flux vector.
     """
 
-    fm = np.zeros(1698) # pad with 1s on all sides.
+    fm = np.zeros(1698)  # pad with 1s on all sides.
     if not provided_relationships:
         relationships = []
     for i, vector_ind in enumerate(range(4)):
         relationship = relationships[i]
 
-        vector = eigenvector[:,vector_ind]
+        vector = eigenvector[:, vector_ind]
 
         eigenweight = np.dot(relationship, vals)
 
@@ -128,8 +140,9 @@ def calc_weighted_vector_insim(vals, eigenvector, relationships, provided_relati
         fm += weighted_vector
         if not provided_relationships:
             relationships += [relationship]
-    fm[fm < 0.] = 0.
+    fm[fm < 0.0] = 0.0
     return fm, relationships
+
 
 def eigenweight_func(airmass, date):
     """
@@ -144,15 +157,24 @@ def eigenweight_func(airmass, date):
     -------
         :array: (array) array of values to be multiplied by the eigenvectors.
     """
-    if airmass < 1. or airmass > 3.:
-        raise ValueError(f'Airmass must be valued between 1 amd 3. given airmass is {airmass}')
+    if airmass < 1.0 or airmass > 3.0:
+        raise ValueError(
+            f"Airmass must be valued between 1 amd 3. given airmass is {airmass}"
+        )
     if date < -200 or date > 400:
         raise ValueError
     return np.array([1, airmass, date, date**2])
 
 
-def add_tellurics(wl_cube_model, flux_cube_model, n_order, n_exp, vary_airmass=False, tell_type='ATRAN',
-                  time_dep_tell=False):
+def add_tellurics(
+    wl_cube_model,
+    flux_cube_model,
+    n_order,
+    n_exp,
+    vary_airmass=False,
+    tell_type="ATRAN",
+    time_dep_tell=False,
+):
     """
     Includes tellurics in the model.
     todo: allow thew airmass variation to not be the case for the data-driven tellurics
@@ -172,32 +194,40 @@ def add_tellurics(wl_cube_model, flux_cube_model, n_order, n_exp, vary_airmass=F
         :flux_cube_model: (array) flux cube model with tellurics included.
 
     """
-    if tell_type == 'data-driven':
-        eigenvectors = np.load('data/eigenvectors.npy')
-        relationships_arr = np.load('data/eigenweight_coeffs.npy')
-        wave_for_eigenvectors = np.load('data/wav_for_eigenvectors.npy')
+    if tell_type == "data-driven":
+        eigenvectors = np.load(abs_path + "/data/eigenvectors.npy")
+        relationships_arr = np.load(abs_path + "/data/eigenweight_coeffs.npy")
+        wave_for_eigenvectors = np.load(abs_path + "/data/wav_for_eigenvectors.npy")
 
-        zenith_angles = np.loadtxt('zenith_angles_w77ab.txt')
+        zenith_angles = np.loadtxt(abs_path + "/data/zenith_angles_w77ab.txt")
 
-        airmasses = 1/np.cos(np.radians(zenith_angles)) # todo: check units
+        airmasses = 1 / np.cos(np.radians(zenith_angles))  # todo: check units
 
         if time_dep_tell:
-            #dates = np.loadtxt('dates_w77ab_scaled.txt')
+            # dates = np.loadtxt('dates_w77ab_scaled.txt')
             dates = np.linspace(0, 350, len(airmasses))
         else:
             dates = np.ones_like(airmasses)
-
 
         # iterate through the each exposure.
         for i, airmass in enumerate(airmasses):
             date = dates[i]
             for order in range(relationships_arr.shape[0]):
                 vals = eigenweight_func(airmass, date)
-                fm, _ = calc_weighted_vector_insim(vals, eigenvectors[order], relationships_arr[order], provided_relationships=True)
+                fm, _ = calc_weighted_vector_insim(
+                    vals,
+                    eigenvectors[order],
+                    relationships_arr[order],
+                    provided_relationships=True,
+                )
                 fm = np.concatenate([np.ones(150), fm])
 
-                flux_cube_model[order][i] *= fm # the orders don't quite line up. or maybe they do : )
+                flux_cube_model[order][
+                    i
+                ] *= fm  # the orders don't quite line up. or maybe they do : )
 
-    elif tell_type == 'ATRAN':
-        flux_cube_model = add_tellurics_atran(wl_cube_model, flux_cube_model, n_order, n_exp, vary_airmass=vary_airmass)
+    elif tell_type == "ATRAN":
+        flux_cube_model = add_tellurics_atran(
+            wl_cube_model, flux_cube_model, n_order, n_exp, vary_airmass=vary_airmass
+        )
     return flux_cube_model

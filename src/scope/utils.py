@@ -34,6 +34,8 @@ def perform_pca(input_matrix, n_princ_comp, return_noplanet=False):
         :input_matrix:
         :n_princ_comp: number of principle components to keep
     """
+    input_matrix[j] -= np.mean(fTemp[j])
+    fTemp[j] /= np.std(fTemp[j])
     u, singular_values, vh = np.linalg.svd(
         input_matrix, full_matrices=False
     )  # decompose
@@ -402,15 +404,57 @@ def detrend_cube(cube, n_order, n_exp, blaze=False):
     -------
         :cube: (array) detrended flux cube
     """
+
+    def detrend_array(array):
+        max_val = np.nanmax(array)
+        return array / max_val
+
+    progress = tqdm(range(n_order), desc="detrending cube")
+
     if not blaze:
-        for order in tqdm(range(n_order)):
+        for order in progress:
             for exp in range(n_exp):
-                max_val = np.nanmax(cube[order, exp])
-                # print(max_val)
-                cube[order, exp] /= max_val
+                detrend_array(cube[order, exp])
+
     else:
-        for order in tqdm(range(n_order)):
-            max_val = np.nanmax(cube[order])
-            cube[order] /= max_val
+        for order in progress:
+            detrend_array(cube[order])
 
     return cube
+
+
+def unpack_grid(grid_ind, parameter_list):
+    param_dict = parameter_list[grid_ind]
+
+    (
+        blaze,
+        n_princ_comp,
+        star,
+        SNR,
+        telluric,
+        tell_type,
+        time_dep_tell,
+        wav_error,
+        order_dep_throughput,
+    ) = (
+        param_dict["blaze"],
+        param_dict["n_princ_comp"],
+        param_dict["star"],
+        param_dict["SNR"],
+        param_dict["telluric"],
+        param_dict["telluric_type"],
+        param_dict["time_dep_telluric"],
+        param_dict["wav_error"],
+        param_dict["order_dep_throughput"],
+    )
+    return (
+        blaze,
+        n_princ_comp,
+        star,
+        SNR,
+        telluric,
+        tell_type,
+        time_dep_tell,
+        wav_error,
+        order_dep_throughput,
+    )

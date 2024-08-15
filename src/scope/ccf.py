@@ -46,4 +46,4 @@ def calc_ccf(model_flux, data_arr_slice, n_pixel):
     return logl, CCF
 
 
-calc_ccf_map = jax.vmap(calc_ccf, in_axes=(0, 0, None), out_axes=0)
+calc_ccf_map = jax.vmap(calc_ccf, in_axes=(0, None, None), out_axes=0)
