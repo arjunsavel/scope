@@ -229,6 +229,7 @@ def calc_log_likelihood(
     phases,
     Rp_solar,
     Rstar,
+    rv_semiamp_orbit,
     A_noplanet,
     do_pca=True,
     n_princ_comp=4,
@@ -266,6 +267,8 @@ def calc_log_likelihood(
             Planet radius in solar radii
             :Rstar: float
             Stellar radius in solar radii
+            :rv_semiamp_orbit: float
+            Semi-amplitude of the orbit in km/s. This is the motion of the *star*.
             :A_noplanet: array
             Array of the non-planet component of the data cube
             :do_pca: bool
@@ -284,7 +287,6 @@ def calc_log_likelihood(
             Cross-correlation function of the data given the model parameters
     """
     # pdb.set_trace()
-    Kstar = 0.3229 * 1.0
 
     v_sys_measured = (
         1.6845  # this is the systemic velocity of the system reported in the literature
@@ -534,6 +536,7 @@ def run_simulation(
                 phases,
                 Rp_solar,
                 Rstar,
+                0.3229,
                 do_pca=True,
                 n_princ_comp=n_princ_comp,
                 A_noplanet=A_noplanet,
