@@ -34,7 +34,7 @@ def parse_input_file(file_path, database_path="planet_database.csv"):
         header=None,
         names=["parameter", "value"],
         comment="#",
-        skip_blank_lines=True,
+        skiprows=10,
     )
 
     # Convert the dataframe to a dictionary
