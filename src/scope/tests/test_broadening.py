@@ -116,21 +116,21 @@ class TestI_darken(unittest.TestCase):
         """
         should throw an error if epsilon > 1
         """
+
         self.assertRaises(ValueError, I_darken, 0, 0, 1.3)
 
     def test_I_darken_disk_x_greater_one(self):
         """
         any x greater than 1 shouldn't be good.
         """
-
-        self.assertRaises(ValueError, I_darken_disk, 1.5, 0, 0.1)
+        self.assertTrue(I_darken_disk(1.5, 0, 0.1) == 0.0)
 
     def test_I_darken_disk_y_greater_one(self):
         """
         any x greater than 1 shouldn't be good.
         """
 
-        self.assertRaises(ValueError, I_darken_disk, 0, 1.5, 0.1)
+        self.assertTrue(I_darken_disk(0.0, 1.5, 0.1) == 0.0)
 
     def test_I_darken_disk_same_on_disk(self):
         """
