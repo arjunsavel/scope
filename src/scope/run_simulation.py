@@ -10,6 +10,7 @@ import numpy as np
 from scope.broadening import *
 from scope.ccf import *
 from scope.grid import *
+from scope.io import parse_input_file, write_input_file
 from scope.noise import *
 from scope.tellurics import *
 from scope.utils import *
@@ -286,7 +287,6 @@ def calc_log_likelihood(
             :ccf: array
             Cross-correlation function of the data given the model parameters
     """
-    # pdb.set_trace()
 
     v_sys_measured = (
         1.6845  # this is the systemic velocity of the system reported in the literature
@@ -343,7 +343,7 @@ def calc_log_likelihood(
     return logL, CCF  # returning CCF and logL values
 
 
-def run_simulation(
+def simulate_observation(
     planet_spectrum_path,
     star_spectrum_path,
     phases,
@@ -358,6 +358,13 @@ def run_simulation(
     time_dep_tell=False,
     wav_error=False,
     order_dep_throughput=True,
+    Rp=1.21,  # Jupiter radii,
+    Rstar=0.955,  # solar radii
+    kp=192.02,  # planetary orbital velocity, km/s
+    v_rot=4.5,
+    scale=1.0,
+    v_sys=0.0,
+    modelname="yourfirstsimulation",
 ):
     """
     Run a simulation of the data, given a grid index and some paths. Side effects:
@@ -384,10 +391,11 @@ def run_simulation(
 
     """
     # todo: wrap this in a function? with paths and everything!
-    Kp_array = np.linspace(93.06, 292.06, 200)
+    # fix some of these parameters if wanting to simulate IGRINS
+    Rp_solar = (Rp * rjup_rsun,)  # convert from jupiter radii to solar radii
+    Kp_array = np.linspace(kp - 100, kp + 100, 200)
     v_sys_array = np.arange(-100, 100)
     n_order, n_exposure, n_pixel = (44, 79, 1848)
-    scale = 1.0
     mike_wave, mike_cube = pickle.load(open(data_cube_path, "rb"), encoding="latin1")
 
     wl_cube_model = mike_wave.copy().astype(np.float64)
@@ -402,13 +410,6 @@ def run_simulation(
 
     wl_model = wl_model.astype(np.float64)
 
-    Rp = 1.21  # Jupiter radii
-    Rp_solar = Rp * rjup_rsun  # convert from jupiter radii to solar radii
-    Rstar = 0.955  # solar radii
-    Kp = 192.02
-
-    # rotational convolution
-    v_rot = 4.5
     Fp_conv_rot = broaden_spectrum(wl_model / 1e6, Fp, 0, vl=v_rot)
 
     # instrument profile convolution
@@ -443,7 +444,7 @@ def run_simulation(
         blaze=blaze,
         n_princ_comp=n_princ_comp,
         tellurics=telluric,
-        v_sys=0,
+        v_sys=v_sys,
         star=star,
         Kp=Kp,
         SNR=SNR,
@@ -453,34 +454,34 @@ def run_simulation(
         order_dep_throughput=order_dep_throughput,
         observation=observation,
     )
-    # pdb.set_trace()
+
+    # make the output directory
+    outdir = abs_path + f"/output/{modelname}"
+
+    os.mkdir(outdir)
+
     with open(
-        abs_path
-        + f"/output/simdata_{n_princ_comp}_NPC_{blaze}_blaze_{star}_star_{telluric}_telluric_{SNR}_SNR_{tell_type}_{time_dep_tell}_{wav_error}_{order_dep_throughput}_newerrun_cranked_tell_bett_airm.txt",
+        f"{outdir}/simdata_{n_princ_comp}_NPC_{blaze}_blaze_{star}_star_{telluric}_telluric_{SNR}_SNR_{tell_type}_{time_dep_tell}_{wav_error}_{order_dep_throughput}_newerrun_cranked_tell_bett_airm.txt",
         "wb",
     ) as f:
         pickle.dump(flux_cube, f)
     with open(
-        abs_path
-        + f"/output/nopca_simdata_{n_princ_comp}_NPC_{blaze}_blaze_{star}_star_{telluric}_telluric_{SNR}_SNR_{tell_type}_{time_dep_tell}_{wav_error}_{order_dep_throughput}_newerrun_cranked_tell_bett_airm.txt",
+        f"{outdir}/nopca_simdata_{n_princ_comp}_NPC_{blaze}_blaze_{star}_star_{telluric}_telluric_{SNR}_SNR_{tell_type}_{time_dep_tell}_{wav_error}_{order_dep_throughput}_newerrun_cranked_tell_bett_airm.txt",
         "wb",
     ) as f:
         pickle.dump(flux_cube_nopca, f)
     with open(
-        abs_path
-        + f"/output/A_noplanet_{n_princ_comp}_NPC_{blaze}_blaze_{star}_star_{telluric}_telluric_{SNR}_SNR_{tell_type}_{time_dep_tell}_{wav_error}_{order_dep_throughput}_newerrun_cranked_tell_bett_airm.txt",
+        f"{outdir}/A_noplanet_{n_princ_comp}_NPC_{blaze}_blaze_{star}_star_{telluric}_telluric_{SNR}_SNR_{tell_type}_{time_dep_tell}_{wav_error}_{order_dep_throughput}_newerrun_cranked_tell_bett_airm.txt",
         "wb",
     ) as f:
         pickle.dump(A_noplanet, f)
 
     # only save if tellurics are True. Otherwise, this will be cast to an array of ones.
     if tellurics:
-        with open(abs_path + f"/output/just_tellurics_vary_airmass.txt", "wb") as f:
+        with open(f"{outdir}just_tellurics_vary_airmass.txt", "wb") as f:
             pickle.dump(just_tellurics, f)
-    for l, Kp in tqdm(
-        enumerate(Kp_array[50:150][::2]), total=50, desc="looping PCA over Kp"
-    ):
-        for k, v_sys in enumerate(v_sys_array[50:150][::2]):
+    for l, Kp in tqdm(enumerate(Kp_array), total=50, desc="looping PCA over Kp"):
+        for k, v_sys in enumerate(v_sys_array):
             res = calc_log_likelihood(
                 v_sys,
                 Kp,
@@ -506,17 +507,20 @@ def run_simulation(
             ccfs[l, k] = res[1]
 
     np.savetxt(
-        abs_path
-        + f"/output/lls_{n_princ_comp}_NPC_{blaze}_blaze_{star}_star_{telluric}_telluric_{SNR}_SNR_{tell_type}_{time_dep_tell}_{wav_error}_{order_dep_throughput}_newerrun_cranked_tell_bett_airm.txt",
+        f"{outdir}/lls_{n_princ_comp}_NPC_{blaze}_blaze_{star}_star_{telluric}_telluric_{SNR}_SNR_{tell_type}_{time_dep_tell}_{wav_error}_{order_dep_throughput}_newerrun_cranked_tell_bett_airm.txt",
         lls,
     )
     np.savetxt(
-        abs_path
-        + f"/output/ccfs_{n_princ_comp}_NPC_{blaze}_blaze_{star}_star_{telluric}_telluric_{SNR}_SNR_{tell_type}_{time_dep_tell}_{wav_error}_{order_dep_throughput}_newerrun_cranked_tell_bett_airm.txt",
+        f"{outdir}/ccfs_{n_princ_comp}_NPC_{blaze}_blaze_{star}_star_{telluric}_telluric_{SNR}_SNR_{tell_type}_{time_dep_tell}_{wav_error}_{order_dep_throughput}_newerrun_cranked_tell_bett_airm.txt",
         ccfs,
     )
 
+    # and write the input file out
+    args_dict = locals()
+    write_input_file(args_dict, output_file_path=f"{outdir}/input.txt")
+
 
 if __name__ == "__main__":
-    ind = eval(sys.argv[1])
-    run_simulation(ind)
+    file = "input.txt"
+    inputs = parse_input_file(file)
+    simulate_observation(inputs)
