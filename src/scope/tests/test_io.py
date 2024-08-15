@@ -15,9 +15,19 @@ def sample_files():
     # Create a temporary directory for test files
     with tempfile.TemporaryDirectory() as test_dir:
         # Create a sample input file
-        input_file_content = """
-# Test Input File
-planet_name            TestPlanet
+        input_file_content = """·········································
+:                                       :
+:    ▄▄▄▄▄   ▄█▄    ████▄ █ ▄▄  ▄███▄   :
+:   █     ▀▄ █▀ ▀▄  █   █ █   █ █▀   ▀  :
+: ▄  ▀▀▀▀▄   █   ▀  █   █ █▀▀▀  ██▄▄    :
+:  ▀▄▄▄▄▀    █▄  ▄▀ ▀████ █     █▄   ▄▀ :
+:            ▀███▀         █    ▀███▀   :
+:                           ▀           :
+:                                       :
+·········································
+Created: 2024-08-15
+Author: Arjun Savel!
+Planet: GJ 1214b
 
 # Astrophysical Parameters
 Rp                     1.5
