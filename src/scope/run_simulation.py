@@ -296,7 +296,7 @@ def calc_log_likelihood(
         v_sys, v_sys_measured, Kp, Kstar, phases
     )  # measured in m/s
     CCF = 0.0
-    logL_Matteo = 0.0
+    logL = 0.0
     for order in range(n_order):
         wlgrid_order = np.copy(wlgrid[order,])  # Cropped wavelengths
         model_flux_cube = np.zeros(
@@ -336,51 +336,11 @@ def calc_log_likelihood(
             R = (fVec.dot(gVec)) / float(n_pixel)  # cross-covariance
             CC = R / np.sqrt(sf2 * sg2)  # cross-correlation
             CCF += CC
-            logL_Matteo += -0.5 * n_pixel * np.log(sf2 + sg2 - 2.0 * R)
+            logL += -0.5 * n_pixel * np.log(sf2 + sg2 - 2.0 * R)
 
         # # todo: airmass detrending reprocessing
-        # logL_arr, CCF_arr = calc_ccf_map(model_flux_cube, flux_cube, n_pixel)
-        # logL = logL_arr.sum()
-        # CCF = CCF_arr.sum()
 
-    return logL_Matteo, CCF  # returning CCF and logL values
-
-
-def unpack_grid(grid_ind, parameter_list):
-    param_dict = parameter_list[grid_ind]
-
-    (
-        blaze,
-        n_princ_comp,
-        star,
-        SNR,
-        telluric,
-        tell_type,
-        time_dep_tell,
-        wav_error,
-        order_dep_throughput,
-    ) = (
-        param_dict["blaze"],
-        param_dict["n_princ_comp"],
-        param_dict["star"],
-        param_dict["SNR"],
-        param_dict["telluric"],
-        param_dict["telluric_type"],
-        param_dict["time_dep_telluric"],
-        param_dict["wav_error"],
-        param_dict["order_dep_throughput"],
-    )
-    return (
-        blaze,
-        n_princ_comp,
-        star,
-        SNR,
-        telluric,
-        tell_type,
-        time_dep_tell,
-        wav_error,
-        order_dep_throughput,
-    )
+    return logL, CCF  # returning CCF and logL values
 
 
 def run_simulation(
