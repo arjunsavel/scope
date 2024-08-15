@@ -30,7 +30,7 @@ def parse_input_file(file_path, database_path="planet_database.csv"):
     # Read the file, skipping comment lines and empty lines
     df = pd.read_csv(
         file_path,
-        delim_whitespace=True,
+        sep="\s+",
         header=None,
         names=["parameter", "value"],
         comment="#",
