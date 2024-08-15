@@ -49,7 +49,11 @@ def I_darken(lon, lat, epsilon):
         theta = get_theta(lat, lon)
         res1 = (1 - epsilon) + (epsilon * np.cos(theta))
 
-        res1[np.isnan(res1)] = 0.0
+        if isinstance(res1, np.ndarray) or isinstance(res1, list):
+            res1[np.isnan(res1)] = 0.0
+        else:
+            if np.isnan(res1):
+                res1 = 0.0
         return res1
     else:
         raise ValueError("epsilon should only be from 0 to 1")
