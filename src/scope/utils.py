@@ -1,13 +1,17 @@
+import os
 import pickle
 
 import astropy.units as u
 import matplotlib.pyplot as plt
 import numpy as np
+from numba import njit
 from scipy.interpolate import splev, splrep
 from scipy.ndimage import gaussian_filter1d
 from tqdm import tqdm
 
 from scope.constants import *
+
+abs_path = os.path.dirname(__file__)
 
 np.random.seed(42)
 start_clip = 200
@@ -18,6 +22,7 @@ end_clip = 100
 # todo: plot the maps
 
 
+@njit
 def perform_pca(input_matrix, n_princ_comp, return_noplanet=False):
     """
     Perform PCA using SVD.
@@ -32,12 +37,11 @@ def perform_pca(input_matrix, n_princ_comp, return_noplanet=False):
     u, singular_values, vh = np.linalg.svd(
         input_matrix, full_matrices=False
     )  # decompose
-
     if return_noplanet:
         s_high_variance = singular_values.copy()
         s_high_variance[n_princ_comp:] = 0.0  # keeping the high-variance terms here
         s_matrix = np.diag(s_high_variance)
-        A_noplanet[j] = np.dot(u, np.dot(s_matrix, vh))
+        A_noplanet = np.dot(u, np.dot(s_matrix, vh))
 
     singular_values[:n_princ_comp] = 0.0  # zero out the high-variance terms here
     s_matrix = np.diag(singular_values)
@@ -48,7 +52,8 @@ def perform_pca(input_matrix, n_princ_comp, return_noplanet=False):
     return arr_planet
 
 
-def calc_doppler_shift(template_wave, template_flux, v):
+@njit
+def calc_doppler_shift(eval_wave, template_wave, template_flux, v):
     """
     Doppler shifts a spectrum. Evaluates the flux at a different grid.
 
@@ -63,8 +68,8 @@ def calc_doppler_shift(template_wave, template_flux, v):
         :flux_shifted: shifted flux grid
     """
     beta = v / const_c
-    delta_lam = template_wave * beta.value
-    shifted_wave = template_wave + delta_lam
+    delta_lam = eval_wave * beta
+    shifted_wave = eval_wave + delta_lam
     shifted_flux = np.interp(shifted_wave, template_wave, template_flux)
     return shifted_flux
 
@@ -235,6 +240,7 @@ def convolve_planet_spectrum(
     return planet_flux_conv, yker
 
 
+@njit
 def calc_rvs(v_sys, v_sys_measured, Kp, Kstar, phases):
     """
     calculate radial velocities of planet and star.
@@ -334,7 +340,7 @@ def change_wavelength_solution(wl_cube_model, flux_cube_model, doppler_shifts):
             wl_grid = wl_cube_model[order]
             flux = flux_cube_model[order][exp]
             flux_cube_model[order][exp] = calc_doppler_shift(
-                wl_grid, flux, doppler_shift
+                wl_grid, wl_grid, flux, doppler_shift
             )
 
     return flux_cube_model
@@ -357,17 +363,17 @@ def add_blaze_function(wl_cube_model, flux_cube_model, n_order, n_exp):
     """
     # read in...have to somehow match the telluric spectra
 
-    with open("K_blaze_spectra.pic", "rb") as f:
+    with open(abs_path + "/data/K_blaze_spectra.pic", "rb") as f:
         K_blaze_cube = pickle.load(f)
 
-    with open("H_blaze_spectra.pic", "rb") as f:
+    with open(abs_path + "/data/H_blaze_spectra.pic", "rb") as f:
         H_blaze_cube = pickle.load(f)
 
     n_orders_k = K_blaze_cube.shape[0]
     n_orders_h = H_blaze_cube.shape[0]
     # K first, then H
-    K_blaze_cube = detrend_cube(K_blaze_cube, n_orders_k, n_exp)
-    H_blaze_cube = detrend_cube(H_blaze_cube, n_orders_h, n_exp)
+    K_blaze_cube = detrend_cube(K_blaze_cube, n_orders_k, n_exp, blaze=True)
+    H_blaze_cube = detrend_cube(H_blaze_cube, n_orders_h, n_exp, blaze=True)
 
     for order in tqdm(range(n_order), desc="adding blaze function"):
         flux_cube_model_slice = flux_cube_model[order, :, :]
@@ -382,7 +388,7 @@ def add_blaze_function(wl_cube_model, flux_cube_model, n_order, n_exp):
     return flux_cube_model
 
 
-def detrend_cube(cube, n_order, n_exp):
+def detrend_cube(cube, n_order, n_exp, blaze=False):
     """
     Detrends the cube by dividing each order by its maximum value.
 
@@ -396,8 +402,15 @@ def detrend_cube(cube, n_order, n_exp):
     -------
         :cube: (array) detrended flux cube
     """
-    for order in tqdm(range(n_order)):
-        for exp in range(n_exp):
-            max_val = np.max(cube[order, exp])
-            cube[order, exp] /= max_val
+    if not blaze:
+        for order in tqdm(range(n_order)):
+            for exp in range(n_exp):
+                max_val = np.nanmax(cube[order, exp])
+                # print(max_val)
+                cube[order, exp] /= max_val
+    else:
+        for order in tqdm(range(n_order)):
+            max_val = np.nanmax(cube[order])
+            cube[order] /= max_val
+
     return cube
