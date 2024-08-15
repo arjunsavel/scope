@@ -152,12 +152,3 @@ Planet: {data['planet_name']}
                     f.write(f"{param:<23} {value}\n")
 
     print(f"Input file written to {output_file_path}")
-
-
-# Usage
-write_input_file(input_data, "new_input.txt")
-
-
-# Usage
-input_data = parse_input_file("input.txt", "path/to/your/planet_database.csv")
-print(input_data)
