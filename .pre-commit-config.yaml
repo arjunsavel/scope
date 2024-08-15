@@ -16,12 +16,12 @@ repos:
       - id: isort
         name: isort (python)
         additional_dependencies: [toml]
-        exclude: src/simmer/tests
+        exclude: src/scope/tests
       - id: isort
         name: isort (cython)
         types: [cython]
         additional_dependencies: [toml]
-        exclude: src/simmer/tests
+        exclude: src/scope/tests
       - id: isort
         name: isort (pyi)
         types: [pyi]
