@@ -332,7 +332,7 @@ def calc_log_likelihood(
         if do_pca:
             # process the model same as the "data"!
             model_flux_cube *= A_noplanet[order]
-            model_flux_cube = perform_pca(model_flux_cube, n_princ_comp, False)
+            model_flux_cube, _ = perform_pca(model_flux_cube, n_princ_comp, False)
         I = np.ones(n_pixel)
         for i in range(n_exposure):
             gVec = np.copy(model_flux_cube[i,])
