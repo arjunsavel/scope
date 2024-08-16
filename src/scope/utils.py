@@ -35,8 +35,6 @@ def perform_pca(input_matrix, n_princ_comp, return_noplanet=False):
         :input_matrix:
         :n_princ_comp: number of principle components to keep
     """
-    input_matrix[j] -= np.mean(fTemp[j])
-    fTemp[j] /= np.std(fTemp[j])
     u, singular_values, vh = np.linalg.svd(
         input_matrix, full_matrices=False
     )  # decompose
