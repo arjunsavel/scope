@@ -410,7 +410,7 @@ def simulate_observation(
 
     # todo: add data in
     # so if I want to change my model, I just alter this!
-    wl_model, Fp, Fstar = np.load(planet_spectrum_path)
+    wl_model, Fp, Fstar = np.load(planet_spectrum_path, allow_pickle=True)
 
     wl_model = wl_model.astype(np.float64)
 
