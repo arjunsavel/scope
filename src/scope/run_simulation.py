@@ -476,7 +476,10 @@ def simulate_observation(
     # make the output directory
     outdir = abs_path + f"/output/{modelname}"
 
-    os.mkdir(outdir)
+    try:
+        os.mkdir(outdir)
+    except FileExistsError:
+        print("Directory already exists. Continuing!")
 
     with open(
         f"{outdir}/simdata_{n_princ_comp}_NPC_{blaze}_blaze_{star}_star_{telluric}_telluric_{SNR}_SNR_{tell_type}_{time_dep_tell}_{wav_error}_{order_dep_throughput}_newerrun_cranked_tell_bett_airm.txt",
