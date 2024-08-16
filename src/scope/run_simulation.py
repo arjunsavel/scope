@@ -367,6 +367,7 @@ def simulate_observation(
     scale=1.0,
     v_sys=0.0,
     modelname="yourfirstsimulation",
+    **kwargs,
 ):
     """
     Run a simulation of the data, given a grid index and some paths. Side effects:
