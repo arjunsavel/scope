@@ -48,7 +48,7 @@ def add_quadratic_noise(flux_cube_model, wl_grid, SNR, IGRINS=False, **kwargs):
         :noisy_flux: (array) flux cube model with quadratic noise added.
     """
     if IGRINS:
-        A_a, A_b, A_c, B_a, B_b, B_c = np.loadtxt("igrins_median_snr.txt")
+        A_a, A_b, A_c, B_a, B_b, B_c = np.loadtxt("data/igrins_median_snr.txt")
         # this is scaled to a mean SNR of 250.
         noisy_flux = np.ones_like(flux_cube_model) * 0
         wl_cutoff = 1.9
