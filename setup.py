@@ -86,7 +86,7 @@ if __name__ == "__main__":
         packages=PACKAGES,
         package_dir={"": "src"},
         zip_safe=False,
-        python_requires=">3.8.0",
+        python_requires=">3.10.0",
         classifiers=CLASSIFIERS,
         include_package_data=True,
         install_requires=INSTALL_REQUIRES,
