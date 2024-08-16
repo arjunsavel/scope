@@ -396,7 +396,7 @@ def simulate_observation(
     phases = np.linspace(phase_start, phase_end, n_exposures)
     # todo: wrap this in a function? with paths and everything!
     # fix some of these parameters if wanting to simulate IGRINS
-    Rp_solar = (Rp * rjup_rsun,)  # convert from jupiter radii to solar radii
+    Rp_solar = Rp * rjup_rsun  # convert from jupiter radii to solar radii
     Kp_array = np.linspace(kp - 100, kp + 100, 200)
     v_sys_array = np.arange(-100, 100)
     n_order, n_exposure, n_pixel = (44, 79, 1848)
