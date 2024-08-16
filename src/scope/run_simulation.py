@@ -123,6 +123,9 @@ def make_data(
                 ] = flux_planet
 
     throughput_baselines = np.loadtxt(abs_path + "/data/throughputs.txt")
+
+    flux_cube = detrend_cube(flux_cube, n_order, n_exposure)
+
     for i in range(flux_cube.shape[1]):
         throughput_baseline = throughput_baselines[i]
         throughput_factor = throughput_baseline / np.nanpercentile(
@@ -153,10 +156,13 @@ def make_data(
         )
         flux_cube[flux_cube < 0.0] = 0.0
         just_tellurics[just_tellurics < 0.0] = 0.0
+    flux_cube = detrend_cube(flux_cube, n_order, n_exposure)
     if blaze:
         flux_cube = add_blaze_function(wlgrid, flux_cube, n_order, n_exposure)
         flux_cube[flux_cube < 0.0] = 0.0
     flux_cube[np.isnan(flux_cube)] = 0.0
+
+    flux_cube = detrend_cube(flux_cube, n_order, n_exposure)
     if SNR > 0:  # 0 means don't add noise!
         if order_dep_throughput:
             noise_model = "IGRINS"
@@ -164,11 +170,16 @@ def make_data(
             noise_model = "constant"
         flux_cube = add_noise_cube(flux_cube, wlgrid, SNR, noise_model=noise_model)
 
+    flux_cube = detrend_cube(flux_cube, n_order, n_exposure)
+
     if wav_error:
         doppler_shifts = np.loadtxt(
             "data/doppler_shifts_w77ab.txt"
         )  # todo: create this!
         flux_cube = change_wavelength_solution(wlgrid, flux_cube, doppler_shifts)
+
+    flux_cube = detrend_cube(flux_cube, n_order, n_exposure)
+
     flux_cube_nopca = flux_cube.copy()
     if do_pca:
         for j in range(n_order):
