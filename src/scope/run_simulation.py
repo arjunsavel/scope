@@ -501,7 +501,9 @@ def simulate_observation(
     if tellurics:
         with open(f"{outdir}just_tellurics_vary_airmass.txt", "wb") as f:
             pickle.dump(just_tellurics, f)
-    for l, Kp in tqdm(enumerate(Kp_array), total=50, desc="looping PCA over Kp"):
+    for l, Kp in tqdm(
+        enumerate(Kp_array), total=len(Kp_array), desc="looping PCA over Kp"
+    ):
         for k, v_sys in enumerate(v_sys_array):
             res = calc_log_likelihood(
                 v_sys,
