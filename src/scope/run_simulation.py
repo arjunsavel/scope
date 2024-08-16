@@ -440,7 +440,7 @@ def simulate_observation(
         Fp_conv,
         Fstar_conv,
         n_order,
-        n_exposure,
+        n_exposures,
         n_pixel,
         phases,
         Rp_solar,
