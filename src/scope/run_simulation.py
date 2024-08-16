@@ -414,7 +414,8 @@ def simulate_observation(
 
     wl_model = wl_model.astype(np.float64)
 
-    Fp_conv_rot = broaden_spectrum(wl_model / 1e6, Fp, 0, vl=v_rot)
+    # Fp_conv_rot = broaden_spectrum(wl_model / 1e6, Fp, 0, vl=v_rot)
+    Fp_conv_rot = get_rot_ker(wl_model, Fp, v_rot)
 
     # instrument profile convolution
     xker = np.arange(41) - 20
