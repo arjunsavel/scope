@@ -50,7 +50,7 @@ def perform_pca(input_matrix, n_princ_comp, return_noplanet=False):
 
     if return_noplanet:
         return arr_planet, A_noplanet
-    return arr_planet
+    return arr_planet, arr_planet
 
 
 @njit
