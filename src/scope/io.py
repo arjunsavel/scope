@@ -12,8 +12,9 @@ parameter_mapping = {
     "Rstar": "st_rad",
     "v_sys": "system_velocity",
     "a": "pl_orbsmax",
-    "P": "pl_orbtper",
+    "P_rot": "pl_orbtper",
     "v_sys": "st_radv",
+    "planet_name": "pl_name",
 }
 
 
@@ -24,7 +25,7 @@ def query_database(
         df = pd.read_csv(database_path)
         # Use the mapped parameter name if it exists, otherwise use the original
         db_parameter = parameter_mapping.get(parameter, parameter)
-        value = df.loc[df["planet_name"] == planet_name, db_parameter].values[0]
+        value = df.loc[df["pl_name"] == planet_name, db_parameter].values[0]
         return float(value)
     except Exception as e:
         print(f"Error querying database for {planet_name}, {parameter}: {e}")
@@ -49,13 +50,14 @@ def parse_input_file(file_path, database_path="planet_database.csv", **kwargs):
             author = line.split("Author:", 1)[1].strip()
         elif not line.startswith("#") and not line.startswith(":") and line:
             data_lines.append(line)
-
+    # pdb.set_trace()
     # Read the remaining lines with pandas
     df = pd.read_csv(
         io.StringIO("\n".join(data_lines)),
         delim_whitespace=True,
         header=None,
         names=["parameter", "value"],
+        comment="#",
     )
 
     # Convert the dataframe to a dictionary
@@ -66,7 +68,16 @@ def parse_input_file(file_path, database_path="planet_database.csv", **kwargs):
     data["author"] = author
 
     # List of astrophysical parameters
-    astrophysical_params = ["Rp", "Rp_solar", "Rstar", "kp", "v_rot", "v_sys"]
+    astrophysical_params = [
+        "Rp",
+        "Rp_solar",
+        "Rstar",
+        "kp",
+        "v_rot",
+        "v_sys",
+        "P_rot",
+        "a",
+    ]
 
     # Convert values to appropriate types
     for key, value in data.items():
@@ -94,13 +105,13 @@ def parse_input_file(file_path, database_path="planet_database.csv", **kwargs):
     # Add any additional kwargs to the data dictionary
     data.update(kwargs)
     if np.isnan(data["v_rot"]):
-        if np.isnan(data["Rp"]) or np.isnan(data["P"]):
+        if np.isnan(data["Rp"]) or np.isnan(data["P_rot"]):
             raise ValueError("Rp and P must be provided to calculate v_rot!")
-        data["v_rot"] = calc_v_rot(data["Rp"], data["P"])
+        data["v_rot"] = calc_v_rot(data["Rp"], data["P_rot"])
     if np.isnan(data["kp"]):
-        if np.isnan(data["a"]) or np.isnan(data["P"]):
+        if np.isnan(data["a"]) or np.isnan(data["P_rot"]):
             raise ValueError("a and P must be provided to calculate kp!")
-        data["kp"] = calc_kp(data["a"], data["P"])
+        data["kp"] = calc_kp(data["a"], data["P_rot"])
 
     return data
 

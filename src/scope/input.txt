@@ -8,9 +8,9 @@
 #                           ▀           :
 #                                       :
 #·······································:
-created                2024-08-15
-author                 Arjun Savel!
-planet_name            GJ 1214b
+Created:                2024-08-15
+Author:                 Arjun Savel!
+Planet name:            GJ 1214 b
 
 # Filepaths
 planet_spectrum_path   /home/asavel/scratch/retrieval_stuff/fm_wasp_77ab_noisy/fm_wasp_77ab_noisy
