@@ -48,7 +48,12 @@ def parse_input_file(file_path, database_path="planet_database.csv", **kwargs):
             planet_name = line.split("Planet name:", 1)[1].strip()
         elif "Author:" in line:
             author = line.split("Author:", 1)[1].strip()
-        elif not line.startswith("#") and not line.startswith(":") and line:
+        elif (
+            not line.startswith("#")
+            and not line.startswith(":")
+            and not line.startswith("Created")
+            and line
+        ):
             data_lines.append(line)
     # pdb.set_trace()
     # Read the remaining lines with pandas
