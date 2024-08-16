@@ -13,7 +13,7 @@ Author:                 Arjun Savel!
 Planet name:            GJ 1214 b
 
 # Filepaths
-planet_spectrum_path   /home/asavel/scratch/retrieval_stuff/fm_wasp_77ab_noisy/fm_wasp_77ab_noisy
+planet_spectrum_path   /home/asavel/scratch/retrieval_stuff/fm_wasp_77ab_noisy/fm_wasp_77ab_noisy/best_fit_spectrum_tran_gj1214_steam_nir.pic
 star_spectrum_path     /home/asavel/scratch/scope/src/scope/data/PHOENIX_5605_4.33.txt
 data_cube_path         /home/asavel/scratch/scope/src/scope/data/data_RAW_20201214_wl_algn_03.pic
 
