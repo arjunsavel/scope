@@ -526,4 +526,4 @@ def simulate_observation(
 if __name__ == "__main__":
     file = "input.txt"
     inputs = parse_input_file(file)
-    simulate_observation(inputs)
+    simulate_observation(**inputs)
