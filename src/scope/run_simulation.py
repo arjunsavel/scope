@@ -101,26 +101,26 @@ def make_data(
             flux_star = calc_doppler_shift(
                 wlgrid_order, wl_model, Fstar_conv * Rstar**2, rv_star[exposure]
             )
-        if star:
-            if observation == "emission":
-                flux_cube[
-                    order,
-                    exposure,
-                ] = (
-                    flux_planet + flux_star  # now want to get the star in there
-                )
-            elif observation == "transmission":
-                flux_cube[
-                    order,
-                    exposure,
-                ] = flux_star * (
-                    1 - flux_planet
-                )  # now want to get the star in there
-            else:
-                flux_cube[
-                    order,
-                    exposure,
-                ] = flux_planet
+            if star:
+                if observation == "emission":
+                    flux_cube[
+                        order,
+                        exposure,
+                    ] = (
+                        flux_planet + flux_star  # now want to get the star in there
+                    )
+                elif observation == "transmission":
+                    flux_cube[
+                        order,
+                        exposure,
+                    ] = flux_star * (
+                        1 - flux_planet
+                    )  # now want to get the star in there
+                else:
+                    flux_cube[
+                        order,
+                        exposure,
+                    ] = flux_planet
 
     throughput_baselines = np.loadtxt(abs_path + "/data/throughputs.txt")
 
@@ -163,6 +163,7 @@ def make_data(
     flux_cube[np.isnan(flux_cube)] = 0.0
 
     flux_cube = detrend_cube(flux_cube, n_order, n_exposure)
+    flux_cube[np.isnan(flux_cube)] = 0.0
     if SNR > 0:  # 0 means don't add noise!
         if order_dep_throughput:
             noise_model = "IGRINS"
@@ -179,7 +180,7 @@ def make_data(
         flux_cube = change_wavelength_solution(wlgrid, flux_cube, doppler_shifts)
 
     flux_cube = detrend_cube(flux_cube, n_order, n_exposure)
-
+    flux_cube[np.isnan(flux_cube)] = 0.0
     flux_cube_nopca = flux_cube.copy()
     if do_pca:
         for j in range(n_order):
