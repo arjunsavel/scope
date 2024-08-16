@@ -202,7 +202,7 @@ def add_tellurics(
         zenith_angles = np.loadtxt(abs_path + "/data/zenith_angles_w77ab.txt")
 
         airmasses = 1 / np.cos(np.radians(zenith_angles))  # todo: check units
-
+        airmasses = airmasses[:n_exp]
         if time_dep_tell:
             # dates = np.loadtxt('dates_w77ab_scaled.txt')
             dates = np.linspace(0, 350, len(airmasses))
