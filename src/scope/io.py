@@ -3,7 +3,8 @@ import re
 
 import numpy as np
 import pandas as pd
-from calc_quantities import calc_kp, calc_v_rot
+
+from scope.calc_quantities import calc_kp, calc_v_rot
 
 # Mapping between input file parameters and database columns
 parameter_mapping = {

@@ -19,13 +19,13 @@ data_cube_path         /path/to/data/cube
 
 # Astrophysical Parameters. Can specify DATABASE to pull based on name for parameters iwth [DB]
 Rp                     DATABASE          # planetary radius in Jupiter radii. [DB]
-Rstar                  DATABASE         # stellar radius, in solar radii. [DB]
-kp                     NULL        # expected planetary orbital velocity assuming circular orbit, in km/s. input NULL if you'd like to calculate from orbital parameters.
-v_sys                  DATABASE           # systemic velocity, in km/s.  [DB]
-v_rot                  NULL           # equatorial rotational velocity. input NULL if you'd like to calculate from orbital parameters.
+Rstar                  DATABASE          # stellar radius, in solar radii. [DB]
+kp                     NULL              # expected planetary orbital velocity assuming circular orbit, in km/s. input NULL if you'd like to calculate from orbital parameters.
+v_sys                  DATABASE          # systemic velocity, in km/s.  [DB]
+v_rot                  NULL              # equatorial rotational velocity. input NULL if you'd like to calculate from orbital parameters.
 P_rot                  DATABASE          # orbital period of the planet, in days. [DB]
-a                      DATABASE         # semi-major axis of the planet, in AU. [DB]
-scale                  1.0           # scaling factor for the model spectrum.
+a                      DATABASE          # semi-major axis of the planet, in AU. [DB]
+scale                  1.0               # scaling factor for the model spectrum.
 
 
 # Instrument Parameters
