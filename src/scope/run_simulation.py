@@ -305,7 +305,7 @@ def calc_log_likelihood(
     )
 
     rv_planet, rv_star = calc_rvs(
-        v_sys, v_sys_measured, Kp, Kstar, phases
+        v_sys, v_sys_measured, Kp, rv_semiamp_orbit, phases
     )  # measured in m/s
     CCF = 0.0
     logL = 0.0
