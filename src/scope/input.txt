@@ -13,11 +13,11 @@ author                 Arjun Savel!
 planet_name            GJ 1214b
 
 # Filepaths
-planet_spectrum_path   /path/to/planet/spectrum
-star_spectrum_path     /path/to/star/spectrum
-data_cube_path         /path/to/data/cube
+planet_spectrum_path   /home/asavel/scratch/retrieval_stuff/fm_wasp_77ab_noisy/fm_wasp_77ab_noisy
+star_spectrum_path     /home/asavel/scratch/scope/src/scope/data/PHOENIX_5605_4.33.txt
+data_cube_path         /home/asavel/scratch/scope/src/scope/data/data_RAW_20201214_wl_algn_03.pic
 
-# Astrophysical Parameters. Can specify DATABASE to pull based on name for parameters iwth [DB]
+# Astrophysical Parameters. Can specify DATABASE to pull based on name for parameters with [DB]
 Rp                     DATABASE          # planetary radius in Jupiter radii. [DB]
 Rstar                  DATABASE          # stellar radius, in solar radii. [DB]
 kp                     NULL              # expected planetary orbital velocity assuming circular orbit, in km/s. input NULL if you'd like to calculate from orbital parameters.
