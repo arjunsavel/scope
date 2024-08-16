@@ -344,10 +344,12 @@ def calc_log_likelihood(
 
 
 def simulate_observation(
-    planet_spectrum_path,
-    star_spectrum_path,
-    phases,
-    data_cube_path,
+    planet_spectrum_path=".",
+    star_spectrum_path=".",
+    data_cube_path=".",
+    phase_start=0,
+    phase_end=1,
+    n_exposures=10,
     observation="emission",
     blaze=True,
     n_princ_comp=4,
@@ -390,6 +392,7 @@ def simulate_observation(
 
 
     """
+    phases = np.linspace(phase_start, phase_end, n_exposures)
     # todo: wrap this in a function? with paths and everything!
     # fix some of these parameters if wanting to simulate IGRINS
     Rp_solar = (Rp * rjup_rsun,)  # convert from jupiter radii to solar radii
