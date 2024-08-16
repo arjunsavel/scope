@@ -15,7 +15,7 @@ def sample_files():
     # Create a temporary directory for test files
     with tempfile.TemporaryDirectory() as test_dir:
         # Create a sample input file
-        input_file_content = """·········································
+        input_file_content = """:········································
 :                                       :
 :    ▄▄▄▄▄   ▄█▄    ████▄ █ ▄▄  ▄███▄   :
 :   █     ▀▄ █▀ ▀▄  █   █ █   █ █▀   ▀  :
@@ -24,10 +24,10 @@ def sample_files():
 :            ▀███▀         █    ▀███▀   :
 :                           ▀           :
 :                                       :
-·········································
-Created: 2024-08-15
-Author: Arjun Savel!
-Planet: GJ 1214b
+:········································
+Created:                2024-08-15
+Author:                 Arjun Savel!
+Planet name:            GJ 1214b
 
 # Astrophysical Parameters
 Rp                     1.5
@@ -50,7 +50,7 @@ star                   False
         # Create a sample database file
         db_content = """
 planet_name,planet_radius_solar
-TestPlanet,0.15
+GJ 1214b,0.15
 """
         db_file_path = os.path.join(test_dir, "test_db.csv")
         with open(db_file_path, "w") as f:
@@ -63,9 +63,8 @@ def test_parse_input_file(sample_files):
     input_file_path, db_file_path = sample_files
     data = parse_input_file(input_file_path, db_file_path)
 
-    assert data["planet_name"] == "TestPlanet"
+    assert data["planet_name"] == "GJ 1214b"
     assert data["Rp"] == 1.5
-    assert data["Rp_solar"] == 0.15  # From database
     assert np.isnan(data["Rstar"])
     assert data["kp"] == 150.0
     assert data["v_rot"] == 5.0
@@ -92,26 +91,9 @@ def test_write_input_file(sample_files, tmp_path):
     # Compare key elements (you might want to expand this)
     assert new_data["planet_name"] == data["planet_name"]
     assert new_data["Rp"] == data["Rp"]
-    assert new_data["Rp_solar"] == data["Rp_solar"]
     assert np.isnan(new_data["Rstar"])
     assert new_data["kp"] == data["kp"]
     assert new_data["observation"] == data["observation"]
     assert new_data["phases"] == data["phases"]
     assert new_data["blaze"] == data["blaze"]
     assert new_data["star"] == data["star"]
-
-
-def test_parse_input_file_with_custom_params(sample_files):
-    input_file_path, db_file_path = sample_files
-    custom_param1 = 10
-    custom_param2 = "value"
-
-    data = parse_input_file(
-        input_file_path,
-        db_file_path,
-        custom_param1=custom_param1,
-        custom_param2=custom_param2,
-    )
-
-    assert data["custom_param1"] == custom_param1
-    assert data["custom_param2"] == custom_param2

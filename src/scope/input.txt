@@ -1,16 +1,16 @@
-·········································
-:                                       :
-:    ▄▄▄▄▄   ▄█▄    ████▄ █ ▄▄  ▄███▄   :
-:   █     ▀▄ █▀ ▀▄  █   █ █   █ █▀   ▀  :
-: ▄  ▀▀▀▀▄   █   ▀  █   █ █▀▀▀  ██▄▄    :
-:  ▀▄▄▄▄▀    █▄  ▄▀ ▀████ █     █▄   ▄▀ :
-:            ▀███▀         █    ▀███▀   :
-:                           ▀           :
-:                                       :
-·········································
-Created: 2024-08-15
-Author: Arjun Savel!
-Planet: GJ 1214b
+#·······································:
+#                                       :
+#    ▄▄▄▄▄   ▄█▄    ████▄ █ ▄▄  ▄███▄   :
+#   █     ▀▄ █▀ ▀▄  █   █ █   █ █▀   ▀  :
+# ▄  ▀▀▀▀▄   █   ▀  █   █ █▀▀▀  ██▄▄    :
+#  ▀▄▄▄▄▀    █▄  ▄▀ ▀████ █     █▄   ▄▀ :
+#            ▀███▀         █    ▀███▀   :
+#                           ▀           :
+#                                       :
+#·······································:
+created                2024-08-15
+author                 Arjun Savel!
+planet_name            GJ 1214b
 
 # Filepaths
 planet_spectrum_path   /path/to/planet/spectrum
@@ -18,10 +18,10 @@ star_spectrum_path     /path/to/star/spectrum
 data_cube_path         /path/to/data/cube
 
 # Astrophysical Parameters. Can specify DATABASE to pull based on name for parameters iwth [DB]
-Rp                  DATABASE          # planetary radius in Jupiter radii. [DB]
+Rp                     DATABASE          # planetary radius in Jupiter radii. [DB]
 Rstar                  DATABASE         # stellar radius, in solar radii. [DB]
 kp                     192.02        # expected planetary orbital velocity assuming circular orbit, in km/s. input NULL if you'd like to calculate from orbital parameters.
-v_sys                 DATABASE           # systemic velocity, in km/s.  [DB]
+v_sys                  DATABASE           # systemic velocity, in km/s.  [DB]
 v_rot                  NULL           # equatorial rotational velocity. input NULL if you'd like to calculate from orbital parameters.
 P_rot                  DATABASE          # orbital period of the planet, in days. [DB]
 a                      DATABASE         # semi-major axis of the planet, in AU. [DB]
