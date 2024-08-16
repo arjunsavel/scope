@@ -32,7 +32,9 @@ def query_database(
         return np.nan
 
 
-def parse_input_file(file_path, database_path="data/default_params_exoplanet_archive.csv", **kwargs):
+def parse_input_file(
+    file_path, database_path="data/default_params_exoplanet_archive.csv", **kwargs
+):
     # First, read the entire file content
     with open(file_path, "r") as file:
         content = file.readlines()
@@ -90,6 +92,8 @@ def parse_input_file(file_path, database_path="data/default_params_exoplanet_arc
         if value == "NULL":
             data[key] = np.nan
         # Check for DATABASE in astrophysical parameters
+        elif key == "n_exposures":
+            data[key] = int(value)
         elif value == "DATABASE" and key in astrophysical_params:
             data[key] = query_database(planet_name, key, database_path)
         else:
