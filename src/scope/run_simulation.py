@@ -442,7 +442,7 @@ def simulate_observation(
     ).T  # Phoenix stellar model packing
     Fstar_conv = get_star_spline(star_wave, star_flux, wl_model, yker, smooth=False)
 
-    lls, ccfs = np.zeros((100, 100)), np.zeros((100, 100))
+    lls, ccfs = np.zeros((200, 200)), np.zeros((200, 200))
 
     # redoing the grid. how close does PCA get to a tellurics-free signal detection?
     A_noplanet, flux_cube, flux_cube_nopca, just_tellurics = make_data(
