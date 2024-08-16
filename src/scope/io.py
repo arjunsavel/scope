@@ -3,6 +3,7 @@ import re
 
 import numpy as np
 import pandas as pd
+from calc_quantities import calc_kp, calc_v_rot
 
 # Mapping between input file parameters and database columns
 parameter_mapping = {
@@ -91,6 +92,14 @@ def parse_input_file(file_path, database_path="planet_database.csv", **kwargs):
 
     # Add any additional kwargs to the data dictionary
     data.update(kwargs)
+    if np.isnan(data["v_rot"]):
+        if np.isnan(data["Rp"]) or np.isnan(data["P"]):
+            raise ValueError("Rp and P must be provided to calculate v_rot!")
+        data["v_rot"] = calc_v_rot(data["Rp"], data["P"])
+    if np.isnan(data["kp"]):
+        if np.isnan(data["a"]) or np.isnan(data["P"]):
+            raise ValueError("a and P must be provided to calculate kp!")
+        data["kp"] = calc_kp(data["a"], data["P"])
 
     return data
 
