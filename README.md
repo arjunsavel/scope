@@ -21,6 +21,17 @@ cd scope
 python3 -m pip install -e .
 ```
 
+You'll also need to download some data files. Currently, these data files are about 141 MB large. You can download them
+(to the correct directory, even!) with the following:
+
+```
+cd src/scope
+chmod +x download_data.sh
+./download_data.sh
+```
+
+This will create a `data` directory and plop the relevant files into it.
+
 # workflow
 The bulk of `scope`'s high-level functionality is contained in `scope/run_simulation.py`.
 For a detailed tutorial, see <a href="https://scope-astr.readthedocs.io/en/latest/">the documentation</a>.
