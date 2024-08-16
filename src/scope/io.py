@@ -32,7 +32,7 @@ def query_database(
         return np.nan
 
 
-def parse_input_file(file_path, database_path="planet_database.csv", **kwargs):
+def parse_input_file(file_path, database_path="data/default_params_exoplanet_archive.csv", **kwargs):
     # First, read the entire file content
     with open(file_path, "r") as file:
         content = file.readlines()
