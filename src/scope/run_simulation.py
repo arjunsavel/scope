@@ -498,7 +498,7 @@ def simulate_observation(
                 Fstar_conv,
                 flux_cube,
                 n_order,
-                n_exposure,
+                n_exposures,
                 n_pixel,
                 phases,
                 Rp_solar,
