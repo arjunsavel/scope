@@ -452,7 +452,7 @@ def simulate_observation(
         tellurics=telluric,
         v_sys=v_sys,
         star=star,
-        Kp=Kp,
+        Kp=kp,
         SNR=SNR,
         tell_type=tell_type,
         time_dep_tell=time_dep_tell,
