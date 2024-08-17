@@ -12,7 +12,7 @@ parameter_mapping = {
     "Rstar": "st_rad",
     "v_sys": "system_velocity",
     "a": "pl_orbsmax",
-    "P_rot": "pl_orbtper",
+    "P_rot": "pl_orbper",
     "v_sys": "st_radv",
     "planet_name": "pl_name",
 }
