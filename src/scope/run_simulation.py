@@ -46,6 +46,11 @@ def make_data(
     time_dep_tell=False,
     wav_error=False,
     order_dep_throughput=False,
+    a=1,  # AU
+    u1=0.3,
+    u2=0.3,
+    LD=True,
+    b=0.0,  # impact parameter
 ):
     """
     Creates a simulated HRCCS dataset. Main function.
@@ -114,7 +119,7 @@ def make_data(
                     ) + (flux_star * Rstar**2)
 
                 elif observation == "transmission":
-                    I = calc_limb_darkening(u1, u2, a, b, Rstar, ph[i], LD)
+                    I = calc_limb_darkening(u1, u2, a, b, Rstar, phases[exposure], LD)
 
                     # for the limb darkening, this applies to Fp. in the LD l
                     flux_cube[
@@ -260,6 +265,11 @@ def calc_log_likelihood(
     n_princ_comp=4,
     star=False,
     observation="emission",
+    a=1,  # AU
+    u1=0.3,
+    u2=0.3,
+    LD=True,
+    b=0.0,  # impact parameter
 ):
     """
     Calculates the log likelihood and cross-correlation function of the data given the model parameters.
@@ -340,7 +350,8 @@ def calc_log_likelihood(
                     flux_star * Rstar**2
                 ) + 1.0
             else:  # in transmission, after we "divide out" (with PCA) the star and tellurics, we're left with Fp.
-                model_flux_cube[exposure,] = 1.0 - flux_planet
+                I = calc_limb_darkening(u1, u2, a, b, Rstar, phases[exposure], LD)
+                model_flux_cube[exposure,] = 1.0 - flux_planet * I
 
         # ok now do the PCA. where does it fall apart?
         if do_pca:
