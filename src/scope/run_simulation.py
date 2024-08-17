@@ -346,7 +346,7 @@ def calc_log_likelihood(
             )
 
             if star and observation == "emission":
-                model_flux_cube[i,] = (flux_planet * Rp_solar**2) / (
+                model_flux_cube[exposure,] = (flux_planet * Rp_solar**2) / (
                     flux_star * Rstar**2
                 ) + 1.0
             else:  # in transmission, after we "divide out" (with PCA) the star and tellurics, we're left with Fp.
