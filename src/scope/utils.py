@@ -13,6 +13,7 @@ from tqdm import tqdm
 from scope.constants import *
 
 
+@njit
 def calc_limb_darkening(u1, u2, a, b, Rstar, ph, LD):
     """
     calculates limb darkening as a function of phase
