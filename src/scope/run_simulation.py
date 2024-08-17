@@ -95,32 +95,44 @@ def make_data(
         wlgrid_order = np.copy(wlgrid[order,])  # Cropped wavelengths
         for exposure in range(n_exposure):
             flux_planet = calc_doppler_shift(
-                wlgrid_order, wl_model, Fp_conv * Rp_solar**2, rv_planet[exposure]
+                wlgrid_order, wl_model, Fp_conv, rv_planet[exposure]
             )
             flux_planet *= scale  # apply scale factor
             flux_star = calc_doppler_shift(
                 wlgrid_order, wl_model, Fstar_conv * Rstar**2, rv_star[exposure]
             )
+            # do keep in mind that Fp is actually *flux* in emission, but in transmission, it's 1-absorption in fraction.
+            # Fp = np.interp(wShift, wl_model, Fp_conv * (Rp * 0.1) ** 2) * scale
+            # Fs = np.interp(wls, wl_model, Fstar_conv * (Rstar) ** 2)
             if star:
                 if observation == "emission":
                     flux_cube[
                         order,
                         exposure,
                     ] = (
-                        flux_planet + flux_star  # now want to get the star in there
-                    )
+                        flux_planet * Rp_solar**2
+                    ) + (flux_star * Rstar**2)
+
                 elif observation == "transmission":
+                    I = calc_limb_darkening(u1, u2, a, b, Rstar, ph[i], LD)
+
+                    # for the limb darkening, this applies to Fp. in the LD l
                     flux_cube[
                         order,
                         exposure,
-                    ] = flux_star * (
-                        1 - flux_planet
-                    )  # now want to get the star in there
-                else:
+                    ] = (1 - flux_planet * I) * flux_star
+
+            else:
+                if observation == "emission":
                     flux_cube[
                         order,
                         exposure,
                     ] = flux_planet
+                elif observation == "transmission":
+                    flux_cube[
+                        order,
+                        exposure,
+                    ] = (1 - flux_planet) * flux_star
 
     throughput_baselines = np.loadtxt(abs_path + "/data/throughputs.txt")
 
@@ -324,9 +336,11 @@ def calc_log_likelihood(
             )
 
             if star and observation == "emission":
-                model_flux_cube[exposure,] = flux_planet / flux_star + 1.0
-            else:  # in transmission, after we "divide out" (with PCA) the star and tellurics, we're left with flux_planet...kinda
-                model_flux_cube[exposure,] = 1 - flux_planet
+                model_flux_cube[i,] = (flux_planet * Rp_solar**2) / (
+                    flux_star * Rstar**2
+                ) + 1.0
+            else:  # in transmission, after we "divide out" (with PCA) the star and tellurics, we're left with Fp.
+                model_flux_cube[exposure,] = 1.0 - flux_planet
 
         # ok now do the PCA. where does it fall apart?
         if do_pca:

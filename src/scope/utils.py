@@ -12,6 +12,31 @@ from tqdm import tqdm
 
 from scope.constants import *
 
+
+def calc_limb_darkening(u1, u2, a, b, Rstar, ph, LD):
+    """
+    calculates limb darkening as a function of phase
+
+    :u1: (float) linear limb darkening coefficient
+    :u2: (float) quadratic limb darkening coefficient
+    :a: (float) semi-major axis in meters
+    :b: (float) impact parameter
+    :Rstar: (float) stellar radius in solar radii
+    :ph: (array) phase
+    :LD: (bool) whether to apply limb darkening
+    """
+    if LD:  # apply limb darkening. 1D style!
+        x = (a * np.sin(2 * np.pi * ph)) / (Rstar * u.R_sun).si.value
+        mu = np.sqrt(1 - x**2 - b**2)
+        if x**2 <= 1 - b**2:
+            I = 1 - u1 * (1 - mu) - u2 * (1 - mu) ** 2
+        else:
+            I = 0.0
+    else:
+        I = 1.0
+    return I
+
+
 abs_path = os.path.dirname(__file__)
 
 np.random.seed(42)
