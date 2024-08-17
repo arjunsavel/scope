@@ -27,7 +27,7 @@ def calc_limb_darkening(u1, u2, a, b, Rstar, ph, LD):
     :LD: (bool) whether to apply limb darkening
     """
     if LD:  # apply limb darkening. 1D style!
-        x = (a * np.sin(2 * np.pi * ph)) / (Rstar * u.R_sun).si.value
+        x = (a * np.sin(2 * np.pi * ph)) / (Rstar * rsun)
         mu = np.sqrt(1 - x**2 - b**2)
         if x**2 <= 1 - b**2:
             I = 1 - u1 * (1 - mu) - u2 * (1 - mu) ** 2
