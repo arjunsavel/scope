@@ -421,7 +421,7 @@ def simulate_observation(
 
     outdir = abs_path + f"/output/{modelname}"
 
-    make_outdir(modelname)
+    make_outdir(outdir)
 
     # and write the input file out
     write_input_file(locals(), output_file_path=f"{outdir}/input.txt")
