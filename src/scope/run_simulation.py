@@ -41,6 +41,7 @@ def make_data(
     Kp=192.06,
     star=False,
     SNR=0,
+    rv_semiamp_orbit=0.3229,
     observation="emission",
     tell_type="ATRAN",
     time_dep_tell=False,
@@ -82,14 +83,13 @@ def make_data(
         :just_tellurics: (array) the telluric model that's multiplied to the dataset.
 
     """
-    Kstar = 0.3229 * 1.0
 
     v_sys_measured = (
         1.6845  # this is the systemic velocity of the system reported in the literature
     )
 
     rv_planet, rv_star = calc_rvs(
-        v_sys, v_sys_measured, Kp, Kstar, phases
+        v_sys, v_sys_measured, Kp, rv_semiamp_orbit, phases
     )  # measured in m/s
 
     flux_cube = np.zeros(
