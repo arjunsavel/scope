@@ -432,11 +432,10 @@ def simulate_observation(
 
     outdir = abs_path + f"/output/{modelname}"
 
-    make_outdir(outdir)
+    make_outdir(modelname)
 
     # and write the input file out
-    args_dict = locals()
-    write_input_file(args_dict, output_file_path=f"{outdir}/input.txt")
+    write_input_file(locals(), output_file_path=f"{outdir}/input.txt")
 
     phases = np.linspace(phase_start, phase_end, n_exposures)
     # todo: wrap this in a function? with paths and everything!
