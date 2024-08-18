@@ -78,9 +78,9 @@ def make_outdir(outdir):
         print("Directory already exists. Continuing!")
 
 
-def get_instrument_kernel():
+def get_instrument_kernel(resolution_ratio=250000 / 45000):
     xker = np.arange(41) - 20
-    sigma = 5.5 / (2.0 * np.sqrt(2.0 * np.log(2.0)))  # nominal
+    sigma = resolution_ratio / (2.0 * np.sqrt(2.0 * np.log(2.0)))  # nominal
     yker = np.exp(-0.5 * (xker / sigma) ** 2.0)
     yker /= yker.sum()
     return yker
@@ -344,36 +344,6 @@ def calc_crossing_time(
     # so that's the maximum time, but we want more than that many exposures.
     # don't have to worry about pixel-crossing time.
     return max_time, max_time_per_pixel, dphase_per_exp, n_exp
-
-
-# todo: own convolution
-def convolve_planet_spectrum(
-    planet_wave,
-    planet_flux,
-    resolution_model=250000,
-    resolution_instrument=45000,
-):
-    """
-    Convolves a planet with rotational and instrumental profile.
-    """
-    scale = 1
-    vsini = 4.52
-    ker_rot = get_rot_ker(vsini, planet_wave)  # rotation kernel
-    Fp_conv_rot = np.convolve(
-        planet_flux, ker_rot, mode="same"
-    )  # convolving with rot kernel
-
-    resolution_ratio = resolution_model / resolution_instrument
-
-    xker = np.arange(41) - 20
-    sigma = resolution_ratio / (
-        2.0 * np.sqrt(2.0 * np.log(2.0))
-    )  # 5.5 is FWHM of resolution element in model wavelength grid "coords"
-    yker = np.exp(-0.5 * (xker / sigma) ** 2.0)  # making a gaussian
-    yker /= yker.sum()  # normalize so that the convolution is mathmatically correct.
-    planet_flux_conv = np.convolve(Fp_conv_rot, yker, mode="same") * scale
-
-    return planet_flux_conv, yker
 
 
 @njit
