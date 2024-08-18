@@ -1,12 +1,10 @@
 import io
 import os
-import re
 
-import astropy.units as u
 import numpy as np
 import pandas as pd
 
-from scope.calc_quantities import calculate_derived_parameters
+from scope.calc_quantities import *
 
 # Mapping between input file parameters and database columns
 parameter_mapping = {
@@ -97,6 +95,17 @@ def coerce_integers(data, key, value):
 def coerce_database(data, key, value, astrophysical_params, planet_name, database_path):
     if value == "DATABASE" and key in astrophysical_params:
         data[key] = query_database(planet_name, key, database_path)
+    elif key in ["phase_start", "phase_end"]:
+        tdur = query_database(planet_name, "pl_trandur", database_path)
+        period = query_database(planet_name, "pl_orbper", database_path)
+
+        # convert it to phase
+        tdur_phase = convert_tdur_to_phase(tdur, period)
+
+        if key == "phase_start":
+            data[key] = -tdur_phase / 2
+        else:
+            data[key] = tdur_phase / 2
 
     return data
 

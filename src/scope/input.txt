@@ -41,8 +41,8 @@ order_dep_throughput   True          # whether to include order-dependent throug
 
 # Observation Parameters
 observation            transmission      # type of observation to perform. supported observations are ``emission`` and ``transmission``.
-phase_start            -0.011464100685159746           # phase of the beginning of the observations. 0 is center of transit, 0.5 is secondary eclipse.
-phase_end              0.011464100685159746           # phase of the end of the observations. 0 is center of transit, 0.5 is secondary eclipse.
+phase_start            DATABASE           # phase of the beginning of the observations. 0 is center of transit, 0.5 is secondary eclipse. If DATABASE, just the transit duration. [DB]
+phase_end              DATABASE           # phase of the end of the observations. 0 is center of transit, 0.5 is secondary eclipse. If DATABASE, just the transit duration. [DB]
 n_exposures            10             # number of exposures to simulate. sets the phases of the exposures.
 star                   True          # whether to include the star in the simulation. In general, you'd like to!
 telluric               True          # whether to include tellurics in the simulation. In general, you'd like to!
