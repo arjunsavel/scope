@@ -13,6 +13,13 @@ from tqdm import tqdm
 from scope.constants import *
 
 
+def make_outdir(outdir):
+    try:
+        os.mkdir(outdir)
+    except FileExistsError:
+        print("Directory already exists. Continuing!")
+
+
 def get_instrument_kernel():
     xker = np.arange(41) - 20
     sigma = 5.5 / (2.0 * np.sqrt(2.0 * np.log(2.0)))  # nominal

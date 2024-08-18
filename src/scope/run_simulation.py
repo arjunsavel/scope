@@ -431,10 +431,8 @@ def simulate_observation(
     # make the output directory
 
     outdir = abs_path + f"/output/{modelname}"
-    try:
-        os.mkdir(outdir)
-    except FileExistsError:
-        print("Directory already exists. Continuing!")
+
+    make_outdir(outdir)
 
     # and write the input file out
     args_dict = locals()
@@ -446,7 +444,7 @@ def simulate_observation(
     Rp_solar = Rp * rjup_rsun  # convert from jupiter radii to solar radii
     Kp_array = np.linspace(kp - 100, kp + 100, 200)
     v_sys_array = np.arange(-100, 100)
-    n_order, n_pixel = (44, 1848)
+    n_order, n_pixel = (44, 1848)  # todo: fix.
     mike_wave, mike_cube = pickle.load(open(data_cube_path, "rb"), encoding="latin1")
 
     wl_cube_model = mike_wave.copy().astype(np.float64)
