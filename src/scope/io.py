@@ -175,6 +175,9 @@ def parse_input_file(
 
     # Convert values to appropriate types
     for key, value in data.items():
+        # check for values that are comma-delimited
+        data = coerce_splits(data, key, value)
+
         # Check for NULL
         data = coerce_nulls(data, key, value)
 
@@ -188,9 +191,6 @@ def parse_input_file(
         data = coerce_database(
             data, key, value, astrophysical_params, planet_name, database_path
         )
-
-        # check for values that are comma-delimited
-        data = coerce_splits(data, key, value)
 
     # Add any additional kwargs to the data dictionary
     data.update(kwargs)
