@@ -6,7 +6,7 @@ import astropy.units as u
 import numpy as np
 import pandas as pd
 
-from scope.calc_quantities import calc_velocity
+from scope.calc_quantities import calculate_derived_parameters
 
 # Mapping between input file parameters and database columns
 parameter_mapping = {
