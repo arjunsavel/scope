@@ -38,7 +38,7 @@ def calculate_derived_parameters(data):
             )
 
     # Calculate the equatorial rotational velocity
-    calc_param_boilerplate("v_eq", ["Rp", "P_rot"], data, u.R_jup)
+    calc_param_boilerplate("v_rot", ["Rp", "P_rot"], data, u.R_jup)
 
     # calculate planetary orbital velocity
     calc_param_boilerplate("kp", ["a", "P_rot"], data, u.AU)
