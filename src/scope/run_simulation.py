@@ -6,6 +6,7 @@ import sys
 
 import jax
 import numpy as np
+from tqdm import tqdm
 
 from scope.broadening import *
 from scope.ccf import *
@@ -98,46 +99,27 @@ def make_data(
     A_noplanet = np.zeros((n_order, n_exposure, n_pixel))
     for order in range(n_order):
         wlgrid_order = np.copy(wlgrid[order,])  # Cropped wavelengths
-        for exposure in range(n_exposure):
-            flux_planet = calc_doppler_shift(
-                wlgrid_order, wl_model, Fp_conv, rv_planet[exposure]
-            )
-            flux_planet *= scale  # apply scale factor
-            flux_star = calc_doppler_shift(
-                wlgrid_order, wl_model, Fstar_conv * Rstar**2, rv_star[exposure]
-            )
-            # do keep in mind that Fp is actually *flux* in emission, but in transmission, it's 1-absorption in fraction.
-            # Fp = np.interp(wShift, wl_model, Fp_conv * (Rp * 0.1) ** 2) * scale
-            # Fs = np.interp(wls, wl_model, Fstar_conv * (Rstar) ** 2)
-            if star:
-                if observation == "emission":
-                    flux_cube[
-                        order,
-                        exposure,
-                    ] = (
-                        flux_planet * Rp_solar**2
-                    ) + (flux_star * Rstar**2)
-
-                elif observation == "transmission":
-                    I = calc_limb_darkening(u1, u2, a, b, Rstar, phases[exposure], LD)
-
-                    # for the limb darkening, this applies to Fp. in the LD l
-                    flux_cube[
-                        order,
-                        exposure,
-                    ] = (1 - flux_planet * I) * flux_star
-
-            else:
-                if observation == "emission":
-                    flux_cube[
-                        order,
-                        exposure,
-                    ] = flux_planet
-                elif observation == "transmission":
-                    flux_cube[
-                        order,
-                        exposure,
-                    ] = (1 - flux_planet) * flux_star
+        flux_cube[order] = doppler_shift_planet_star(
+            flux_cube[order],
+            n_exposure,
+            phases,
+            rv_planet,
+            rv_star,
+            wlgrid_order,
+            wl_model,
+            Fp_conv,
+            Rp_solar,
+            Fstar_conv,
+            Rstar,
+            u1,
+            u2,
+            a,
+            b,
+            LD,
+            scale,
+            star,
+            observation,
+        )
 
     throughput_baselines = np.loadtxt(abs_path + "/data/throughputs.txt")
 
@@ -336,22 +318,28 @@ def calc_log_likelihood(
         model_flux_cube = np.zeros(
             (n_exposure, n_pixel)
         )  # "shifted" model spectra array at each phase
-        for exposure in range(n_exposure):
-            flux_planet = calc_doppler_shift(
-                wlgrid_order, wl_model, Fp_conv * Rp_solar**2, rv_planet[exposure]
-            )
-            flux_planet *= scale  # apply scale factor
-            flux_star = calc_doppler_shift(
-                wlgrid_order, wl_model, Fstar_conv * Rstar**2, rv_star[exposure]
-            )
 
-            if star and observation == "emission":
-                model_flux_cube[exposure,] = (flux_planet * Rp_solar**2) / (
-                    flux_star * Rstar**2
-                ) + 1.0
-            else:  # in transmission, after we "divide out" (with PCA) the star and tellurics, we're left with Fp.
-                I = calc_limb_darkening(u1, u2, a, b, Rstar, phases[exposure], LD)
-                model_flux_cube[exposure,] = 1.0 - flux_planet * I
+        model_flux_cube = doppler_shift_planet_star(
+            model_flux_cube,
+            n_exposure,
+            phases,
+            rv_planet,
+            rv_star,
+            wlgrid_order,
+            wl_model,
+            Fp_conv,
+            Rp_solar,
+            Fstar_conv,
+            Rstar,
+            u1,
+            u2,
+            a,
+            b,
+            LD,
+            scale,
+            star,
+            observation,
+        )
 
         # ok now do the PCA. where does it fall apart?
         if do_pca:
@@ -396,6 +384,7 @@ def simulate_observation(
     tell_type="data-driven",
     time_dep_tell=False,
     wav_error=False,
+    rv_semiamp_orbit=0.3229,
     order_dep_throughput=True,
     Rp=1.21,  # Jupiter radii,
     Rstar=0.955,  # solar radii
@@ -427,26 +416,25 @@ def simulate_observation(
     -------
     None
 
-
-
     """
+    # make the output directory
+
+    outdir = abs_path + f"/output/{modelname}"
+
+    make_outdir(modelname)
+
+    # and write the input file out
+    write_input_file(locals(), output_file_path=f"{outdir}/input.txt")
+
     phases = np.linspace(phase_start, phase_end, n_exposures)
-    # todo: wrap this in a function? with paths and everything!
-    # fix some of these parameters if wanting to simulate IGRINS
     Rp_solar = Rp * rjup_rsun  # convert from jupiter radii to solar radii
     Kp_array = np.linspace(kp - 100, kp + 100, 200)
     v_sys_array = np.arange(-100, 100)
-    n_order, n_pixel = (44, 1848)
+    n_order, n_pixel = (44, 1848)  # todo: fix.
     mike_wave, mike_cube = pickle.load(open(data_cube_path, "rb"), encoding="latin1")
 
     wl_cube_model = mike_wave.copy().astype(np.float64)
 
-    # Rvel = np.load(
-    #     "data/rvel.pic", allow_pickle=True
-    # )  # Time-resolved Earth-star velocity
-
-    # todo: add data in
-    # so if I want to change my model, I just alter this!
     wl_model, Fp, Fstar = np.load(planet_spectrum_path, allow_pickle=True)
 
     wl_model = wl_model.astype(np.float64)
@@ -456,16 +444,15 @@ def simulate_observation(
     Fp_conv_rot = np.convolve(Fp, rot_ker, mode="same")
 
     # instrument profile convolution
-    xker = np.arange(41) - 20
-    sigma = 5.5 / (2.0 * np.sqrt(2.0 * np.log(2.0)))  # nominal
-    yker = np.exp(-0.5 * (xker / sigma) ** 2.0)
-    yker /= yker.sum()
-    Fp_conv = np.convolve(Fp_conv_rot, yker, mode="same")
+    instrument_kernel = get_instrument_kernel()
+    Fp_conv = np.convolve(Fp_conv_rot, instrument_kernel, mode="same")
 
     star_wave, star_flux = np.loadtxt(
         star_spectrum_path
     ).T  # Phoenix stellar model packing
-    Fstar_conv = get_star_spline(star_wave, star_flux, wl_model, yker, smooth=False)
+    Fstar_conv = get_star_spline(
+        star_wave, star_flux, wl_model, instrument_kernel, smooth=False
+    )
 
     lls, ccfs = np.zeros((200, 200)), np.zeros((200, 200))
 
@@ -491,6 +478,7 @@ def simulate_observation(
         star=star,
         Kp=kp,
         SNR=SNR,
+        rv_semiamp_orbit=rv_semiamp_orbit,
         tell_type=tell_type,
         time_dep_tell=time_dep_tell,
         wav_error=wav_error,
@@ -498,34 +486,10 @@ def simulate_observation(
         observation=observation,
     )
 
-    # make the output directory
-    outdir = abs_path + f"/output/{modelname}"
+    run_name = f"{n_princ_comp}_NPC_{blaze}_blaze_{star}_star_{telluric}_telluric_{SNR}_SNR_{tell_type}_{time_dep_tell}_{wav_error}_{order_dep_throughput}"
 
-    try:
-        os.mkdir(outdir)
-    except FileExistsError:
-        print("Directory already exists. Continuing!")
+    save_data(outdir, run_name, flux_cube, flux_cube_nopca, A_noplanet, just_tellurics)
 
-    with open(
-        f"{outdir}/simdata_{n_princ_comp}_NPC_{blaze}_blaze_{star}_star_{telluric}_telluric_{SNR}_SNR_{tell_type}_{time_dep_tell}_{wav_error}_{order_dep_throughput}_newerrun_cranked_tell_bett_airm.txt",
-        "wb",
-    ) as f:
-        pickle.dump(flux_cube, f)
-    with open(
-        f"{outdir}/nopca_simdata_{n_princ_comp}_NPC_{blaze}_blaze_{star}_star_{telluric}_telluric_{SNR}_SNR_{tell_type}_{time_dep_tell}_{wav_error}_{order_dep_throughput}_newerrun_cranked_tell_bett_airm.txt",
-        "wb",
-    ) as f:
-        pickle.dump(flux_cube_nopca, f)
-    with open(
-        f"{outdir}/A_noplanet_{n_princ_comp}_NPC_{blaze}_blaze_{star}_star_{telluric}_telluric_{SNR}_SNR_{tell_type}_{time_dep_tell}_{wav_error}_{order_dep_throughput}_newerrun_cranked_tell_bett_airm.txt",
-        "wb",
-    ) as f:
-        pickle.dump(A_noplanet, f)
-
-    # only save if tellurics are True. Otherwise, this will be cast to an array of ones.
-    if tellurics:
-        with open(f"{outdir}just_tellurics_vary_airmass.txt", "wb") as f:
-            pickle.dump(just_tellurics, f)
     for l, Kp in tqdm(
         enumerate(Kp_array), total=len(Kp_array), desc="looping PCA over Kp"
     ):
@@ -545,27 +509,15 @@ def simulate_observation(
                 phases,
                 Rp_solar,
                 Rstar,
-                0.3229,
+                rv_semiamp_orbit,
                 do_pca=True,
                 n_princ_comp=n_princ_comp,
                 A_noplanet=A_noplanet,
                 star=star,
             )
-            lls[l, k] = res[0]
-            ccfs[l, k] = res[1]
+            lls[l, k], ccfs[l, k] = res
 
-    np.savetxt(
-        f"{outdir}/lls_{n_princ_comp}_NPC_{blaze}_blaze_{star}_star_{telluric}_telluric_{SNR}_SNR_{tell_type}_{time_dep_tell}_{wav_error}_{order_dep_throughput}_newerrun_cranked_tell_bett_airm.txt",
-        lls,
-    )
-    np.savetxt(
-        f"{outdir}/ccfs_{n_princ_comp}_NPC_{blaze}_blaze_{star}_star_{telluric}_telluric_{SNR}_SNR_{tell_type}_{time_dep_tell}_{wav_error}_{order_dep_throughput}_newerrun_cranked_tell_bett_airm.txt",
-        ccfs,
-    )
-
-    # and write the input file out
-    args_dict = locals()
-    write_input_file(args_dict, output_file_path=f"{outdir}/input.txt")
+    save_results(outdir, run_name, lls, ccfs)
 
 
 if __name__ == "__main__":

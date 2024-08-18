@@ -13,6 +13,108 @@ from tqdm import tqdm
 from scope.constants import *
 
 
+def doppler_shift_planet_star(
+    model_flux_cube,
+    n_exposure,
+    phases,
+    rv_planet,
+    rv_star,
+    wlgrid_order,
+    wl_model,
+    Fp_conv,
+    Rp_solar,
+    Fstar_conv,
+    Rstar,
+    u1,
+    u2,
+    a,
+    b,
+    LD,
+    scale,
+    star,
+    observation,
+    reprocessing=False,
+):
+    for exposure in range(n_exposure):
+        flux_planet = calc_doppler_shift(
+            wlgrid_order, wl_model, Fp_conv * Rp_solar**2, rv_planet[exposure]
+        )
+        flux_planet *= scale  # apply scale factor
+        flux_star = calc_doppler_shift(
+            wlgrid_order, wl_model, Fstar_conv * Rstar**2, rv_star[exposure]
+        )
+
+        if star and observation == "emission":
+            model_flux_cube[exposure,] = (flux_planet * Rp_solar**2) / (
+                flux_star * Rstar**2
+            ) + 1.0
+            if not reprocessing:
+                model_flux_cube[exposure,] *= flux_star * Rstar**2
+
+        else:  # in transmission, after we "divide out" (with PCA) the star and tellurics, we're left with Fp.
+            I = calc_limb_darkening(u1, u2, a, b, Rstar, phases[exposure], LD)
+            model_flux_cube[exposure,] = 1.0 - flux_planet * I
+            if not reprocessing:
+                model_flux_cube[exposure,] *= flux_star
+    return model_flux_cube
+
+
+def save_results(outdir, run_name, lls, ccfs):
+    np.savetxt(
+        f"{outdir}/lls_{run_name}.txt",
+        lls,
+    )
+    np.savetxt(
+        f"{outdir}/ccfs_{run_name}.txt",
+        ccfs,
+    )
+
+
+def make_outdir(outdir):
+    try:
+        os.mkdir(outdir)
+    except FileExistsError:
+        print("Directory already exists. Continuing!")
+
+
+def get_instrument_kernel():
+    xker = np.arange(41) - 20
+    sigma = 5.5 / (2.0 * np.sqrt(2.0 * np.log(2.0)))  # nominal
+    yker = np.exp(-0.5 * (xker / sigma) ** 2.0)
+    yker /= yker.sum()
+    return yker
+
+
+def save_data(outdir, run_name, flux_cube, flux_cube_nopca, A_noplanet, just_tellurics):
+    """
+    Saves data to a pickle file.
+
+    Inputs
+    ------
+        :outdir: (str) output directory
+        :run_name: (str) name of the run
+        :data: (dict) data to save
+    """
+    with open(
+        f"{outdir}/simdata_{run_name}.txt",
+        "wb",
+    ) as f:
+        pickle.dump(flux_cube, f)
+    with open(
+        f"{outdir}/nopca_simdata_{run_name}.txt",
+        "wb",
+    ) as f:
+        pickle.dump(flux_cube_nopca, f)
+    with open(
+        f"{outdir}/A_noplanet_{run_name}.txt",
+        "wb",
+    ) as f:
+        pickle.dump(A_noplanet, f)
+
+    with open(f"{outdir}/just_tellurics_vary_airmass.txt", "wb") as f:
+        pickle.dump(just_tellurics, f)
+
+
 @njit
 def calc_limb_darkening(u1, u2, a, b, Rstar, ph, LD):
     """
