@@ -102,7 +102,7 @@ def coerce_database(data, key, value, astrophysical_params, planet_name, databas
 
 
 def coerce_splits(data, key, value):
-    if "," in value:
+    if isinstance(value, str) and "," in value:
         data[key] = [float(v.strip()) for v in value.split(",")]
 
     return data
