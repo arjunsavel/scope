@@ -530,14 +530,7 @@ def simulate_observation(
             )
             lls[l, k], ccfs[l, k] = res
 
-    np.savetxt(
-        f"{outdir}/lls_{run_name}.txt",
-        lls,
-    )
-    np.savetxt(
-        f"{outdir}/ccfs_{run_name}.txt",
-        ccfs,
-    )
+    save_results(outdir, run_name, lls, ccfs)
 
 
 if __name__ == "__main__":

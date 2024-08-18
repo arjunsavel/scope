@@ -13,6 +13,17 @@ from tqdm import tqdm
 from scope.constants import *
 
 
+def save_results(outdir, run_name, lls, ccfs):
+    np.savetxt(
+        f"{outdir}/lls_{run_name}.txt",
+        lls,
+    )
+    np.savetxt(
+        f"{outdir}/ccfs_{run_name}.txt",
+        ccfs,
+    )
+
+
 def make_outdir(outdir):
     try:
         os.mkdir(outdir)
