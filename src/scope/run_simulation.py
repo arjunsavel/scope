@@ -6,6 +6,7 @@ import sys
 
 import jax
 import numpy as np
+from tqdm import tqdm
 
 from scope.broadening import *
 from scope.ccf import *
@@ -439,8 +440,6 @@ def simulate_observation(
     write_input_file(locals(), output_file_path=f"{outdir}/input.txt")
 
     phases = np.linspace(phase_start, phase_end, n_exposures)
-    # todo: wrap this in a function? with paths and everything!
-    # fix some of these parameters if wanting to simulate IGRINS
     Rp_solar = Rp * rjup_rsun  # convert from jupiter radii to solar radii
     Kp_array = np.linspace(kp - 100, kp + 100, 200)
     v_sys_array = np.arange(-100, 100)
