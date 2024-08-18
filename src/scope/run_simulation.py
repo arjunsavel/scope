@@ -424,7 +424,9 @@ def simulate_observation(
     make_outdir(outdir)
 
     # and write the input file out
-    write_input_file(locals().update(kwargs), output_file_path=f"{outdir}/input.txt")
+    output_args = locals()
+    output_args.update(kwargs)
+    write_input_file(output_args, output_file_path=f"{outdir}/input.txt")
 
     phases = np.linspace(phase_start, phase_end, n_exposures)
     Rp_solar = Rp * rjup_rsun  # convert from jupiter radii to solar radii
