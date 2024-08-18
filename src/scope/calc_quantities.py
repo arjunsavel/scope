@@ -54,3 +54,22 @@ def calculate_velocity(distance, P, distance_unit=u.AU, time_unit=u.day):
     velocity = 2 * np.pi * distance * distance_unit / (P * time_unit)
 
     return velocity.to(u.km / u.s).value
+
+
+def convert_tdur_to_phase(tdur, period):
+    """
+    Convert the transit duration to a phase.
+
+    Parameters
+    ----------
+    tdur : float
+        The transit duration in hours.
+    period : float
+        The period of the planet in days.
+
+    Returns
+    -------
+    float
+        The phase of the transit duration.
+    """
+    return ((tdur * u.hours) / (period * u.days)).si.value
