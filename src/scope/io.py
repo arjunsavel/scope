@@ -58,20 +58,19 @@ def unpack_lines(content):
     """
     data_lines = []
     for line in content:
-        # Remove comments
-        line = re.sub(r"#.*", "", line).strip()
-
-        # Skip empty lines
-        if not line:
-            continue
-
-        # Check for split lines
-        if line.endswith("\\"):
-            line = line[:-1]
-        else:
-            line += "\n"
-        data_lines.append(line)
-    return data_lines
+        line = line.strip()
+        if line.startswith("Planet name:"):
+            planet_name = line.split("Planet name:", 1)[1].strip()
+        elif "Author:" in line:
+            author = line.split("Author:", 1)[1].strip()
+        elif (
+            not line.startswith("#")
+            and not line.startswith(":")
+            and not line.startswith("Created")
+            and line
+        ):
+            data_lines.append(line)
+    return data_lines, planet_name, author
 
 
 def parse_input_file(
@@ -98,11 +97,7 @@ def parse_input_file(
     with open(file_path, "r") as file:
         content = file.readlines()
 
-    # Extract planet name and author name
-    planet_name = ""
-    author = ""
-
-    data_lines = unpack_lines(content)
+    data_lines, planet_name, author = unpack_lines(content)
 
     # Read the remaining lines with pandas
     df = pd.read_csv(
