@@ -50,6 +50,28 @@ def get_theta(lat, lon):
         return np.arccos(np.sqrt(1 - np.sin(lon) ** 2 - np.sin(lat) ** 2))
 
 
+def fix_nan_result(res):
+    """
+    Fixes the result of a calculation that has NaNs in it.
+
+    Parameters
+    ----------
+    res : float
+        The result of a calculation.
+
+    Returns
+    -------
+    float
+        The result of the calculation with NaNs fixed.
+    """
+    if isinstance(res, np.ndarray) or isinstance(res, list):
+        res[np.isnan(res)] = 0.0
+    else:
+        if np.isnan(res):
+            res = 0.0
+    return res
+
+
 # @njit
 def I_darken(lon, lat, epsilon):
     """
@@ -69,11 +91,8 @@ def I_darken(lon, lat, epsilon):
         theta = get_theta(lat, lon)
         res1 = (1 - epsilon) + (epsilon * np.cos(theta))
 
-        if isinstance(res1, np.ndarray) or isinstance(res1, list):
-            res1[np.isnan(res1)] = 0.0
-        else:
-            if np.isnan(res1):
-                res1 = 0.0
+        res1 = fix_nan_result(res1)
+
         return res1
     else:
         raise ValueError("epsilon should only be from 0 to 1")
