@@ -164,14 +164,7 @@ def parse_input_file(
     # Add any additional kwargs to the data dictionary
     data.update(kwargs)
 
-    if np.isnan(data["v_rot"]):
-        if np.isnan(data["Rp"]) or np.isnan(data["P_rot"]):
-            raise ValueError("Rp and P must be provided to calculate v_rot!")
-        data["v_rot"] = calc_velocity(data["Rp"], data["P_rot"], distance_unit=u.R_jup)
-    if np.isnan(data["kp"]):
-        if np.isnan(data["a"]) or np.isnan(data["P_rot"]):
-            raise ValueError("a and P must be provided to calculate kp!")
-        data["kp"] = calc_velocity(data["a"], data["P_rot"], distance_unit=u.AU)
+    data = calculate_derived_parameters(data)
 
     return data
 
