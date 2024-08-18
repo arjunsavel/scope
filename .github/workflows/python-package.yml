@@ -35,6 +35,7 @@ jobs:
         run: |
          pip install pytest
          pip install pytest-cov
+         export NUMBA_DISABLE_JIT=1
          pytest --cov=src/scope --cov-report=xml
 
       - name: Upload coverage reports to Codecov
