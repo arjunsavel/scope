@@ -205,7 +205,7 @@ def calc_doppler_shift(eval_wave, template_wave, template_flux, v):
     return shifted_flux
 
 
-def calc_exposure_time(
+def calc_crossing_time(
     period=1.80988198,
     mstar=1.458,
     e=0.000,
