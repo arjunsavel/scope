@@ -37,11 +37,11 @@ def doppler_shift_planet_star(
 ):
     for exposure in range(n_exposure):
         flux_planet = calc_doppler_shift(
-            wlgrid_order, wl_model, Fp_conv * Rp_solar**2, rv_planet[exposure]
+            wlgrid_order, wl_model, Fp_conv, rv_planet[exposure]
         )
         flux_planet *= scale  # apply scale factor
         flux_star = calc_doppler_shift(
-            wlgrid_order, wl_model, Fstar_conv * Rstar**2, rv_star[exposure]
+            wlgrid_order, wl_model, Fstar_conv, rv_star[exposure]
         )
 
         if star and observation == "emission":
