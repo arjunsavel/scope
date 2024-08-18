@@ -13,6 +13,52 @@ from tqdm import tqdm
 from scope.constants import *
 
 
+def doppler_shift_planet_star(
+    model_flux_cube,
+    n_exposure,
+    phases,
+    rv_planet,
+    rv_star,
+    wlgrid_order,
+    wl_model,
+    Fp_conv,
+    Rp_solar,
+    Fstar_conv,
+    Rstar,
+    u1,
+    u2,
+    a,
+    b,
+    LD,
+    scale,
+    star,
+    observation,
+    reprocessing=False,
+):
+    for exposure in range(n_exposure):
+        flux_planet = calc_doppler_shift(
+            wlgrid_order, wl_model, Fp_conv * Rp_solar**2, rv_planet[exposure]
+        )
+        flux_planet *= scale  # apply scale factor
+        flux_star = calc_doppler_shift(
+            wlgrid_order, wl_model, Fstar_conv * Rstar**2, rv_star[exposure]
+        )
+
+        if star and observation == "emission":
+            model_flux_cube[exposure,] = (flux_planet * Rp_solar**2) / (
+                flux_star * Rstar**2
+            ) + 1.0
+            if not reprocessing:
+                model_flux_cube[exposure,] *= flux_star * Rstar**2
+
+        else:  # in transmission, after we "divide out" (with PCA) the star and tellurics, we're left with Fp.
+            I = calc_limb_darkening(u1, u2, a, b, Rstar, phases[exposure], LD)
+            model_flux_cube[exposure,] = 1.0 - flux_planet * I
+            if not reprocessing:
+                model_flux_cube[exposure,] *= flux_star
+    return model_flux_cube
+
+
 def save_results(outdir, run_name, lls, ccfs):
     np.savetxt(
         f"{outdir}/lls_{run_name}.txt",
