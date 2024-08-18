@@ -55,7 +55,7 @@ dynamic = ["version"]
 [project.urls]
 Homepage = "https://github.com/arjunsavel/scope"
 Issues = "https://github.com/arjunsavel/scope/issues"
-Documentation = "https://github.com/arjunsavel/scope"
+Documentation = "scope-astr.readthedocs.io"
 
 [tool.black]
 target_version = ['py310', 'py311']
