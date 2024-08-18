@@ -74,6 +74,49 @@ def unpack_lines(content):
     return data_lines, planet_name, author
 
 
+def coerce_nulls(data, key, value):
+    if value == "NULL":
+        data[key] = np.nan
+
+    return data
+
+
+def coerce_integers(data, key, value):
+    integer_fields = ["n_exposures", "n_princ_comp"]
+    if key in integer_fields:
+        data[key] = int(value)
+    else:
+        try:
+            data[key] = float(value)
+        except:
+            pass
+
+    return data
+
+
+def coerce_database(data, key, value, astrophysical_params, planet_name, database_path):
+    if value == "DATABASE" and key in astrophysical_params:
+        data[key] = query_database(planet_name, key, database_path)
+
+    return data
+
+
+def coerce_splits(data, key, value):
+    if "," in value:
+        data[key] = [float(v.strip()) for v in value.split(",")]
+
+    return data
+
+
+def coerce_booleans(data, key, value):
+    if value == "True":
+        data[key] = True
+    elif value == "False":
+        data[key] = False
+
+    return data
+
+
 def parse_input_file(
     file_path, database_path="data/default_params_exoplanet_archive.csv", **kwargs
 ):
@@ -133,29 +176,21 @@ def parse_input_file(
     # Convert values to appropriate types
     for key, value in data.items():
         # Check for NULL
-        if value == "NULL":
-            data[key] = np.nan
+        data = coerce_nulls(data, key, value)
+
+        # make sure integers are cast as such
+        data = coerce_integers(data, key, value)
+
+        # make sure booleans are cast as such
+        data = coerce_booleans(data, key, value)
+
         # Check for DATABASE in astrophysical parameters
-        elif key == "n_exposures":
-            data[key] = int(value)
-        elif value == "DATABASE" and key in astrophysical_params:
-            data[key] = query_database(planet_name, key, database_path)
-        else:
-            # Try to convert to float
-            if key == "limb_darkening":
-                key = "LD"
-            try:
-                data[key] = float(value)
-            except ValueError:
-                # Check if it's a boolean
-                if value.lower() == "true":
-                    data[key] = True
-                elif value.lower() == "false":
-                    data[key] = False
-                # Check if it's a list (for phases)
-                elif "," in value:
-                    data[key] = [float(v.strip()) for v in value.split(",")]
-                # Otherwise, keep as string
+        data = coerce_database(
+            data, key, value, astrophysical_params, planet_name, database_path
+        )
+
+        # check for values that are comma-delimited
+        data = coerce_splits(data, key, value)
 
     # Add any additional kwargs to the data dictionary
     data.update(kwargs)
