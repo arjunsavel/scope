@@ -4,24 +4,44 @@ import numpy as np
 # refactor the below two functions to be a single function
 
 
+def check_args(args, data, quantity):
+    """
+    Check that the arguments are in the data dictionary.
+
+    Parameters
+    ----------
+    args : list
+        List of arguments to check.
+    data : dict
+        Dictionary of data.
+
+    """
+    for arg in args:
+        if arg not in data:
+            raise ValueError(
+                f"{arg} not in data dictionary! It is required to calculate {quantity}!"
+            )
+
+
 def calculate_derived_parameters(data):
     """
     Calculate derived parameters from the input data.
 
     """
     # first, equatorial rotational velocity.
-    if np.isnan(data["v_rot"]):
-        if np.isnan(data["Rp"]) or np.isnan(data["P_rot"]):
-            raise ValueError("Rp and P must be provided to calculate v_rot!")
-        data["v_rot"] = calculate_velocity(
-            data["Rp"], data["P_rot"], distance_unit=u.R_jup
-        )
 
-    # second, orbital velocity of the planet.
-    if np.isnan(data["kp"]):
-        if np.isnan(data["a"]) or np.isnan(data["P_rot"]):
-            raise ValueError("a and P must be provided to calculate kp!")
-        data["kp"] = calculate_velocity(data["a"], data["P_rot"], distance_unit=u.AU)
+    def calc_param_boilerplate(param, args, data, distance_unit):
+        if np.isnan(data[param]):
+            check_args(args, data, param)
+            data[param] = calculate_velocity(
+                *[data[arg] for arg in args], distance_unit=distance_unit
+            )
+
+    # Calculate the equatorial rotational velocity
+    calc_param_boilerplate("v_eq", ["Rp", "P_rot"], data, u.R_jup)
+
+    # calculate planetary orbital velocity
+    calc_param_boilerplate("kp", ["a", "P_rot"], data, u.AU)
 
     return data
 
