@@ -72,4 +72,4 @@ def convert_tdur_to_phase(tdur, period):
     float
         The phase of the transit duration.
     """
-    return ((tdur * u.hours) / (period * u.days)).si.value
+    return ((tdur * u.hour) / (period * u.day)).si.value
