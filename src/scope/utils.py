@@ -186,6 +186,7 @@ def perform_pca(input_matrix, n_princ_comp, return_noplanet=False):
 def calc_doppler_shift(eval_wave, template_wave, template_flux, v):
     """
     Doppler shifts a spectrum. Evaluates the flux at a different grid.
+    convention: negative v is redshift.
 
     Inputs
     ------
