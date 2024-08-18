@@ -6,7 +6,7 @@ import astropy.units as u
 import numpy as np
 import pandas as pd
 
-from scope.calc_quantities import calc_velocity
+from scope.calc_quantities import calculate_derived_parameters
 
 # Mapping between input file parameters and database columns
 parameter_mapping = {
@@ -17,6 +17,7 @@ parameter_mapping = {
     "P_rot": "pl_orbper",
     "v_sys": "st_radv",
     "planet_name": "pl_name",
+    "Rp_solar": "planet_radius_solar",
 }
 
 
@@ -42,18 +43,21 @@ def query_database(
         return np.nan
 
 
-def parse_input_file(
-    file_path, database_path="data/default_params_exoplanet_archive.csv", **kwargs
-):
-    # First, read the entire file content
-    with open(file_path, "r") as file:
-        content = file.readlines()
+def unpack_lines(content):
+    """
+    Unpack lines from a file, removing comments and joining lines that are split.
 
-    # Extract planet name and author name
-    planet_name = ""
-    author = ""
+    Parameters
+    ----------
+    content : list
+        List of lines from the file.
+
+    Returns
+    -------
+    data_lines : list
+        List of lines with comments removed and split lines joined.
+    """
     data_lines = []
-
     for line in content:
         line = line.strip()
         if line.startswith("Planet name:"):
@@ -67,7 +71,35 @@ def parse_input_file(
             and line
         ):
             data_lines.append(line)
-    # pdb.set_trace()
+    return data_lines, planet_name, author
+
+
+def parse_input_file(
+    file_path, database_path="data/default_params_exoplanet_archive.csv", **kwargs
+):
+    """
+    Parse an input file and return a dictionary of parameters.
+
+    Parameters
+    ----------
+    file_path : str
+        Path to the input file.
+    database_path : str
+        Path to the database file.
+    **kwargs
+        Additional keyword arguments to add to the data dictionary.
+
+    Returns
+    -------
+    data : dict
+        Dictionary of parameters.
+    """
+    # First, read the entire file content
+    with open(file_path, "r") as file:
+        content = file.readlines()
+
+    data_lines, planet_name, author = unpack_lines(content)
+
     # Read the remaining lines with pandas
     df = pd.read_csv(
         io.StringIO("\n".join(data_lines)),
@@ -128,14 +160,7 @@ def parse_input_file(
     # Add any additional kwargs to the data dictionary
     data.update(kwargs)
 
-    if np.isnan(data["v_rot"]):
-        if np.isnan(data["Rp"]) or np.isnan(data["P_rot"]):
-            raise ValueError("Rp and P must be provided to calculate v_rot!")
-        data["v_rot"] = calc_velocity(data["Rp"], data["P_rot"], distance_unit=u.R_jup)
-    if np.isnan(data["kp"]):
-        if np.isnan(data["a"]) or np.isnan(data["P_rot"]):
-            raise ValueError("a and P must be provided to calculate kp!")
-        data["kp"] = calc_velocity(data["a"], data["P_rot"], distance_unit=u.AU)
+    data = calculate_derived_parameters(data)
 
     return data
 
