@@ -1,4 +1,5 @@
 import io
+import os
 import re
 
 import numpy as np
@@ -21,14 +22,22 @@ parameter_mapping = {
 def query_database(
     planet_name, parameter, database_path="data/default_params_exoplanet_archive.csv"
 ):
+    if not os.path.exists(database_path):
+        raise FileNotFoundError(f"Database file {database_path} not found.")
+
+    df = pd.read_csv(database_path)
+
+    # check whether planet name is in database
+    if planet_name not in df["pl_name"].values:
+        print(f"Planet name {planet_name} not found in database.")
     try:
-        df = pd.read_csv(database_path)
         # Use the mapped parameter name if it exists, otherwise use the original
         db_parameter = parameter_mapping.get(parameter, parameter)
         value = df.loc[df["pl_name"] == planet_name, db_parameter].values[0]
         return float(value)
     except Exception as e:
         print(f"Error querying database for {planet_name}, {parameter}: {e}")
+
         return np.nan
 
 
