@@ -448,12 +448,6 @@ def simulate_observation(
 
     wl_cube_model = mike_wave.copy().astype(np.float64)
 
-    # Rvel = np.load(
-    #     "data/rvel.pic", allow_pickle=True
-    # )  # Time-resolved Earth-star velocity
-
-    # todo: add data in
-    # so if I want to change my model, I just alter this!
     wl_model, Fp, Fstar = np.load(planet_spectrum_path, allow_pickle=True)
 
     wl_model = wl_model.astype(np.float64)
@@ -533,8 +527,7 @@ def simulate_observation(
                 A_noplanet=A_noplanet,
                 star=star,
             )
-            lls[l, k] = res[0]
-            ccfs[l, k] = res[1]
+            lls[l, k], ccfs[l, k] = res
 
     np.savetxt(
         f"{outdir}/lls_{run_name}.txt",
