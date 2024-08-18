@@ -162,7 +162,7 @@ def perform_pca(input_matrix, n_princ_comp, return_noplanet=False):
     Inputs
     ------
         :input_matrix:
-        :n_princ_comp: number of principle components to keep
+        :n_princ_comp: number of principal components to keep
     """
     u, singular_values, vh = np.linalg.svd(
         input_matrix, full_matrices=False
@@ -218,7 +218,6 @@ def calc_exposure_time(
     plot=False,
 ):
     """
-    Todo: use the newer version of exoplanet, where the orbits are installed elsewhere.
 
     todo: refactor this into separate functions, maybe?
 

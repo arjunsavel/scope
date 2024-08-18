@@ -59,3 +59,61 @@ class Testdetrend_cube(unittest.TestCase):
 )
 def test_calc_limb_darkening(values, output):
     assert calc_limb_darkening(*values) == output
+
+
+class TestPca(unittest.TestCase):
+    """
+    These don't really test the fancy statistics of PCA. just assert that it's a
+    variance-reducing black box.
+    """
+
+    n_exp = 10
+    n_pix = 10
+    cube = np.random.random((n_exp, n_pix))
+
+    def test_perform_pca_shapes(self):
+        """
+        just make sure the output shapes are what we expect.
+        """
+
+        n_princ_comp = 5
+        scaled_cube, pca = perform_pca(self.cube, n_princ_comp, return_noplanet=True)
+        assert scaled_cube.shape == self.cube.shape
+        assert pca.shape == self.cube.shape
+
+    def test_perform_pca_variance_removed(self):
+        """
+        just make sure the output shapes are what we expect.
+        """
+
+        n_princ_comp = 5
+        scaled_cube, pca = perform_pca(self.cube, n_princ_comp, return_noplanet=True)
+        assert np.std(scaled_cube) < np.std(
+            pca
+        )  # the variance should be contained in the main components
+
+    def test_perform_pca_variance_removed_compared_input(self):
+        """
+        just make sure the output shapes are what we expect.
+        """
+
+        n_princ_comp = 5
+        scaled_cube, pca = perform_pca(self.cube, n_princ_comp, return_noplanet=True)
+        assert np.std(scaled_cube) < np.std(
+            self.cube
+        )  # the variance should be contained in the main components
+
+    def test_perform_pca_variance_removed_compared_input_diffcompoents(self):
+        """
+        just make sure the output shapes are what we expect.
+        """
+
+        n_princ_comp = 5
+        scaled_cube5, pca5 = perform_pca(self.cube, n_princ_comp, return_noplanet=True)
+        n_princ_comp = 10
+        scaled_cube10, pca10 = perform_pca(
+            self.cube, n_princ_comp, return_noplanet=True
+        )
+        assert np.std(scaled_cube10) < np.std(
+            scaled_cube5
+        )  # the variance should be contained in the main components
