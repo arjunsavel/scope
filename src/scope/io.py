@@ -17,6 +17,7 @@ parameter_mapping = {
     "P_rot": "pl_orbper",
     "v_sys": "st_radv",
     "planet_name": "pl_name",
+    "Rp_solar": "planet_radius_solar",
 }
 
 
