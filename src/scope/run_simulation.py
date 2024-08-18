@@ -53,6 +53,8 @@ def make_data(
     u2=0.3,
     LD=True,
     b=0.0,  # impact parameter
+    divide_out_of_transit=False,
+    out_of_transit_dur=0.1,
 ):
     """
     Creates a simulated HRCCS dataset. Main function.
@@ -181,6 +183,57 @@ def make_data(
     flux_cube = detrend_cube(flux_cube, n_order, n_exposure)
     flux_cube[np.isnan(flux_cube)] = 0.0
     flux_cube_nopca = flux_cube.copy()
+
+    if observation == "transmission" and divide_out_of_transit:
+        # generate the out of transit baseline
+        n_exposures_baseline = (
+            out_of_transit_dur * n_exposure
+        )  # assuming n_exposure is fully just in transit
+        out_of_transit_flux = np.ones_like(
+            flux_cube
+        )  # todo: fix shape for out of transit baseline
+
+        # take star
+        for exposure in range(n_exposures_baseline):
+            flux_star = calc_doppler_shift(
+                wlgrid_order, wl_model, Fstar_conv, rv_star[exposure]
+            )
+
+            out_of_transit_flux[exposure,] *= flux_star
+
+        out_of_transit_flux = detrend_cube(out_of_transit_flux, n_order, n_exposure)
+
+        # add tellurics
+        out_of_transit_flux = add_tellurics(
+            wlgrid,
+            out_of_transit_flux,
+            n_order,
+            n_exposures_baseline,
+            vary_airmass=True,
+            tell_type=tell_type,
+            time_dep_tell=time_dep_tell,
+        )
+        out_of_transit_flux = detrend_cube(out_of_transit_flux, n_order, n_exposure)
+
+        # add blaze
+        out_of_transit_flux = add_blaze_function(
+            wlgrid, out_of_transit_flux, n_order, n_exposures_baseline
+        )
+        out_of_transit_flux[flux_cube < 0.0] = 0.0
+        out_of_transit_flux[np.isnan(flux_cube)] = 0.0
+        out_of_transit_flux = detrend_cube(out_of_transit_flux, n_order, n_exposure)
+
+        # add noise
+        out_of_transit_flux = add_noise_cube(
+            out_of_transit_flux, wlgrid, SNR, noise_model=noise_model
+        )
+
+        # take median
+        median_out_of_transit = np.median(out_of_transit_flux, axis=1)
+
+        # divide out the flux cube
+        flux_cube /= median_out_of_transit  # todo: check axes work out
+
     if do_pca:
         for j in range(n_order):
             flux_cube[j] -= np.mean(flux_cube[j])
@@ -393,7 +446,8 @@ def simulate_observation(
     scale=1.0,
     v_sys=0.0,
     modelname="yourfirstsimulation",
-    **kwargs,
+    divide_out_of_transit=False,
+    out_of_transit_dur=0.1**kwargs,
 ):
     """
     Run a simulation of the data, given a grid index and some paths. Side effects:
@@ -486,6 +540,8 @@ def simulate_observation(
         wav_error=wav_error,
         order_dep_throughput=order_dep_throughput,
         observation=observation,
+        divide_out_of_transit=False,
+        out_of_transit_dur=0.1,
     )
 
     run_name = f"{n_princ_comp}_NPC_{blaze}_blaze_{star}_star_{telluric}_telluric_{SNR}_SNR_{tell_type}_{time_dep_tell}_{wav_error}_{order_dep_throughput}"
