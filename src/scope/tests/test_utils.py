@@ -210,7 +210,7 @@ class TestCrossingTime(unittest.TestCase):
         """
         low_mass_time, _, _, _ = calc_crossing_time()
 
-        high_mass_time, _, _, _ = calc_crossing_time(10 * self.mstar)
+        high_mass_time, _, _, _ = calc_crossing_time(mstar=10 * self.mstar)
         assert low_mass_time > high_mass_time
 
     def test_crossing_time_moremassive_star(self):
@@ -219,7 +219,7 @@ class TestCrossingTime(unittest.TestCase):
         """
         short_period_time, _, _, _ = calc_crossing_time()
 
-        long_period_time, _, _, _ = calc_crossing_time(10 * self.period)
+        long_period_time, _, _, _ = calc_crossing_time(period=10 * self.period)
         assert short_period_time < long_period_time
 
     def test_crossing_time_pixel_per_res(self):
@@ -228,7 +228,9 @@ class TestCrossingTime(unittest.TestCase):
         """
         _, few_pixels_per_element, _, _ = calc_crossing_time()
 
-        _, many_pixels_per_element, _, _ = calc_crossing_time(10 * self.pix_per_res)
+        _, many_pixels_per_element, _, _ = calc_crossing_time(
+            pix_per_res=10 * self.pix_per_res
+        )
         assert many_pixels_per_element < few_pixels_per_element
 
     def test_crossing_time_resolution(self):
@@ -237,5 +239,5 @@ class TestCrossingTime(unittest.TestCase):
         """
         low_resolution_time, _, _, _ = calc_crossing_time()
 
-        high_resolution_time, _, _, _ = calc_crossing_time(10 * self.resolution)
-        assert high_resolution_time < high_resolution_time
+        high_resolution_time, _, _, _ = calc_crossing_time(R=10 * self.R)
+        assert high_resolution_time < low_resolution_time
