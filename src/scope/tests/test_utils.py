@@ -117,3 +117,71 @@ class TestPca(unittest.TestCase):
         assert np.std(scaled_cube10) < np.std(
             scaled_cube5
         )  # the variance should be contained in the main components
+
+
+class TestDopplerShift(unittest.TestCase):
+    def test_same_after_shift(self):
+        """
+        shouldn't globally change the properties. should really just shift things.
+        """
+        eval_wave = np.linspace(1.1, 1.8, 10000) * 1e-6  # meters.
+        template_wave = np.linspace(1, 2, 10000) * 1e-6
+
+        template_flux = np.random.random(10000)
+        interped_flux = np.interp(eval_wave, template_wave, template_flux)
+        v = 1e-6  # m/s. should not change much
+
+        shifted_flux = calc_doppler_shift(eval_wave, template_wave, template_flux, v)
+        # test that shifted flux and interpred flux are very similar
+        assert (
+            np.testing.assert_allclose(shifted_flux, interped_flux, rtol=1e-2) == None
+        )
+
+    def test_diff_after_shift(self):
+        """
+        shouldn't globally change the properties. should really just shift things.
+        """
+        eval_wave = np.linspace(1.1, 1.8, 10000) * 1e-6  # meters.
+        template_wave = np.linspace(1, 2, 10000) * 1e-6
+
+        template_flux = np.random.random(10000)
+        interped_flux = np.interp(eval_wave, template_wave, template_flux)
+        v = 2e3  # m/s. should not change much
+
+        shifted_flux = calc_doppler_shift(eval_wave, template_wave, template_flux, v)
+        # test that shifted flux and interpred flux are very similar
+        np.testing.assert_raises(
+            AssertionError, np.testing.assert_array_equal, shifted_flux, interped_flux
+        )
+
+    def test_gaussian_shifted_red(self):
+        """
+        shouldn't globally change the properties. should really just shift things.
+        """
+        eval_wave = np.linspace(1.1, 1.8, 10000) * 1e-6
+        template_wave = np.linspace(1, 2, 10000) * 1e-6
+        # make a gaussian centered at 1.5
+        template_flux = np.exp(-0.5 * ((template_wave - 1.5e-6) / 0.01) ** 2)
+        interped_flux = np.interp(eval_wave, template_wave, template_flux)
+
+        v = -5e4  # m/s. should not change much
+        shifted_flux = calc_doppler_shift(eval_wave, template_wave, template_flux, v)
+        wav_max_shifted = eval_wave[np.argmax(shifted_flux)]
+        wav_max = eval_wave[np.argmax(interped_flux)]
+        assert wav_max_shifted > wav_max
+
+    def test_gaussian_shifted_blue(self):
+        """
+        shouldn't globally change the properties. should really just shift things.
+        """
+        eval_wave = np.linspace(1.1, 1.8, 10000) * 1e-6
+        template_wave = np.linspace(1, 2, 10000) * 1e-6
+        # make a gaussian centered at 1.5
+        template_flux = np.exp(-0.5 * ((template_wave - 1.5e-6) / 0.01) ** 2)
+
+        v = 5e4  # m/s. should not change much
+        shifted_flux = calc_doppler_shift(eval_wave, template_wave, template_flux, v)
+        interped_flux = np.interp(eval_wave, template_wave, template_flux)
+        wav_max_shifted = eval_wave[np.argmax(shifted_flux)]
+        wav_max = eval_wave[np.argmax(interped_flux)]
+        assert wav_max_shifted < wav_max
