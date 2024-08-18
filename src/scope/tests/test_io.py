@@ -49,7 +49,7 @@ star                   False
 
         # Create a sample database file
         db_content = """
-planet_name,planet_radius_solar
+pl_name,planet_radius_solar
 GJ 1214b,0.15
 """
         db_file_path = os.path.join(test_dir, "test_db.csv")
