@@ -466,16 +466,15 @@ def simulate_observation(
     Fp_conv_rot = np.convolve(Fp, rot_ker, mode="same")
 
     # instrument profile convolution
-    xker = np.arange(41) - 20
-    sigma = 5.5 / (2.0 * np.sqrt(2.0 * np.log(2.0)))  # nominal
-    yker = np.exp(-0.5 * (xker / sigma) ** 2.0)
-    yker /= yker.sum()
-    Fp_conv = np.convolve(Fp_conv_rot, yker, mode="same")
+    instrument_kernel = get_instrument_kernel()
+    Fp_conv = np.convolve(Fp_conv_rot, instrument_kernel, mode="same")
 
     star_wave, star_flux = np.loadtxt(
         star_spectrum_path
     ).T  # Phoenix stellar model packing
-    Fstar_conv = get_star_spline(star_wave, star_flux, wl_model, yker, smooth=False)
+    Fstar_conv = get_star_spline(
+        star_wave, star_flux, wl_model, instrument_kernel, smooth=False
+    )
 
     lls, ccfs = np.zeros((200, 200)), np.zeros((200, 200))
 

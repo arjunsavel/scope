@@ -13,6 +13,14 @@ from tqdm import tqdm
 from scope.constants import *
 
 
+def get_instrument_kernel():
+    xker = np.arange(41) - 20
+    sigma = 5.5 / (2.0 * np.sqrt(2.0 * np.log(2.0)))  # nominal
+    yker = np.exp(-0.5 * (xker / sigma) ** 2.0)
+    yker /= yker.sum()
+    return yker
+
+
 def save_data(outdir, run_name, flux_cube, flux_cube_nopca, A_noplanet, just_tellurics):
     """
     Saves data to a pickle file.
