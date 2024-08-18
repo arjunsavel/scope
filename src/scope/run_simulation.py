@@ -427,9 +427,19 @@ def simulate_observation(
     -------
     None
 
-
-
     """
+    # make the output directory
+
+    outdir = abs_path + f"/output/{modelname}"
+    try:
+        os.mkdir(outdir)
+    except FileExistsError:
+        print("Directory already exists. Continuing!")
+
+    # and write the input file out
+    args_dict = locals()
+    write_input_file(args_dict, output_file_path=f"{outdir}/input.txt")
+
     phases = np.linspace(phase_start, phase_end, n_exposures)
     # todo: wrap this in a function? with paths and everything!
     # fix some of these parameters if wanting to simulate IGRINS
@@ -498,34 +508,10 @@ def simulate_observation(
         observation=observation,
     )
 
-    # make the output directory
-    outdir = abs_path + f"/output/{modelname}"
+    run_name = f"{n_princ_comp}_NPC_{blaze}_blaze_{star}_star_{telluric}_telluric_{SNR}_SNR_{tell_type}_{time_dep_tell}_{wav_error}_{order_dep_throughput}"
 
-    try:
-        os.mkdir(outdir)
-    except FileExistsError:
-        print("Directory already exists. Continuing!")
+    save_data(outdir, run_name, flux_cube, flux_cube_nopca, A_noplanet, just_tellurics)
 
-    with open(
-        f"{outdir}/simdata_{n_princ_comp}_NPC_{blaze}_blaze_{star}_star_{telluric}_telluric_{SNR}_SNR_{tell_type}_{time_dep_tell}_{wav_error}_{order_dep_throughput}_newerrun_cranked_tell_bett_airm.txt",
-        "wb",
-    ) as f:
-        pickle.dump(flux_cube, f)
-    with open(
-        f"{outdir}/nopca_simdata_{n_princ_comp}_NPC_{blaze}_blaze_{star}_star_{telluric}_telluric_{SNR}_SNR_{tell_type}_{time_dep_tell}_{wav_error}_{order_dep_throughput}_newerrun_cranked_tell_bett_airm.txt",
-        "wb",
-    ) as f:
-        pickle.dump(flux_cube_nopca, f)
-    with open(
-        f"{outdir}/A_noplanet_{n_princ_comp}_NPC_{blaze}_blaze_{star}_star_{telluric}_telluric_{SNR}_SNR_{tell_type}_{time_dep_tell}_{wav_error}_{order_dep_throughput}_newerrun_cranked_tell_bett_airm.txt",
-        "wb",
-    ) as f:
-        pickle.dump(A_noplanet, f)
-
-    # only save if tellurics are True. Otherwise, this will be cast to an array of ones.
-    if tellurics:
-        with open(f"{outdir}just_tellurics_vary_airmass.txt", "wb") as f:
-            pickle.dump(just_tellurics, f)
     for l, Kp in tqdm(
         enumerate(Kp_array), total=len(Kp_array), desc="looping PCA over Kp"
     ):
@@ -555,17 +541,13 @@ def simulate_observation(
             ccfs[l, k] = res[1]
 
     np.savetxt(
-        f"{outdir}/lls_{n_princ_comp}_NPC_{blaze}_blaze_{star}_star_{telluric}_telluric_{SNR}_SNR_{tell_type}_{time_dep_tell}_{wav_error}_{order_dep_throughput}_newerrun_cranked_tell_bett_airm.txt",
+        f"{outdir}/lls_{run_name}.txt",
         lls,
     )
     np.savetxt(
-        f"{outdir}/ccfs_{n_princ_comp}_NPC_{blaze}_blaze_{star}_star_{telluric}_telluric_{SNR}_SNR_{tell_type}_{time_dep_tell}_{wav_error}_{order_dep_throughput}_newerrun_cranked_tell_bett_airm.txt",
+        f"{outdir}/ccfs_{run_name}.txt",
         ccfs,
     )
-
-    # and write the input file out
-    args_dict = locals()
-    write_input_file(args_dict, output_file_path=f"{outdir}/input.txt")
 
 
 if __name__ == "__main__":

@@ -13,6 +13,36 @@ from tqdm import tqdm
 from scope.constants import *
 
 
+def save_data(outdir, run_name, flux_cube, flux_cube_nopca, A_noplanet, just_tellurics):
+    """
+    Saves data to a pickle file.
+
+    Inputs
+    ------
+        :outdir: (str) output directory
+        :run_name: (str) name of the run
+        :data: (dict) data to save
+    """
+    with open(
+        f"{outdir}/simdata_{run_name}.txt",
+        "wb",
+    ) as f:
+        pickle.dump(flux_cube, f)
+    with open(
+        f"{outdir}/nopca_simdata_{run_name}.txt",
+        "wb",
+    ) as f:
+        pickle.dump(flux_cube_nopca, f)
+    with open(
+        f"{outdir}/A_noplanet_{run_name}.txt",
+        "wb",
+    ) as f:
+        pickle.dump(A_noplanet, f)
+
+    with open(f"{outdir}/just_tellurics_vary_airmass.txt", "wb") as f:
+        pickle.dump(just_tellurics, f)
+
+
 @njit
 def calc_limb_darkening(u1, u2, a, b, Rstar, ph, LD):
     """
