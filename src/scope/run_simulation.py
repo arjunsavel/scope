@@ -447,7 +447,13 @@ def simulate_observation(
     v_sys=0.0,
     modelname="yourfirstsimulation",
     divide_out_of_transit=False,
-    out_of_transit_dur=0.1**kwargs,
+    out_of_transit_dur=0.1,
+    include_rm=False,
+    v_rot_star=3.0,
+    a=0.033,  #
+    lambda_misalign=0.0,
+    inc=90.0,
+    **kwargs,
 ):
     """
     Run a simulation of the data, given a grid index and some paths. Side effects:
@@ -506,6 +512,12 @@ def simulate_observation(
     star_wave, star_flux = np.loadtxt(
         star_spectrum_path
     ).T  # Phoenix stellar model packing
+
+    if include_rm:
+        star_flux, _ = make_stellar_disk(
+            star_flux, star_wave, v_rot_star, phases, Rstar, inc, lambda_misalign, a, Rp
+        )
+
     Fstar_conv = get_star_spline(
         star_wave, star_flux, wl_model, instrument_kernel, smooth=False
     )
