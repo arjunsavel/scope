@@ -13,6 +13,7 @@ from tqdm import tqdm
 from scope.constants import *
 
 
+@njit
 def doppler_shift_planet_star(
     model_flux_cube,
     n_exposure,
