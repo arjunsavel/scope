@@ -84,6 +84,8 @@ def parse_input_file(
         "v_sys",
         "P_rot",
         "a",
+        "u1",
+        "u2",
     ]
 
     # Convert values to appropriate types
@@ -98,6 +100,8 @@ def parse_input_file(
             data[key] = query_database(planet_name, key, database_path)
         else:
             # Try to convert to float
+            if key == "limb_darkening":
+                key = "LD"
             try:
                 data[key] = float(value)
             except ValueError:

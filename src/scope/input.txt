@@ -26,7 +26,9 @@ v_rot                  NULL              # equatorial rotational velocity. input
 P_rot                  DATABASE          # orbital period of the planet, in days. [DB]
 a                      DATABASE          # semi-major axis of the planet, in AU. [DB]
 scale                  1.0               # scaling factor for the model spectrum.
-
+limb_darkening         True              # whether to include limb darkening in the simulation or not. only matters if observation is set to transmission.
+u1                     0.1               # first quadratic limb darkening coefficient. not used if limb_darkening is set to False or if observation is set to emission.
+u2                     0.1               # second quadratic limb darkening coefficient. not used if limb_darkening is set to False or if observation is set to emission.
 
 # Instrument Parameters
 blaze                  True          # whether to include a blaze function or not.
