@@ -162,7 +162,7 @@ def gaussian_term(lon, lat, offset, sigma, amp):
         :res1: the gaussian term.
 
     """
-    return gaussian_term_1d(lat, offset, sigma, amp) * np.exp(
+    return gaussian_term_1d(lat, 0.0, sigma, amp) * np.exp(
         -((lon - offset) ** 2) / (2 * sigma**2)
     )
 
