@@ -2,6 +2,8 @@ import unittest
 
 import numpy as np
 
+import pytest
+
 from scope.utils import *
 
 
@@ -30,3 +32,30 @@ class Testdetrend_cube(unittest.TestCase):
         n_order, n_exp, n_pix = self.test_cube.shape
         detrended_cube = detrend_cube(self.test_cube, n_order, n_exp)
         self.assertTrue(np.all(orig_min_arr == np.argmax(detrended_cube, axis=0)))
+
+
+# todo: benchmark against batman at some point.
+
+
+@pytest.mark.parametrize(
+    "values, output",
+    [
+        ([0, 0, 1, 0, 1, 0, True], 1.0),  # if no coefficients, no LD
+        ([0, 0, 1, 0, 1, 0, False], 1.0),  # but that doesn't matter if LD is turned off
+        (
+            [1, 1, 10 * rsun, 0, 1e-3, 0.3, True],
+            0.0,
+        ),  # if there is a really tiny sun, you're not gonna hit the sun
+        ([1, 1, 1, 0, 1, 0, True], 1.0),  # at center phase, should be 1
+        (
+            [0.3, 0.3, 10 * rsun, 0.0, 1, 0.25, True],
+            0.0,
+        ),  # at quadrature you're definitely not transiting!
+        (
+            [0.3, 0.3, 10 * rsun, 1.3, 1, 0.0, True],
+            0.0,
+        ),  # non-transiting planets don't transit!
+    ],
+)
+def test_calc_limb_darkening(values, output):
+    assert calc_limb_darkening(*values) == output
