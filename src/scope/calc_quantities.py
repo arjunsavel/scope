@@ -1,34 +1,14 @@
 import astropy.units as u
 import numpy as np
 
+# refactor the below two functions to be a single function
 
-def calc_v_rot(Rp, P):
+
+def calc_velocity(distance, P, distance_unit=u.AU, time_unit=u.day):
     """
-    Calculate the rotational velocity of a planet.
-
-    Parameters
-    ----------
-    Rp : float
-        The radius of the planet in Jupiter radii.
-    P : float
-        The period of the planet in days.
-
-    Returns
-    -------
-    v_rot : float
-        The rotational velocity of the planet in km/s.
+    Calculate a velocity over some period over some distance.
     """
-    # Calculate the rotational velocity
-    v_rot = 2 * np.pi * Rp * u.R_jup / (P * u.day)
+    # Calculate the velocity
+    velocity = 2 * np.pi * distance * distance_unit / (P * time_unit)
 
-    return v_rot.to(u.km / u.s).value
-
-
-def calc_kp(a, P):
-    """
-    Calculate the orbital velocity of the planet.
-    """
-    # Calculate the orbital velocity
-    kp = 2 * np.pi * a * u.AU / (P * u.day)
-
-    return kp.to(u.km / u.s).value
+    return velocity.to(u.km / u.s).value
