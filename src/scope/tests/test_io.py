@@ -71,7 +71,8 @@ def test_parse_input_file(sample_files):
     assert data["v_rot"] == 5.0
     assert data["v_sys"] == 0.0
     assert data["observation"] == "emission"
-    assert data["phases"] == [0.0, 0.25, 0.5, 0.75]
+    assert data["phase_start"] == 0.3
+    assert data["phase_end"] == 0.5
     assert data["blaze"] == True
     assert data["star"] == False
 
