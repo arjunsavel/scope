@@ -39,7 +39,8 @@ v_sys                  0.0
 
 # Observation Parameters
 observation            emission
-phases                 0.0,0.25,0.5,0.75
+phase_start                 0.3
+phase_end                 0.5
 blaze                  True
 star                   False
 """
