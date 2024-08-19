@@ -218,7 +218,9 @@ def write_input_file(data, output_file_path="input.txt"):
         "Instrument Parameters": ["SNR"],
         "Observation Parameters": [
             "observation",
-            "phases",
+            "phase_start",
+            "phase_end",
+            "n_exposures",
             "blaze",
             "star",
             "telluric",
