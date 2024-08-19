@@ -94,6 +94,6 @@ def test_write_input_file(sample_files, tmp_path):
     assert np.isnan(new_data["Rstar"])
     assert new_data["kp"] == data["kp"]
     assert new_data["observation"] == data["observation"]
-    assert new_data["phases"] == data["phases"]
+    assert new_data["phase_start"] == data["phase_start"]
     assert new_data["blaze"] == data["blaze"]
     assert new_data["star"] == data["star"]
