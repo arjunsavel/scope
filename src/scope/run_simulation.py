@@ -278,7 +278,7 @@ def make_data(
     )  # returning CCF and logL values
 
 
-# @njit
+@njit
 def calc_log_likelihood(
     v_sys,
     Kp,
