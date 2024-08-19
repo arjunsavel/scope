@@ -11,7 +11,7 @@ from tqdm import tqdm
 from scope.broadening import *
 from scope.ccf import *
 from scope.grid import *
-from scope.io import parse_input_file, write_input_file
+from scope.input_output import parse_input_file, write_input_file
 from scope.noise import *
 from scope.tellurics import *
 from scope.utils import *
@@ -278,7 +278,7 @@ def make_data(
     )  # returning CCF and logL values
 
 
-@njit
+# @njit
 def calc_log_likelihood(
     v_sys,
     Kp,
@@ -584,6 +584,7 @@ def simulate_observation(
                 n_princ_comp=n_princ_comp,
                 A_noplanet=A_noplanet,
                 star=star,
+                observation=observation,
             )
             lls[l, k], ccfs[l, k] = res
 

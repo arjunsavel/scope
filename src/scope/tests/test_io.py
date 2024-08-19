@@ -4,7 +4,7 @@ import tempfile
 import numpy as np
 import pytest
 
-from scope.io import (  # Replace 'your_module' with the actual module name
+from scope.input_output import (  # Replace 'your_module' with the actual module name
     parse_input_file,
     write_input_file,
 )
