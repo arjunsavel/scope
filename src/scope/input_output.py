@@ -95,7 +95,7 @@ def coerce_integers(data, key, value):
 def coerce_database(data, key, value, astrophysical_params, planet_name, database_path):
     if value == "DATABASE" and key in astrophysical_params:
         data[key] = query_database(planet_name, key, database_path)
-    elif key in ["phase_start", "phase_end"]:
+    elif value == "DATABASE" and key in ["phase_start", "phase_end"]:
         tdur = query_database(planet_name, "pl_trandur", database_path)
         period = query_database(planet_name, "pl_orbper", database_path)
 
