@@ -566,7 +566,7 @@ def simulate_observation(
         for k, v_sys in enumerate(v_sys_array):
             res = calc_log_likelihood(
                 v_sys,
-                Kp,
+                k,
                 scale,
                 wl_cube_model,
                 wl_model,
