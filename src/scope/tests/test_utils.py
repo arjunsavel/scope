@@ -154,7 +154,7 @@ class TestDopplerShift(unittest.TestCase):
             AssertionError, np.testing.assert_array_equal, shifted_flux, interped_flux
         )
 
-    def test_gaussian_shifted_red(self):
+    def test_gaussian_shifted_blue(self):
         """
         shouldn't globally change the properties. should really just shift things.
         """
@@ -168,9 +168,9 @@ class TestDopplerShift(unittest.TestCase):
         shifted_flux = calc_doppler_shift(eval_wave, template_wave, template_flux, v)
         wav_max_shifted = eval_wave[np.argmax(shifted_flux)]
         wav_max = eval_wave[np.argmax(interped_flux)]
-        assert wav_max_shifted > wav_max
+        assert wav_max_shifted < wav_max
 
-    def test_gaussian_shifted_blue(self):
+    def test_gaussian_shifted_red(self):
         """
         shouldn't globally change the properties. should really just shift things.
         """
@@ -184,7 +184,7 @@ class TestDopplerShift(unittest.TestCase):
         interped_flux = np.interp(eval_wave, template_wave, template_flux)
         wav_max_shifted = eval_wave[np.argmax(shifted_flux)]
         wav_max = eval_wave[np.argmax(interped_flux)]
-        assert wav_max_shifted < wav_max
+        assert wav_max_shifted > wav_max
 
 
 class TestCrossingTime(unittest.TestCase):
