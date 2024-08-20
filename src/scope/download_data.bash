@@ -15,9 +15,8 @@ if curl -L --fail --silent --show-error $download_link -o temp.zip; then
     if unzip -q temp.zip; then
         echo "Folder contents extracted successfully to $local_path"
     else
-        echo "Error: Failed to extract the zip file"
-        rm temp.zip
-        exit 1
+        echo "Error: Failed to extract the zip file?"
+
     fi
 else
     echo "Error: Download failed"
