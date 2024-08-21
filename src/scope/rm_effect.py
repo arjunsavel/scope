@@ -9,7 +9,11 @@ const_c = const.c.to("km/s").value
 
 # @njit
 def make_grid(n_r, n_theta):
-    r_range = np.linspace(0, 1, n_r)  # in stellar radius units
+    # well we don't want the edges of the grid, we want the midpoint.
+
+    dr = 1 / n_r
+
+    r_range = np.linspace(dr / 2, 1, n_r)  # in stellar radius units
 
     theta_range = np.linspace(0, 2 * np.pi, n_theta)  # in radians
 
@@ -19,7 +23,6 @@ def make_grid(n_r, n_theta):
     # define a new theta at each radius
 
     grid = np.zeros((n_theta * n_r, 2))  # not quite sure this is correct. return!
-    # pdb.set_trace()
     grid[:, 1] = r_vals
     grid[:, 0] = theta_vals
     return grid
@@ -158,13 +161,25 @@ def sum_grid(occulted_grid, areas):
 def calc_areas(grid):
     """
     calculate the area of each cell in the grid.
+    if it's an r, theta grid, then the area is r^2 * pi / (n_r * n_theta)
+    no, that's not true. it involves dr. and dtheta. but we can just do it in r, theta space.
+
+    so, the
     :param grid:
     :return:
     """
     areas = np.zeros(grid.shape[0])
+    dr = grid[1, 1] - grid[0, 1]
+    dtheta = np.max(np.diff(grid[:, 0]))
+    # pdb.set_trace()
     for i, point in enumerate(grid):
-        r, theta = point
-        areas[i] = r**2 * np.pi / (grid.shape[0] * grid.shape[1])
+        theta, r = point
+
+        r_outer = r + dr / 2
+        r_inner = r - dr / 2
+        area = 0.5 * (r_outer**2 - r_inner**2) * dtheta
+        areas[i] = area
+
     return areas
 
 
