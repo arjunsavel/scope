@@ -10,7 +10,6 @@ from tqdm import tqdm
 
 from scope.broadening import *
 from scope.ccf import *
-from scope.grid import *
 from scope.input_output import parse_input_file, write_input_file
 from scope.noise import *
 from scope.tellurics import *
@@ -35,7 +34,6 @@ def make_data(
     Rstar,
     do_pca=True,
     blaze=False,
-    do_airmass_detrending=False,
     tellurics=False,
     n_princ_comp=4,
     v_sys=0,
@@ -65,7 +63,6 @@ def make_data(
         :wlgrid: (array) wavelength grid for the data.
         :do_pca: (bool) if True, do PCA on the data.
         :blaze: (bool) if True, include the blaze function in the data.
-        :do_airmass_detrending: (bool) if True, do airmass detrending on the data.
         :tellurics: (bool) if True, include tellurics in the data.
         :n_princ_comp: (int) number of principal components to use.
         :v_sys: (float) systemic velocity of the planet.
@@ -80,7 +77,7 @@ def make_data(
 
     Outputs
     -------
-        :A_noplanet: (array) the data cube with only the larger-scale trends.
+        :pca_noise_matrix: (array) the data cube with only the larger-scale trends.
         :flux_cube: (array) the data cube with the larger-scale trends removed.
         :fTemp_nopca: (array) the data cube with all components.
         :just_tellurics: (array) the telluric model that's multiplied to the dataset.
@@ -98,7 +95,7 @@ def make_data(
     flux_cube = np.zeros(
         (n_order, n_exposure, n_pixel)
     )  # will store planet and star signal
-    A_noplanet = np.zeros((n_order, n_exposure, n_pixel))
+    pca_noise_matrix = np.zeros((n_order, n_exposure, n_pixel))
     for order in range(n_order):
         wlgrid_order = np.copy(wlgrid[order,])  # Cropped wavelengths
         flux_cube[order] = doppler_shift_planet_star(
@@ -238,40 +235,24 @@ def make_data(
         for j in range(n_order):
             flux_cube[j] -= np.mean(flux_cube[j])
             flux_cube[j] /= np.std(flux_cube[j])
-            flux_cube[j], A_noplanet[j] = perform_pca(
+            flux_cube[j], pca_noise_matrix[j] = perform_pca(
                 flux_cube[j], n_princ_comp, return_noplanet=True
             )
             # todo: think about the svd
             # todo: redo all analysis centering on 0?
-    elif do_airmass_detrending:
-        zenith_angles = np.loadtxt("data/zenith_angles_w77ab.txt")
-        airm = 1 / np.cos(np.radians(zenith_angles))  # todo: check units
-        polyDeg = 2.0  # Setting the degree of the polynomial fit
-        xvec = airm
-        fAirDetr = np.zeros((n_order, n_exposure, n_pixel))
-        # todo: think about looping
-        for io in range(n_order):
-            # Now looping over columns
-            for i in range(n_pixel):
-                yvec = flux_cube[io, :, i].copy()
-                fit = np.poly1d(np.polyfit(xvec, yvec, polyDeg))(xvec)
-                fAirDetr[io, :, i] = flux_cube[io, :, i] / fit
-                A_noplanet[io, :, i] = fit
-        flux_cube = fAirDetr
-        flux_cube[~np.isfinite(flux_cube)] = 0.0
     else:
         for j in range(n_order):
             for i in range(n_exposure):
                 flux_cube[j][i] -= np.mean(flux_cube[j][i])
 
     # todo: check vars
-    if np.all(A_noplanet == 0):
+    if np.all(pca_noise_matrix == 0):
         print("was all zero")
-        A_noplanet = np.ones_like(A_noplanet)
+        pca_noise_matrix = np.ones_like(pca_noise_matrix)
     if tellurics:
-        return A_noplanet, flux_cube, flux_cube_nopca, just_tellurics
+        return pca_noise_matrix, flux_cube, flux_cube_nopca, just_tellurics
     return (
-        A_noplanet,
+        pca_noise_matrix,
         flux_cube,
         flux_cube_nopca,
         np.ones_like(flux_cube),
@@ -399,22 +380,11 @@ def calc_log_likelihood(
             # process the model same as the "data"!
             model_flux_cube *= A_noplanet[order]
             model_flux_cube, _ = perform_pca(model_flux_cube, n_princ_comp, False)
-        I = np.ones(n_pixel)
-        for i in range(n_exposure):
-            gVec = np.copy(model_flux_cube[i,])
-            gVec -= (gVec.dot(I)) / float(n_pixel)  # mean subtracting here...
-            sg2 = (gVec.dot(gVec)) / float(n_pixel)
+        # I = np.ones(n_pixel)
 
-            fVec = np.copy(
-                flux_cube[order][i,]
-            )  # already mean-subtracted! needed for the previous PCA! or...can I do the PCA without normalizing first? TODO
-            # fVec-=(fVec.dot(I))/float(Npix)
-            sf2 = (fVec.dot(fVec)) / float(n_pixel)
-
-            R = (fVec.dot(gVec)) / float(n_pixel)  # cross-covariance
-            CC = R / np.sqrt(sf2 * sg2)  # cross-correlation
-            CCF += CC
-            logL += -0.5 * n_pixel * np.log(sf2 + sg2 - 2.0 * R)
+        logl, ccf = calc_ccf(model_flux_cube, flux_cube[order], n_pixel)
+        CCF += ccf
+        logL += logl
 
         # # todo: airmass detrending reprocessing
 
@@ -538,7 +508,6 @@ def simulate_observation(
         Rp_solar,
         Rstar,
         do_pca=True,
-        do_airmass_detrending=True,
         blaze=blaze,
         n_princ_comp=n_princ_comp,
         tellurics=telluric,

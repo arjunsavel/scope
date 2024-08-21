@@ -12,6 +12,12 @@ from tqdm import tqdm
 
 from scope.constants import *
 
+abs_path = os.path.dirname(__file__)
+
+np.random.seed(42)
+start_clip = 200
+end_clip = 100
+
 
 @njit
 def doppler_shift_planet_star(
@@ -141,12 +147,6 @@ def calc_limb_darkening(u1, u2, a, b, Rstar, ph, LD):
     return I
 
 
-abs_path = os.path.dirname(__file__)
-
-np.random.seed(42)
-start_clip = 200
-end_clip = 100
-
 # todo: download atran scripts
 # todo: fit wavelength solution stuff
 # todo: plot the maps
@@ -198,15 +198,11 @@ def calc_doppler_shift(eval_wave, template_wave, template_flux, v):
     -------
         :flux_shifted: shifted flux grid
     """
-    # beta = v / const_c
-    # delta_lam = eval_wave * beta
-    # shifted_wave = eval_wave + delta_lam
-    # shifted_flux = np.interp(shifted_wave, template_wave, template_flux)
-    # return shifted_flux
-    dl_l = v / const_c
-    wShift = eval_wave * (1.0 - dl_l)
-    flux_shifted = np.interp(wShift, template_wave, template_flux)
-    return flux_shifted
+    beta = v / const_c
+    delta_lam = eval_wave * beta
+    shifted_wave = eval_wave - delta_lam
+    shifted_flux = np.interp(shifted_wave, template_wave, template_flux)
+    return shifted_flux
 
 
 def calc_crossing_time(
