@@ -5,7 +5,7 @@ import numpy as np
 
 from scope.utils import *
 
-test_data_path = os.path.join(os.path.dirname(__file__), "../data")
+test_data_path = os.path.join(os.path.dirname(__file__), "data")
 
 
 def add_constant_noise(flux_cube_model, wl_grid, SNR):
