@@ -153,7 +153,7 @@ def sum_grid(occulted_grid, areas):
     """
     # pdb.set_trace()
     # what if i summed a slice
-    summed_spectrum = np.sum(np.dot((occulted_grid).T, areas))
+    summed_spectrum = np.dot((occulted_grid).T, areas) / np.sum(areas)
     # summed_spectrum = np.zeros(spectrum_grid.shape[1])
     # # can probably just multiply and broadcaset
     # for i, area in enumerate(areas):
@@ -199,8 +199,8 @@ def make_stellar_disk(
     lambda_misalign,
     a,
     r_p,
-    n_theta=50,
-    n_r=50,
+    n_theta=10,
+    n_r=10,
 ):
     """
     based on the x and y position of the planet on the disk, make the stellar spectrum.
@@ -236,8 +236,9 @@ def make_stellar_disk(
     areas = calc_areas(grid)
 
     for i, phase in enumerate(phases):
-        planet_location = planet_locations[i]
         occulted_grid = np.copy(spectrum_grid)
+
+        planet_location = planet_locations[i]
 
         # step 4: occult those spots on the grid. oh. yeah it's a mask. so just multiply by spectrum grid!
         occulted_grid = occult_grid(occulted_grid, grid, planet_location, r_p / r_star)
@@ -246,7 +247,6 @@ def make_stellar_disk(
         summed_grids[i] = sum_grid(occulted_grid, areas)
 
         # clean up memory. these should be pretty big arrays...
-        # occulted_grid.fill(1.0)
 
     # step 6: what's that overcorrection factor?
     correction_factor = (
@@ -254,8 +254,8 @@ def make_stellar_disk(
     )  # this is what you get when you divide flux(in_transit) / flux(out).
 
     # you'll want to divide your correction factor by the data.
-
-    return summed_grids, correction_factor
+    # because wait, shouldn't the summed grids basically be on the order of the spectrum?
+    return summed_grids, correction_factor, areas, occulted_grid
 
     # can do this convolution style assuming the same stellar line profile...
     # frame it as an area calculation. total minus the little bit you're
