@@ -42,9 +42,10 @@ def test_likelihood(test_baseline_outouts, test_inputs):
     Rstar = 1.0
     phases = np.linspace(-0.01, 0.01, n_exposure)
     Fp_conv, Fstar_conv, wl_cube_model, wl_model = test_inputs
-    best_kp = 150
-    x_good = [150, 0, 0]
-    x_bad = [104, -20, -0.4]
+    best_kp = 192.06
+
+    x_good = [best_kp, 0, 0]
+    x_bad = [144, -50, -0.9]
     n_princ_comp = 4
     log_prob_good = log_prob(
         x_good,

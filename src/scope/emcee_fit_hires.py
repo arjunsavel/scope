@@ -47,33 +47,32 @@ def log_prob(
     Kp, Vsys, log_scale = x
     scale = np.power(10, log_scale)
     prior_val = prior(x, best_kp)
+
     if not np.isfinite(prior_val):
         return -np.inf
-    return (
-        prior_val
-        + calc_log_likelihood(
-            Vsys,
-            Kp,
-            scale,
-            wl_cube_model,
-            wl_model,
-            Fp_conv,
-            Fstar_conv,
-            flux_cube,
-            n_order,
-            n_exposure,
-            n_pixel,
-            phases,
-            Rp_solar,
-            Rstar,
-            rv_semiamp_orbit,
-            A_noplanet,
-            do_pca=do_pca,
-            n_princ_comp=n_princ_comp,
-            star=star,
-            observation="emission",
-        )[0]
-    )
+    ll = calc_log_likelihood(
+        Vsys,
+        Kp,
+        scale,
+        wl_cube_model,
+        wl_model,
+        Fp_conv,
+        Fstar_conv,
+        flux_cube,
+        n_order,
+        n_exposure,
+        n_pixel,
+        phases,
+        Rp_solar,
+        Rstar,
+        rv_semiamp_orbit,
+        A_noplanet,
+        do_pca=do_pca,
+        n_princ_comp=n_princ_comp,
+        star=star,
+        observation="transmission",
+    )[0]
+    return prior_val + ll
 
 
 # @numba.njit

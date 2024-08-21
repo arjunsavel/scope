@@ -231,7 +231,7 @@ def test_baseline_outputs_take2(test_inputs):
         star=True,
         SNR=0,
         rv_semiamp_orbit=0.3229,
-        observation="emission",
+        observation="transmission",
         tell_type="data-driven",
         time_dep_tell=False,
         wav_error=False,
