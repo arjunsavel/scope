@@ -3,7 +3,6 @@ import sys
 
 import emcee
 from schwimmbad import MPIPool  # todo: add these as dependencies...?
-from utils import *
 
 from scope.run_simulation import *
 

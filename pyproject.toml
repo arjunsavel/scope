@@ -45,7 +45,8 @@ dependencies = [
     "matplotlib",
     "pandas",
     "exoplanet-core",
-    "pymc>=4"
+    "pymc>=4",
+    "schwimmbad",
 ]
 
 dynamic = ["version"]
