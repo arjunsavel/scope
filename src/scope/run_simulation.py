@@ -10,7 +10,6 @@ from tqdm import tqdm
 
 from scope.broadening import *
 from scope.ccf import *
-from scope.grid import *
 from scope.input_output import parse_input_file, write_input_file
 from scope.noise import *
 from scope.tellurics import *

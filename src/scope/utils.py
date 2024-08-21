@@ -12,6 +12,12 @@ from tqdm import tqdm
 
 from scope.constants import *
 
+abs_path = os.path.dirname(__file__)
+
+np.random.seed(42)
+start_clip = 200
+end_clip = 100
+
 
 @njit
 def doppler_shift_planet_star(
@@ -140,12 +146,6 @@ def calc_limb_darkening(u1, u2, a, b, Rstar, ph, LD):
         I = 1.0
     return I
 
-
-abs_path = os.path.dirname(__file__)
-
-np.random.seed(42)
-start_clip = 200
-end_clip = 100
 
 # todo: download atran scripts
 # todo: fit wavelength solution stuff
