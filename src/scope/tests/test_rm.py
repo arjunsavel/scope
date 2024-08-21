@@ -1,6 +1,11 @@
 import pytest
+import os
+from scipy import signal
+from scipy.optimize import curve_fit
 
 from scope.rm_effect import *
+
+test_data_path = os.path.join(os.path.dirname(__file__), "../data")
 
 
 @pytest.mark.parametrize(
@@ -93,3 +98,102 @@ def test_calc_planet_locations_center_of_transit(values, output):
     phases, r_star, inc, lambda_misalign, a = values
     res = calc_planet_locations(phases, r_star, inc, lambda_misalign, a)
     assert np.allclose(res, output)
+
+
+@pytest.fixture
+def test_load_phoenix_model():
+    star_spectrum_path = os.path.join(test_data_path, "PHOENIX_5605_4.33.txt")
+    star_wave, star_flux = np.loadtxt(
+        star_spectrum_path
+    ).T  # Phoenix stellar model packing
+    star_wave *= 1e-6  # convert to meters
+    return star_wave, star_flux
+
+
+def test_doppler_shift_grid_shape(test_make_grid_values, test_load_phoenix_model):
+    grid = test_make_grid_values
+    star_wave, star_flux = test_load_phoenix_model
+    n_wl = len(star_wave)
+
+    res = doppler_shift_grid(grid, star_flux, star_wave, 3)
+    assert res.shape == (grid.shape[0], n_wl)
+
+
+def test_doppler_shift_grid_approach_side_more_blue(
+    test_make_grid_values, test_load_phoenix_model
+):
+    grid = test_make_grid_values
+    star_wave, star_flux = test_load_phoenix_model
+    n_wl = len(star_wave)
+
+    spectrum_grid = doppler_shift_grid(grid, star_flux, star_wave, 3)
+
+    # from the approach side, the star should be more blue.
+    max_r = np.max(grid[:, 0])
+    most_right = grid[:, 1][np.argmin(np.abs(grid[:, 1] - 0))]
+    most_left = grid[:, 1][np.argmin(np.abs(grid[:, 1] - np.pi))]
+
+    # get the gridpoint that is most right and max r
+
+    most_right_idx = np.argwhere((grid[:, 0] == max_r) & (grid[:, 1] == most_right))[0][
+        0
+    ]
+    most_left_idx = np.argwhere((grid[:, 0] == max_r) & (grid[:, 1] == most_left))[0][0]
+
+    # now get the spectra at these points from the spectrum grid.
+
+    most_right_spec = spectrum_grid[most_right_idx]
+    most_left_spec = spectrum_grid[most_left_idx]
+
+    # now, the right one should be redshifted compared to the left one. how do we check this? simple max value!
+
+    assert np.argmax(most_left_spec) < np.argmax(most_right_spec)
+
+
+def test_doppler_shift_grid_approach_side_more_left_neg_vrot(
+    test_make_grid_values, test_load_phoenix_model
+):
+    grid = test_make_grid_values
+    star_wave, star_flux = test_load_phoenix_model
+    n_wl = len(star_wave)
+
+    spectrum_grid = doppler_shift_grid(grid, star_flux, star_wave, -3)
+
+    # from the approach side, the star should be more blue.
+    max_r = np.max(grid[:, 0])
+    most_right = grid[:, 1][np.argmin(np.abs(grid[:, 1] - 0))]
+    most_left = grid[:, 1][np.argmin(np.abs(grid[:, 1] - np.pi))]
+
+    # get the gridpoint that is most right and max r
+
+    most_right_idx = np.argwhere((grid[:, 0] == max_r) & (grid[:, 1] == most_right))[0][
+        0
+    ]
+    most_left_idx = np.argwhere((grid[:, 0] == max_r) & (grid[:, 1] == most_left))[0][0]
+
+    # now get the spectra at these points from the spectrum grid.
+
+    most_right_spec = spectrum_grid[most_right_idx]
+    most_left_spec = spectrum_grid[most_left_idx]
+
+    # now, the right one should be redshifted compared to the left one. how do we check this? simple max value!
+
+    assert np.argmax(most_left_spec) > np.argmax(most_right_spec)
+
+
+@pytest.fixture()
+def test_doppler_shift_grid_baseline(test_make_grid_values, test_load_phoenix_model):
+    grid = test_make_grid_values
+    star_wave, star_flux = test_load_phoenix_model
+    n_wl = len(star_wave)
+
+    spectrum_grid = doppler_shift_grid(grid, star_flux, star_wave, 5000)
+    return spectrum_grid
+
+
+def test_average_spectrum_not_input(
+    test_load_phoenix_model, test_doppler_shift_grid_baseline
+):
+    star_wave, star_flux = test_load_phoenix_model
+    spectrum_grid = test_doppler_shift_grid_baseline
+    assert not np.allclose(star_flux, np.mean(spectrum_grid, axis=0))

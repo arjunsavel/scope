@@ -32,6 +32,10 @@ def make_grid(n_r, n_theta):
 def doppler_shift_grid(grid, flux, wavelengths, v_rot):
     """
     the grid is the (r, theta) values. takes in a 1D spectrum.
+
+    v_rot is in meters per second.
+
+    outputs the spectrum grid. each row is a different point on the grid. each column is a different wavelength.
     """
     # yeah this is where things get funky lol
     spectrum_grid = np.zeros((grid.shape[0], len(wavelengths)))
@@ -44,9 +48,11 @@ def doppler_shift_grid(grid, flux, wavelengths, v_rot):
         # calculate the v_dopp at that point assuming rotational broadening
         v_dopp = (
             x * v_rot
-        )  # x is normalized from 0 to 1. this is now in km/s. TODO: cjheck this
+        )  # x is normalized from 0 to 1. this is now in m/s. TODO: cjheck this
 
-        delta_lambda = wavelengths * v_dopp / const_c
+        delta_lambda = (
+            wavelengths * v_dopp / const_c
+        )  # this only works if wavelengths in meters. TODO: check this
 
         # interpolate the spectrum onto the new wavelength grid
         spectrum_grid[i] = np.interp(wavelengths + delta_lambda, wavelengths, flux)
@@ -233,7 +239,6 @@ def make_stellar_disk(
 
     # loop over the next bit: occurs at every phase.
     summed_grids = np.zeros((len(phases), len(wavelengths)))
-    # occulted_grid = np.ones(spectrum_grid.shape)
 
     areas = calc_areas(grid)
 
