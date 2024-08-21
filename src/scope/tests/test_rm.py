@@ -298,3 +298,93 @@ def test_occult_correct_part_of_grid(
     # what are the parts of the grid that are occulted when the planet is at the center of the star?
 
     np.testing.assert_array_equal(occulted_grid_right, spectrum_grid_right)
+
+
+def test_sum_grid_shape(test_make_grid_values, test_doppler_shift_grid_baseline):
+    grid = test_make_grid_values
+    spectrum_grid = test_doppler_shift_grid_baseline
+    areas = np.ones(grid.shape[0])
+    summed_grid = sum_grid(spectrum_grid, areas)
+
+    assert summed_grid.shape == (len(spectrum_grid[0]),)
+
+
+def test_sum_grid_equal_areas(test_make_grid_values, test_doppler_shift_grid_baseline):
+    grid = test_make_grid_values
+    spectrum_grid = test_doppler_shift_grid_baseline
+    areas = np.ones(grid.shape[0])
+    summed_grid = sum_grid(spectrum_grid, areas)
+    assert np.allclose(summed_grid, np.mean(spectrum_grid, axis=0))
+
+
+@pytest.fixture
+def test_stellar_disk(test_load_phoenix_model):
+    star_wave, star_flux = test_load_phoenix_model
+    v_rot = 3000
+    phases = np.linspace(-0.01, 0.01, 10)
+    r_star = 1e9
+    a = 3e9
+    inc = np.pi / 2
+    lambda_misalign = 0
+    r_p = 1e8
+
+    summed_grids, correction_factor, areas, occulted_grid = make_stellar_disk(
+        star_flux,
+        star_wave,
+        v_rot,
+        phases,
+        r_star,
+        inc,
+        lambda_misalign,
+        a,
+        r_p,
+        n_theta=10,
+        n_r=10,
+    )
+    return summed_grids, correction_factor, phases, areas, occulted_grid
+
+
+def test_make_stellar_disk_shape(test_stellar_disk, test_load_phoenix_model):
+    star_wave, star_flux = test_load_phoenix_model
+    summed_grids, correction_factor, phases, areas, occulted_grid = test_stellar_disk
+    assert summed_grids.shape[0] == len(phases) and summed_grids.shape[1] == len(
+        star_flux
+    )
+
+
+def test_make_stellar_disk_correction_factor_regular(
+    test_stellar_disk, test_load_phoenix_model
+):
+    star_wave, star_flux = test_load_phoenix_model
+    summed_grids, correction_factor, phases, areas, occulted_grid = test_stellar_disk
+    assert np.all(np.isfinite(correction_factor)) and np.all(np.isfinite(summed_grids))
+
+
+# def test_make_stellar_disk_summed_grids_factor_small(test_stellar_disk):
+#     """
+#     all the values in the summed grids should be less than 1.
+#     """
+#     summed_grids, correction_factor, phases, areas, occulted_grid = test_stellar_disk
+#     assert np.all(summed_grids < 1.)
+
+
+def test_make_stellar_disk_bigger_planet_more_occulted(
+    test_stellar_disk, test_load_phoenix_model
+):
+    """
+    if it's a bigger planet, more should be occulted.
+    """
+    summed_grids, correction_factor, phases, areas, occulted_grid = test_stellar_disk
+    star_wave, star_flux = test_load_phoenix_model
+    v_rot = 3000
+    phases = np.linspace(-0.01, 0.01, 10)
+    r_star = 1e9
+    a = 3e9
+    inc = np.pi / 2
+    lambda_misalign = 0
+    r_p = 5e8
+
+    new_summed_grids, new_correction_factor, areas, occulted_grid = make_stellar_disk(
+        star_flux, star_wave, v_rot, phases, r_star, inc, lambda_misalign, a, r_p
+    )
+    assert np.all(new_summed_grids <= summed_grids)
