@@ -10,7 +10,19 @@ do_pca = True
 np.random.seed(42)
 
 
-def log_prob(x):
+def log_prob(
+    x,
+    best_kp,
+    wl_cube_model,
+    Fp_conv,
+    n_order,
+    n_exposure,
+    n_pixel,
+    A_noplanet,
+    star,
+    n_princ_comp,
+    do_pca,
+):
     """
     just add the log likelihood and the log prob.
 
@@ -24,7 +36,7 @@ def log_prob(x):
     """
     Kp, Vsys, log_scale = x
     scale = np.power(10, log_scale)
-    prior_val = prior(x)
+    prior_val = prior(x, best_kp)
     if not np.isfinite(prior_val):
         return -np.inf
     return (
@@ -34,21 +46,20 @@ def log_prob(x):
             Kp,
             scale,
             wl_cube_model,
-            fTemp,
-            Ndet,
+            Fp_conv,
+            n_order,
             n_exposure,
             n_pixel,
             A_noplanet=A_noplanet,
             do_pca=do_pca,
-            NPC=n_princ_comp,
+            n_princ_comp=n_princ_comp,
             star=star,
         )[0]
     )
 
 
-# van Sluijs+22 fit for log10 a. so do Brogi et al.
 # @numba.njit
-def prior(x):
+def prior(x, best_kp):
     """
     Prior on the parameters. Only uniform!
 
@@ -62,7 +73,11 @@ def prior(x):
     """
     Kp, Vsys, log_scale = x
     # do I sample in log_scale?
-    if 146.0 < Kp < 246.0 and -50 < Vsys < 50 and -1 < log_scale < 1:
+    if (
+        best_kp - 50.0 < Kp < best_kp + 50.0
+        and -50.0 < Vsys < 50.0
+        and -1 < log_scale < 1
+    ):
         return 0
     return -np.inf
 
@@ -71,7 +86,13 @@ def sample(
     nchains,
     nsample,
     A_noplanet,
-    fTemp,
+    Fp_conv,
+    wl_cube_model,
+    n_order,
+    n_exposure,
+    n_pixel,
+    star,
+    n_princ_comp,
     do_pca=True,
     best_kp=192.06,
     best_vsys=0.0,
@@ -110,13 +131,32 @@ def sample(
 
         nwalkers, ndim = pos.shape
 
-        sampler = emcee.EnsembleSampler(nwalkers, ndim, log_prob, pool=pool)
+        sampler = emcee.EnsembleSampler(
+            nwalkers,
+            ndim,
+            log_prob,
+            args=(
+                best_kp,
+                wl_cube_model,
+                Fp_conv,
+                n_order,
+                n_exposure,
+                n_pixel,
+                A_noplanet,
+                star,
+                n_princ_comp,
+                do_pca,
+            ),
+            pool=pool,
+        )
         sampler.run_mcmc(pos, nsample, progress=True)
 
     return sampler
 
 
 if __name__ == "__main__":
+    # example below!
+
     # ind = eval(sys.argv[1])
     ind = 111  # SNR = 60, blaze, tell, star, 4 PCA components
     param_dict = parameter_list[ind]
@@ -131,7 +171,6 @@ if __name__ == "__main__":
 
     lls, ccfs = np.zeros((50, 50)), np.zeros((50, 50))
 
-    # redoing the grid. how close does PCA get to a tellurics-free signal detection?
     A_noplanet, fTemp, fTemp_nopca, just_tellurics = make_data(
         1.0,
         wl_cube_model,

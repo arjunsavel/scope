@@ -21,4 +21,4 @@ def test_prior(values, output):
     Test the prior function.
     """
     Kp, Vsys, log_scale = values
-    assert prior(values) == output
+    assert prior(values, best_kp=160.0) == output
