@@ -23,8 +23,8 @@ def make_grid(n_r, n_theta):
     # define a new theta at each radius
 
     grid = np.zeros((n_theta * n_r, 2))  # not quite sure this is correct. return!
-    grid[:, 1] = r_vals
-    grid[:, 0] = theta_vals
+    grid[:, 0] = r_vals
+    grid[:, 1] = theta_vals
     return grid
 
 
@@ -176,11 +176,11 @@ def calc_areas(grid):
     :return:
     """
     areas = np.zeros(grid.shape[0])
-    dr = grid[1, 1] - grid[0, 1]
-    dtheta = np.max(np.diff(grid[:, 0]))
+    dr = grid[1, 0] - grid[0, 0]
+    dtheta = np.max(np.diff(grid[:, 1]))
     # pdb.set_trace()
     for i, point in enumerate(grid):
-        theta, r = point
+        r, theta = point
 
         r_outer = r + dr / 2
         r_inner = r - dr / 2
