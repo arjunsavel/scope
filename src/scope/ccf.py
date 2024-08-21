@@ -37,13 +37,13 @@ def calc_ccf(model_flux, data_arr_slice, n_pixel):
     cross_variance = (model_vector * data_arr_slice).sum(axis=1)
 
     # now need to sum
-    CCF = (cross_variance / jnp.sqrt(variance_data * variance_model)).sum()
+    ccf = (cross_variance / jnp.sqrt(variance_data * variance_model)).sum()
 
     logl = (
         -0.5 * n_pixel * jnp.log(variance_data + variance_model - 2.0 * cross_variance)
     ).sum()
 
-    return logl, CCF
+    return logl, ccf
 
 
 calc_ccf_map = jax.vmap(calc_ccf, in_axes=(0, None, None), out_axes=0)

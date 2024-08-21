@@ -68,7 +68,6 @@ def test_baseline_outouts(test_inputs):
         Rstar,
         do_pca=True,
         blaze=True,
-        do_airmass_detrending=False,
         tellurics=True,
         n_princ_comp=4,
         v_sys=0,

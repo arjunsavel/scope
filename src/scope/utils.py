@@ -198,15 +198,11 @@ def calc_doppler_shift(eval_wave, template_wave, template_flux, v):
     -------
         :flux_shifted: shifted flux grid
     """
-    # beta = v / const_c
-    # delta_lam = eval_wave * beta
-    # shifted_wave = eval_wave + delta_lam
-    # shifted_flux = np.interp(shifted_wave, template_wave, template_flux)
-    # return shifted_flux
-    dl_l = v / const_c
-    wShift = eval_wave * (1.0 - dl_l)
-    flux_shifted = np.interp(wShift, template_wave, template_flux)
-    return flux_shifted
+    beta = v / const_c
+    delta_lam = eval_wave * beta
+    shifted_wave = eval_wave - delta_lam
+    shifted_flux = np.interp(shifted_wave, template_wave, template_flux)
+    return shifted_flux
 
 
 def calc_crossing_time(
