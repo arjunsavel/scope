@@ -26,8 +26,8 @@ You'll also need to download some data files. Currently, these data files are ab
 
 ```
 cd src/scope
-chmod +x download_data.sh
-./download_data.sh
+chmod +x download_data.bash
+./download_data.bash
 ```
 
 This will create a `data` directory and plop the relevant files into it.

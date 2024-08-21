@@ -20,6 +20,24 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+      
+      - name: Cache test data
+        uses: actions/cache@v3
+        with:
+          path: src/scope/data
+          key: ${{ runner.os }}-test-data-${{ hashFiles('**/test-data-hash') }}
+          restore-keys: |
+            ${{ runner.os }}-test-data-
+      - name: Download test data if not cached
+        if: steps.cache-test-data.outputs.cache-hit != 'true'
+        run: |
+          echo "Downloading test data..."
+          cd src/scope
+          chmod +x download_data.bash
+          ./download_data.bash
+          cd ../../
+        
+            
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v3
         with:
