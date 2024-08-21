@@ -9,6 +9,9 @@ from scope.run_simulation import *
 do_pca = True
 np.random.seed(42)
 
+# load the data
+test_data_path = os.path.join(os.path.dirname(__file__), "../data")
+
 
 def log_prob(
     x,
