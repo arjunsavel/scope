@@ -38,6 +38,9 @@ def test_likelihood(test_baseline_outouts, test_inputs):
         n_pixel,
     ) = test_baseline_outouts
     star = True
+    Rp_solar = 0.1
+    Rstar = 1.0
+    phases = np.linspace(-0.01, 0.01, n_exposure)
     Fp_conv, Fstar_conv, wl_cube_model, wl_model = test_inputs
     best_kp = 150
     x_good = [150, 0, 0]
@@ -54,6 +57,12 @@ def test_likelihood(test_baseline_outouts, test_inputs):
         A_noplanet,
         star,
         n_princ_comp,
+        flux_cube,
+        wl_model,
+        Fstar_conv,
+        Rp_solar,
+        Rstar,
+        phases,
         do_pca,
     )
 
@@ -68,6 +77,12 @@ def test_likelihood(test_baseline_outouts, test_inputs):
         A_noplanet,
         star,
         n_princ_comp,
+        flux_cube,
+        wl_model,
+        Fstar_conv,
+        Rp_solar,
+        Rstar,
+        phases,
         do_pca,
     )
 

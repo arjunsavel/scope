@@ -24,6 +24,12 @@ def log_prob(
     A_noplanet,
     star,
     n_princ_comp,
+    flux_cube,
+    wl_model,
+    Fstar_conv,
+    Rp_solar,
+    Rstar,
+    phases,
     do_pca,
 ):
     """
@@ -37,6 +43,7 @@ def log_prob(
     -------
         :log_prob: (float) log probability.
     """
+    rv_semiamp_orbit = 0.0
     Kp, Vsys, log_scale = x
     scale = np.power(10, log_scale)
     prior_val = prior(x, best_kp)
@@ -49,14 +56,22 @@ def log_prob(
             Kp,
             scale,
             wl_cube_model,
+            wl_model,
             Fp_conv,
+            Fstar_conv,
+            flux_cube,
             n_order,
             n_exposure,
             n_pixel,
-            A_noplanet=A_noplanet,
+            phases,
+            Rp_solar,
+            Rstar,
+            rv_semiamp_orbit,
+            A_noplanet,
             do_pca=do_pca,
             n_princ_comp=n_princ_comp,
             star=star,
+            observation="emission",
         )[0]
     )
 
@@ -96,6 +111,12 @@ def sample(
     n_pixel,
     star,
     n_princ_comp,
+    flux_cube,
+    wl_model,
+    Fstar_conv,
+    Rp_solar,
+    Rstar,
+    phases,
     do_pca=True,
     best_kp=192.06,
     best_vsys=0.0,
@@ -148,6 +169,12 @@ def sample(
                 A_noplanet,
                 star,
                 n_princ_comp,
+                flux_cube,
+                wl_model,
+                Fstar_conv,
+                Rp_solar,
+                Rstar,
+                phases,
                 do_pca,
             ),
             pool=pool,
