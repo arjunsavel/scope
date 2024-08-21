@@ -492,7 +492,7 @@ def simulate_observation(
     Rp_solar = Rp * rjup_rsun  # convert from jupiter radii to solar radii
     Kp_array = np.linspace(kp - 100, kp + 100, 200)
     v_sys_array = np.arange(-100, 100)
-    n_order, n_pixel = (44, 1848)  # todo: fix.
+    n_order, n_pixel = (44, 1848)  # todo: generalize.
     mike_wave, mike_cube = pickle.load(open(data_cube_path, "rb"), encoding="latin1")
 
     wl_cube_model = mike_wave.copy().astype(np.float64)
