@@ -66,7 +66,14 @@ def calc_planet_locations(phases, r_star, inc, lambda_misalign, a):
 
     phases are in units of orbital phase. not radians.
 
+    a and rstar just need to be in the same units.
+
+    inclination is in radians
+    lambda_misalign is in radians.
+
+
     we need
+    note: theta is a bit all over the place for the center of the star. but that's more or less physical : )
 
     Assumes a circular orbit, for now...
     :param phases:
