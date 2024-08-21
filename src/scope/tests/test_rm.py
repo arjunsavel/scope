@@ -197,3 +197,104 @@ def test_average_spectrum_not_input(
     star_wave, star_flux = test_load_phoenix_model
     spectrum_grid = test_doppler_shift_grid_baseline
     assert not np.allclose(star_flux, np.mean(spectrum_grid, axis=0))
+
+
+def test_occult_grid_shape(test_make_grid_values, test_doppler_shift_grid_baseline):
+    grid = test_make_grid_values
+    spectrum_grid = test_doppler_shift_grid_baseline
+    occulted_grid = np.copy(spectrum_grid)
+    planet_location = np.array([0, np.pi / 2])
+    r_p = 0.1
+    occulted_grid = occult_grid(occulted_grid, grid, planet_location, r_p)
+
+    # what are the parts of the grid that are occulted when the planet is at the center of the star?
+
+    assert np.allclose(occulted_grid.shape, spectrum_grid.shape)
+
+
+def test_occult_grid_tiny_planet_does_not_matter(
+    test_make_grid_values, test_doppler_shift_grid_baseline
+):
+    grid = test_make_grid_values
+    spectrum_grid = test_doppler_shift_grid_baseline
+    occulted_grid = np.copy(spectrum_grid)
+    planet_location = np.array([0, np.pi / 2])
+    r_p = 1e-16
+    occulted_grid = occult_grid(occulted_grid, grid, planet_location, r_p)
+
+    # what are the parts of the grid that are occulted when the planet is at the center of the star?
+
+    assert np.allclose(occulted_grid, spectrum_grid)
+
+
+def test_occult_grid_big_planet_far_away_does_not_matter(
+    test_make_grid_values, test_doppler_shift_grid_baseline
+):
+    grid = test_make_grid_values
+    spectrum_grid = test_doppler_shift_grid_baseline
+    occulted_grid = np.copy(spectrum_grid)
+    planet_location = np.array([50, np.pi / 2])
+    r_p = 2
+    occulted_grid = occult_grid(occulted_grid, grid, planet_location, r_p)
+
+    # what are the parts of the grid that are occulted when the planet is at the center of the star?
+
+    assert np.allclose(occulted_grid, spectrum_grid)
+
+
+def test_occult_grid_star_planet_allgone(
+    test_make_grid_values, test_doppler_shift_grid_baseline
+):
+    """
+    if the planet is the size of the star, then the star is gone.
+    """
+    grid = test_make_grid_values
+    spectrum_grid = test_doppler_shift_grid_baseline
+    occulted_grid = np.copy(spectrum_grid)
+    planet_location = np.array([0, np.pi / 2])
+    r_p = 1.0
+    occulted_grid = occult_grid(occulted_grid, grid, planet_location, r_p)
+
+    # what are the parts of the grid that are occulted when the planet is at the center of the star?
+
+    assert np.allclose(occulted_grid, np.zeros_like(occulted_grid))
+
+
+def test_occult_grid_little_decrease(
+    test_make_grid_values, test_doppler_shift_grid_baseline
+):
+    """
+    there should be a decrease in the average flux during transit.
+    """
+    grid = test_make_grid_values
+    spectrum_grid = test_doppler_shift_grid_baseline
+    occulted_grid = np.copy(spectrum_grid)
+    planet_location = np.array([0, np.pi / 2])
+    r_p = 1.0
+    occulted_grid = occult_grid(occulted_grid, grid, planet_location, r_p)
+
+    # what are the parts of the grid that are occulted when the planet is at the center of the star?
+
+    assert np.average(occulted_grid) < np.average(spectrum_grid)
+
+
+def test_occult_correct_part_of_grid(
+    test_make_grid_values, test_doppler_shift_grid_baseline
+):
+    """
+    let's block off a bit of one side. rest should be normal.
+    """
+    grid = test_make_grid_values
+    spectrum_grid = test_doppler_shift_grid_baseline
+    occulted_grid = np.copy(spectrum_grid)
+    planet_location = np.array([0.5, np.pi])
+    r_p = 0.01
+    occulted_grid = occult_grid(occulted_grid, grid, planet_location, r_p)
+
+    mask = (grid[:, 1] < np.pi / 2) | (grid[:, 1] > 3 * np.pi / 2)
+    occulted_grid_right = occulted_grid[mask]
+    spectrum_grid_right = spectrum_grid[mask]
+
+    # what are the parts of the grid that are occulted when the planet is at the center of the star?
+
+    np.testing.assert_array_equal(occulted_grid_right, spectrum_grid_right)

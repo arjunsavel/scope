@@ -113,39 +113,32 @@ def calc_planet_locations(phases, r_star, inc, lambda_misalign, a):
 
 
 # @njit
-def occult_grid(occulted_grid, grid, planet_locations, r_p):
+def occult_grid(occulted_grid, grid, planet_location, r_p):
     """
     take the grid and the planet locations and occult the planet. grid is SPATIAL grid.
+
+    r_p is given in stellar radii — so, it's in grid units.
 
     :param grid:
     :param planet_locations:
     :param r_p:
     :return:
     """
-    grid = grid.copy()
-    for planet_location in planet_locations:
-        # calculate the radial distance from the planet
-        r = np.sqrt(
-            (grid[:, 0] - planet_location[0]) ** 2
-            + (grid[:, 1] - planet_location[1]) ** 2
-        )
+    # calculate the radial distance from the planet
+    r1 = grid[:, 0]
+    r2 = planet_location[0]
+    theta1 = grid[:, 1]
+    theta2 = planet_location[1]
 
-        # find the points where the planet is
-        planet_points = np.where(r < r_p)
+    # calculate the distance between the planet and the grid points
+    r = np.sqrt(r1**2 + r2**2 - 2 * r1 * r2 * np.cos(theta1 - theta2))
 
-        # set those points to zero
-        occulted_grid[planet_points] = 0.0
+    # find the points where the planet is
+    planet_points = np.where(r <= r_p)
+
+    # set those points to zero
+    occulted_grid[planet_points] = 0.0
     return occulted_grid
-
-
-# areas below
-"""
-    for i, area in enumerate(grid):
-        r, theta = point
-        spectrum = spectrum_grid[i]
-        cell_area = r ** 2 * np.pi / (grid.shape[0] * grid.shape[1])
-        summed_spectrum += cell_area * spectrum
-        """
 
 
 # @njit
@@ -243,10 +236,11 @@ def make_stellar_disk(
     areas = calc_areas(grid)
 
     for i, phase in enumerate(phases):
+        planet_location = planet_locations[i]
         occulted_grid = np.copy(spectrum_grid)
 
         # step 4: occult those spots on the grid. oh. yeah it's a mask. so just multiply by spectrum grid!
-        occulted_grid = occult_grid(occulted_grid, grid, planet_locations, r_p / r_star)
+        occulted_grid = occult_grid(occulted_grid, grid, planet_location, r_p / r_star)
 
         # step 5: add up the rest of the spectra, normalized by area!
         summed_grids[i] = sum_grid(occulted_grid, areas)
