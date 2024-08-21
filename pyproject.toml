@@ -39,6 +39,7 @@ dependencies = [
     "jax",
     "exoplanet",
     "tqdm",
+    "emcee",
     "numba",
     "scikit-learn>=1.3.0",
     "matplotlib",
