@@ -46,6 +46,7 @@ dependencies = [
     "pymc>=4",
     "schwimmbad",
 ]
+dynamic = ["version"]
 
 [project.optional-dependencies]
 docs = ["nbsphinx",
@@ -57,7 +58,7 @@ docs = ["nbsphinx",
         "mock"]
 
 
-dynamic = ["version"]
+
 
 [tool.setuptools_scm]
 write_to = "src/scope/__version.py"
