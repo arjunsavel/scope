@@ -12,10 +12,15 @@ All of the required dependencies will be installed automatically. Our current li
 (which will be pruned by v1.0.0) is:
 
 * https://github.com/numpy/numpy
+* https://github.com/astropy/astropy
 * https://github.com/scipy/scipy
+* https://github.com/pandas-dev/pandas
 * https://github.com/matplotlib/matplotlib
+* https://github.com/adrn/schwimmbad
 * https://github.com/google/jax
-* https://github.com/numpy/numpy
+* https://github.com/numba/numba
+* https://github.com/dfm/emcee
+* https://github.com/pymc-devs/pymc
 * https://github.com/scikit-learn/scikit-learn
 * https://github.com/exoplanet-dev/exoplanet
 * https://github.com/tqdm/tqdm
