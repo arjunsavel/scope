@@ -155,7 +155,7 @@ def parse_input_file(
     # Read the remaining lines with pandas
     df = pd.read_csv(
         io.StringIO("\n".join(data_lines)),
-        delim_whitespace=True,
+        sep="\s+",
         header=None,
         names=["parameter", "value"],
         comment="#",
