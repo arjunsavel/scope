@@ -18,11 +18,5 @@ signifying the degree to which developers are confident in production-ready
 In practice
 ------------
 This only applies to developers with write access to the code base. All that
-needs to be done is:
-
-1. Adjust the version specified in :code:`src/scope/__init__.py`. This will
-   automatically update docs and :code:`setup.py` configurations.
-2. Update the GitHub release version to match the version specified in Step 1.
-
-Ideally, we'd have a CI/CD pipeline that automatically makes a new release when the init
-file is incremented.
+needs to be done is make a new release on GitHub---the ``pyproject.toml`` file will automatically
+read this information and update the package accordingly.
