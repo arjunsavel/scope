@@ -30,7 +30,7 @@ def read_atran(path):
         path,
         index_col=0,
         names=["wav", "depth"],
-        delim_whitespace=True,
+        sep=r"\s+",
     ).drop_duplicates(subset=["wav"])
 
     return atran
