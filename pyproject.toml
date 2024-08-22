@@ -49,7 +49,7 @@ dependencies = [
 dynamic = ["version"]
 
 [tool.setuptools_scm]
-write_to = "scope/_version.py"
+write_to = "src/scope/__version__.py"
 
 [tool.setuptools-git-versioning]
 enabled = true
