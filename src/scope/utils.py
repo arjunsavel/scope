@@ -186,7 +186,7 @@ def perform_pca(input_matrix, n_princ_comp, return_noplanet=False):
 def calc_doppler_shift(eval_wave, template_wave, template_flux, v):
     """
     Doppler shifts a spectrum. Evaluates the flux at a different grid.
-    convention: negative v is redshift.
+    convention: positive v is redshift.
 
     Inputs
     ------
@@ -373,7 +373,9 @@ def calc_rvs(v_sys, v_sys_measured, Kp, Kstar, phases):
 
     """
     v_sys_tot = v_sys + v_sys_measured  # total offset
-    rv_planet = v_sys_tot + Kp * np.sin(2.0 * np.pi * phases) * 1e3  # measured in m/s
+    rv_planet = (
+        v_sys_tot + Kp * np.sin(2.0 * np.pi * phases) * 1e3
+    )  # input in km/s, convert to m/s
 
     rv_star = (
         v_sys_measured - Kstar * np.sin(2.0 * np.pi * phases)

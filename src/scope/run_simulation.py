@@ -36,7 +36,7 @@ def make_data(
     blaze=False,
     tellurics=False,
     n_princ_comp=4,
-    v_sys=0,
+    v_sys=0.0,
     Kp=192.06,
     star=False,
     SNR=0,
@@ -90,7 +90,7 @@ def make_data(
 
     rv_planet, rv_star = calc_rvs(
         v_sys, v_sys_measured, Kp, rv_semiamp_orbit, phases
-    )  # measured in m/s
+    )  # measured in m/s now
 
     flux_cube = np.zeros(
         (n_order, n_exposure, n_pixel)
@@ -245,7 +245,6 @@ def make_data(
             for i in range(n_exposure):
                 flux_cube[j][i] -= np.mean(flux_cube[j][i])
 
-    # todo: check vars
     if np.all(pca_noise_matrix == 0):
         print("was all zero")
         pca_noise_matrix = np.ones_like(pca_noise_matrix)
@@ -373,6 +372,7 @@ def calc_log_likelihood(
             scale,
             star,
             observation,
+            reprocessing=True,
         )
 
         # ok now do the PCA. where does it fall apart?

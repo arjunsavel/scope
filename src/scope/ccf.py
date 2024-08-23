@@ -34,7 +34,7 @@ def calc_ccf(model_flux, data_arr_slice, n_pixel):
     )  # normalized and such
     variance_model = jnp.var(model_vector, axis=1)
     variance_data = jnp.var(data_arr_slice, axis=1)
-    cross_variance = (model_vector * data_arr_slice).sum(axis=1)
+    cross_variance = (model_vector * data_arr_slice).sum(axis=1) / n_pixel
 
     # now need to sum
     ccf = (cross_variance / jnp.sqrt(variance_data * variance_model)).sum()
