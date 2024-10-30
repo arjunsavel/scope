@@ -53,6 +53,7 @@ def make_data(
     b=0.0,  # impact parameter
     divide_out_of_transit=False,
     out_of_transit_dur=0.1,
+    v_sys_measured=v_sys_measured,
 ):
     """
     Creates a simulated HRCCS dataset. Main function.
@@ -83,10 +84,6 @@ def make_data(
         :just_tellurics: (array) the telluric model that's multiplied to the dataset.
 
     """
-
-    v_sys_measured = (
-        1.6845  # this is the systemic velocity of the system reported in the literature
-    )
 
     rv_planet, rv_star = calc_rvs(
         v_sys, v_sys_measured, Kp, rv_semiamp_orbit, phases
@@ -285,6 +282,7 @@ def calc_log_likelihood(
     u2=0.3,
     LD=True,
     b=0.0,  # impact parameter
+    v_sys_measured=0.0,
 ):
     """
     Calculates the log likelihood and cross-correlation function of the data given the model parameters.
@@ -336,11 +334,6 @@ def calc_log_likelihood(
             :ccf: array
             Cross-correlation function of the data given the model parameters
     """
-
-    v_sys_measured = (
-        1.6845  # this is the systemic velocity of the system reported in the literature
-    )
-
     rv_planet, rv_star = calc_rvs(
         v_sys, v_sys_measured, Kp, rv_semiamp_orbit, phases
     )  # measured in m/s
@@ -461,7 +454,7 @@ def simulate_observation(
     phases = np.linspace(phase_start, phase_end, n_exposures)
     Rp_solar = Rp * rjup_rsun  # convert from jupiter radii to solar radii
     Kp_array = np.linspace(kp - 100, kp + 100, 200)
-    v_sys_array = np.arange(-100, 100)
+    v_sys_array = np.arange(v_sys - 100, v_sys + 100)
     n_order, n_pixel = (44, 1848)  # todo: generalize.
     mike_wave, mike_cube = pickle.load(open(data_cube_path, "rb"), encoding="latin1")
 
@@ -523,6 +516,7 @@ def simulate_observation(
         observation=observation,
         divide_out_of_transit=False,
         out_of_transit_dur=0.1,
+        v_sys_measured=v_sys,
     )
 
     run_name = f"{n_princ_comp}_NPC_{blaze}_blaze_{star}_star_{telluric}_telluric_{SNR}_SNR_{tell_type}_{time_dep_tell}_{wav_error}_{order_dep_throughput}"
@@ -554,6 +548,7 @@ def simulate_observation(
                 A_noplanet=A_noplanet,
                 star=star,
                 observation=observation,
+                v_sys_measured=v_sys,
             )
             lls[l, k], ccfs[l, k] = res
 

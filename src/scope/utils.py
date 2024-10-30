@@ -216,6 +216,8 @@ def calc_crossing_time(
     b=0.027,
     R=45000,
     pix_per_res=3.3,
+    phase_start=0.9668567402328337,
+    phase_end=1.0331432597671664,
     plot=False,
 ):
     """
@@ -321,8 +323,8 @@ def calc_crossing_time(
         plt.xlim(0.96, 1.041)
 
     # todo: generalize this!
-    ingress = 0.96
-    egress = 1.04
+    ingress = phase_start
+    egress = phase_end
     during_transit = (phases[:-1] > ingress) & (phases[:-1] < egress)
 
     res_crossing_time_transit = res_crossing_time[during_transit]
@@ -333,9 +335,9 @@ def calc_crossing_time(
     period = period * u.day
     dphase_per_exp = (np.min(res_crossing_time_transit) / period).si
 
-    transit_dur = (0.86966 / 24) / period.value  # degrees. todo: calculate.
+    transit_dur = (4.3336 / 24) / period.value  # degrees. todo: calculate.
     print(transit_dur)
-    print(0.86966 * 60 * 60)  # this is how many seconds long it is
+    print(4.3336 * 60 * 60)  # this is how many seconds long it is
     n_exp = transit_dur / dphase_per_exp
 
     # then query https://igrins-jj.firebaseapp.com/etc/simple:
