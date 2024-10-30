@@ -6,6 +6,13 @@ import pandas as pd
 
 from scope.calc_quantities import *
 
+
+class ScopeConfigError(Exception):
+    def __init__(self, message="scope input file error:"):
+        self.message = message
+        super().__init__(self.message)
+
+
 # Mapping between input file parameters and database columns
 parameter_mapping = {
     "Rp": "pl_radj",
@@ -205,6 +212,9 @@ def parse_input_file(
     data.update(kwargs)
 
     data = calculate_derived_parameters(data)
+
+    if data["tell_type"] == "data-driven" and data["blaze"] == False:
+        raise ScopeConfigError("Data-driven tellurics requires blaze set to True.")
 
     return data
 
