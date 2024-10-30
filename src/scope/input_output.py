@@ -264,7 +264,7 @@ Planet name: {data['planet_name']}
                 date=pd.Timestamp.now().strftime("%Y-%m-%d")
             )
         )
-
+        print("data for writing input:", data)
         # Write parameters by category
         for category, params in categories.items():
             f.write(f"# {category}\n")
