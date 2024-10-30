@@ -212,6 +212,7 @@ def parse_input_file(
     data.update(kwargs)
 
     data = calculate_derived_parameters(data)
+    print("data:", data)
 
     if data["tell_type"] == "data-driven" and data["blaze"] == False:
         raise ScopeConfigError("Data-driven tellurics requires blaze set to True.")
