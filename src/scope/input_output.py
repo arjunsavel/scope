@@ -6,6 +6,13 @@ import pandas as pd
 
 from scope.calc_quantities import *
 
+
+class ScopeConfigError(Exception):
+    def __init__(self, message="scope input file error:"):
+        self.message = message
+        super().__init__(self.message)
+
+
 # Mapping between input file parameters and database columns
 parameter_mapping = {
     "Rp": "pl_radj",
@@ -206,6 +213,9 @@ def parse_input_file(
 
     data = calculate_derived_parameters(data)
 
+    if data["tell_type"] == "data-driven" and data["blaze"] == False:
+        raise ScopeConfigError("Data-driven tellurics requires blaze set to True.")
+
     return data
 
 
@@ -253,7 +263,6 @@ Planet name: {data['planet_name']}
                 date=pd.Timestamp.now().strftime("%Y-%m-%d")
             )
         )
-
         # Write parameters by category
         for category, params in categories.items():
             f.write(f"# {category}\n")
