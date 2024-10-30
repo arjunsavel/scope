@@ -1,7 +1,7 @@
 import io
 import os
+from datetime import datetime
 
-import numpy as np
 import pandas as pd
 
 from scope.calc_quantities import *
@@ -241,7 +241,7 @@ def write_input_file(data, output_file_path="input.txt"):
         ],
         "Analysis Parameters": ["n_princ_comp", "scale"],
     }
-
+    current_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     with open(output_file_path, "w") as f:
         # Write the header
         f.write(
@@ -255,7 +255,7 @@ def write_input_file(data, output_file_path="input.txt"):
 :                           ▀           :
 :                                       :
 :········································
-Created: 2024-08-15
+Created: {current_date}
 Author: YourName
 Planet name: {data['planet_name']}
 
