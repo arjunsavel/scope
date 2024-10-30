@@ -115,9 +115,10 @@ def test_error_on_data_driven_tell(sample_files):
     data["tell_type"] = "data-driven"
     data["blaze"] = False
 
-    write_input_file(data)
+    test_file = "test_input_broken_tell.txt"
+    write_input_file(data, test_file)
     # now reading it in should raise the error
     with pytest.raises(ScopeConfigError) as exc:
-        parse_input_file(input_file_path, db_file_path)
+        parse_input_file(input_file_path, test_file)
 
     assert "Data-driven tellurics requires blaze set to True." in str(exc.value)
