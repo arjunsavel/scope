@@ -7,6 +7,6 @@ coverage:
     - "__init__.py"
     - "src/scope/tests"
     - "src/scope/__init__.py"
-    - "src/scope/__version__.py"
+    - "src/scope/__version.py"
     - "setup.py"
     - "tests"
