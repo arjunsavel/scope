@@ -7,6 +7,7 @@ import pytest
 from scope.input_output import (  # Replace 'your_module' with the actual module name
     parse_input_file,
     write_input_file,
+    ScopeConfigError,
 )
 
 
@@ -106,3 +107,15 @@ def test_write_input_file(sample_files, tmp_path):
     assert new_data["phase_start"] == data["phase_start"]
     assert new_data["blaze"] == data["blaze"]
     assert new_data["star"] == data["star"]
+
+
+def test_error_on_data_driven_tell(sample_files):
+    input_file_path, db_file_path = sample_files
+    data = parse_input_file(input_file_path, db_file_path)
+    data["tell_type"] = "data-driven"
+    data["blaze"] = False
+
+    with pytest.raises(ScopeConfigError) as exc:
+        write_input_file(data)
+
+    assert "Data-driven tellurics requires blaze set to True." in str(exc.value)
