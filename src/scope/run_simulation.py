@@ -53,7 +53,7 @@ def make_data(
     b=0.0,  # impact parameter
     divide_out_of_transit=False,
     out_of_transit_dur=0.1,
-    v_sys_measured=v_sys_measured,
+    v_sys_measured=0.0,
 ):
     """
     Creates a simulated HRCCS dataset. Main function.
