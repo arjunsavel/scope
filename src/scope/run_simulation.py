@@ -17,8 +17,6 @@ from scope.utils import *
 
 abs_path = os.path.dirname(__file__)
 
-np.random.seed(42)
-
 
 def make_data(
     scale,
@@ -32,6 +30,7 @@ def make_data(
     phases,
     Rp_solar,
     Rstar,
+    seed=42,
     do_pca=True,
     blaze=False,
     tellurics=False,
@@ -84,6 +83,7 @@ def make_data(
         :just_tellurics: (array) the telluric model that's multiplied to the dataset.
 
     """
+    np.random.seed(seed)
 
     rv_planet, rv_star = calc_rvs(
         v_sys, v_sys_measured, Kp, rv_semiamp_orbit, phases
@@ -416,6 +416,7 @@ def simulate_observation(
     a=0.033,  #
     lambda_misalign=0.0,
     inc=90.0,
+    seed=42,
     **kwargs,
 ):
     """
@@ -500,6 +501,7 @@ def simulate_observation(
         phases,
         Rp_solar,
         Rstar,
+        seed=seed,
         do_pca=True,
         blaze=blaze,
         n_princ_comp=n_princ_comp,

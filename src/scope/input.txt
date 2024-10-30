@@ -14,6 +14,7 @@ Planet name:            GJ 1214 b
 
 # Simulation setup
 modelname              GJ1214b          # name of the model. used for saving the output files.
+seed                   42               # seed for the random number generator when generating noisy data. set to None for a random seed.
 
 # Filepaths
 planet_spectrum_path    /Users/arjunsavel/Desktop/research/gj1214_hires_sims/best_fit_spectrum_tran_gj1214_steam_nir.pic
