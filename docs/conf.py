@@ -130,7 +130,7 @@ master_doc = "index"
 
 # General information about the project.
 project = "scope"
-copyright = "2023, Arjun B. Savel, Megan Bedell, Eliza M.-R. Kempton, Peter Smith, Jacob L. Bean, Lily L. Zhao, Jorge A. Sanchez, and Michael R. Line"
+copyright = "2024, Arjun B. Savel, Megan Bedell, Eliza M.-R. Kempton, Peter Smith, Jacob L. Bean, Lily L. Zhao, Jorge A. Sanchez, and Michael R. Line"
 author = "Arjun B. Savel, Megan Bedell, Eliza M.-R. Kempton, Peter Smith, Jacob L. Bean, Lily L. Zhao, Jorge A. Sanchez, and Michael R. Line"
 
 # The version info for the project you're documenting, acts as replacement for
