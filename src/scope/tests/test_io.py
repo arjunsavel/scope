@@ -37,12 +37,19 @@ kp                     150.0
 v_rot                  5.0
 v_sys                  0.0
 
+# Instrument Parameters
+blaze                  True          # whether to include a blaze function or not.
+wav_error              False         # whether to include wavelength solution errors or not.
+order_dep_throughput   True          # whether to include order-dependent throughput variations.
+
 # Observation Parameters
 observation            emission
 phase_start                 0.3
 phase_end                 0.5
 blaze                  True
 star                   False
+tell_type              data-driven   # type of telluric simulation. supported modes are ``ATRAN`` and ``data-driven``.
+time_dep_tell          False         # whether the tellurics are time-dependent or not.
 """
         input_file_path = os.path.join(test_dir, "test_input.txt")
         with open(input_file_path, "w") as f:
