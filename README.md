@@ -12,6 +12,12 @@
 Simulating cross-correlation of planetary emission.
 
 # installation
+You can install `scope` using pip:
+```
+pip install scope-astr
+```
+
+
 To install from source, run
 ```
 python3 -m pip install -U pip
