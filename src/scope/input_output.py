@@ -23,6 +23,7 @@ parameter_mapping = {
     "v_sys": "st_radv",
     "planet_name": "pl_name",
     "Rp_solar": "planet_radius_solar",
+    "lambda_misalign": "pl_projobliq",
 }
 
 
