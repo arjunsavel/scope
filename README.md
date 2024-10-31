@@ -47,7 +47,7 @@ pytest .
 For more details, see <a href="https://scope-astr.readthedocs.io/en/latest/">the documentation</a>.
 
 Ideally, most user interaction with `scope` will simply occur through the input file (`scope/input.txt`).
-Any data field in a row marked with the [DB] flag can be pulled from a local database. In our case, a database simply refers
+Any data field in a row marked with the [DB] flag can be pulled from a local database by inputting `DATABASE`. In our case, a database simply refers
 to a CSV containing contents from <a href="https://exoplanetarchive.ipac.caltech.edu/">the Exoplanet Archive</a>,
 with planet parameters resolved with the planet name.
 
