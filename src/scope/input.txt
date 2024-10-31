@@ -35,13 +35,14 @@ u1                     0.1               # first quadratic limb darkening coeffi
 u2                     0.1               # second quadratic limb darkening coefficient. not used if limb_darkening is set to False or if observation is set to emission.
 include_rm             False             # whether to include Rossiter-McLaughlin effect in the simulation or not. only matters if observation is set to transmission.
 v_rot_star             3                 # equatorial rotational velocity of the star in km/s. only matters if include_rm is set to True. and observation is set to transmission.
-lambda_misalign        0                 # misalignment angle of the planet's orbit with respect to the star's rotation axis, in degrees. only matters if include_rm is set to True. and observation is set to transmission.
+lambda_misalign        0                 # misalignment angle of the planet's orbit with respect to the star's rotation axis, in degrees. only matters if include_rm is set to True. and observation is set to transmission. [DB]
 inc                    90.0              # inclination of the planet's orbit with respect to the line of sight, in degrees. only matters if include_rm is set to True. and observation is set to transmission.
 
 # Instrument Parameters
 blaze                  True          # whether to include a blaze function or not.
 wav_error              False         # whether to include wavelength solution errors or not.
 order_dep_throughput   True          # whether to include order-dependent throughput variations.
+vary_throughput        True          # whether to include throughput variations. IGRINS variations fit to WASP-77Ab emission data.
 
 
 # Observation Parameters

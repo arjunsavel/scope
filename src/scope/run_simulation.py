@@ -53,6 +53,7 @@ def make_data(
     divide_out_of_transit=False,
     out_of_transit_dur=0.1,
     v_sys_measured=0.0,
+    vary_throughput=True,
 ):
     """
     Creates a simulated HRCCS dataset. Main function.
@@ -121,12 +122,17 @@ def make_data(
 
     flux_cube = detrend_cube(flux_cube, n_order, n_exposure)
 
-    for i in range(flux_cube.shape[1]):
-        throughput_baseline = throughput_baselines[i]
-        throughput_factor = throughput_baseline / np.nanpercentile(
-            flux_cube[:, i, :], 90
-        )
-        flux_cube[:, i, :] *= throughput_factor
+    if vary_throughput:
+        for i in range(flux_cube.shape[1]):
+            if i >= 79:
+                j = 79 - i
+                throughput_baseline = throughput_baselines[j]
+            else:
+                throughput_baseline = throughput_baselines[i]
+            throughput_factor = throughput_baseline / np.nanpercentile(
+                flux_cube[:, i, :], 90
+            )
+            flux_cube[:, i, :] *= throughput_factor
 
     if tellurics:
         flux_cube = add_tellurics(
@@ -417,6 +423,7 @@ def simulate_observation(
     lambda_misalign=0.0,
     inc=90.0,
     seed=42,
+    vary_throughput=True,
     **kwargs,
 ):
     """
@@ -551,6 +558,7 @@ def simulate_observation(
                 star=star,
                 observation=observation,
                 v_sys_measured=v_sys,
+                vary_throughput=vary_throughput,
             )
             lls[l, k], ccfs[l, k] = res
 
