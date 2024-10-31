@@ -9,7 +9,7 @@
 [![Maintainability](https://api.codeclimate.com/v1/badges/d70a25a6766ee132bd94/maintainability)](https://codeclimate.com/github/arjunsavel/scope/maintainability)
 
 
-Simulating cross-correlation of planetary emission.
+Simulating high-resolution cross-correlation spectroscopy for exoplanet atmospheres.
 
 # installation
 You can install `scope` using pip:
