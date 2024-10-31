@@ -42,10 +42,10 @@ simulating transmission and emission spectra.
 License & attribution
 ---------------------
 
-Copyright 2023 Arjun Savel.
+Copyright 2024 Arjun Savel.
 
 The source code is made available under the terms of the MIT license.
 
 If you make use of this package, please be sure to reference this repository in your work.
-The associated paper (Savel et al. 2023b, in prep.) will be the preferred citation in
+The associated paper (Savel et al. 2024c, in prep.) will be the preferred citation in
 the future.
