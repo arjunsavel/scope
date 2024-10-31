@@ -20,6 +20,7 @@ simulating transmission and emission spectra.
    pages/installation
    pages/quickstart
    pages/inputfile
+   pages/inputdataformats
 
 
 
