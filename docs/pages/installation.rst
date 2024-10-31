@@ -1,5 +1,9 @@
 Installation
 -------------
+To install `scope`, you can use `pip`::
+
+    pip install scope
+
 To install from source, run::
 
     python3 -m pip install -U pip
@@ -26,5 +30,4 @@ All of the required dependencies will be installed automatically. Our current li
 * https://github.com/tqdm/tqdm
 
 
-In the future, we plan to release `scope` on PyPI and conda, so that it can be installed
-with your favorite package manager.
+In the future, we plan to release `scope` on conda.
