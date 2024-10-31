@@ -36,24 +36,34 @@ chmod +x download_data.bash
 ./download_data.bash
 ```
 
-This will create a `data` directory and plop the relevant files into it.
+This will create a `data` directory and plop the relevant files into it. You're also welcome to run the tests to
+make sure everything's been installed correctly:
+
+```
+pytest .
+```
 
 # workflow
-The bulk of `scope`'s high-level functionality is contained in `scope/run_simulation.py`.
-For a detailed tutorial, see <a href="https://scope-astr.readthedocs.io/en/latest/">the documentation</a>.
+For more details, see <a href="https://scope-astr.readthedocs.io/en/latest/">the documentation</a>.
 
-To run a large set of models, edit `scope/grid.py` to define a parameter grid. This grid is then used to run a set of simulations in `scope/run_simulation.py`;
-the command `python run_simulation.py n` will run a simulation in the defined grid at index `n`.
+Ideally, most user interaction with `scope` will simply occur through the input file (`scope/input.txt`).
+Any data field in a row marked with the [DB] flag can be pulled from a local database. In our case, a database simply refers
+to a CSV containing contents from <a href="https://exoplanetarchive.ipac.caltech.edu/">the Exoplanet Archive</a>,
+with planet parameters resolved with the planet name.
 
-The `scope.run_simulation.make_data` function can be used to simulate a single high-resolution dataset. To
-simulate detection significances, use `scope.run_simulation.calc_log_likelihood`.
+Simply edit the input file to the desired parameters, then run:
 
-Running the script requires an exoplanet spectrum, stellar spectrum, and telluric spectrum.
-Default parameters are currently correspond to the exoplanet WASP-77Ab.
+```
+python run_simulation.py
+```
 
-Once completed, `scope.run_simulation.calc_log_likelihood` will output:
-- `simdata` file: the simulated flux cube with PCA performed. That is, the principle components with the largest variance have been removed.
-- `nopca_simdata` file: the simulated flux cube, including all spectral components (exoplanet, star, blaze function, tellurics).
-- `A_noplanet` file: the simulated flux cube with the *lowest-variance* principle component removed.
-- `lls_` file: the log-likelihood surface for the simulated flux cube, as a Kp--Vsys map.
-- `ccfs_` file: the cross-correlation function for the simulated flux cube, as a Kp--Vsys map.
+Running the script requires exoplanet, stellar, and telluric spectra.
+Default spectra and parameters currently correspond to the exoplanet WASP-77Ab.
+
+Once completed, the code will create a directory for the data in `output/` (based on the input `modelname`)
+with the following types of files:
+- `simdata_`: the simulated flux cube with PCA performed. That is, the principal components with the largest variance have been removed.
+- `nopca_simdata_`: the simulated flux cube, including all spectral components (exoplanet, star, blaze function, tellurics).
+- `A_noplanet_`: the simulated flux cube with the *lowest-variance* principal component(s) removed.
+- `lls_`: the log-likelihood surface for the simulated flux cube, as a Kp--Vsys map.
+- `ccfs_`: the cross-correlation function for the simulated flux cube, as a Kp--Vsys map.
