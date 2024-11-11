@@ -1,10 +1,5 @@
-# import sys,os
-# sys.path.append(os.path.realpath('..'))
-# sys.path.append(os.path.realpath('.'))
 import os
-import sys
 
-import jax
 import numpy as np
 from tqdm import tqdm
 
@@ -346,10 +341,9 @@ def calc_log_likelihood(
     CCF = 0.0
     logL = 0.0
     for order in range(n_order):
-        wlgrid_order = np.copy(wlgrid[order,])  # Cropped wavelengths
-        model_flux_cube = np.zeros(
-            (n_exposure, n_pixel)
-        )  # "shifted" model spectra array at each phase
+        # grab the wavelengths from each order
+        wlgrid_order = np.copy(wlgrid[order,])
+        model_flux_cube = np.zeros((n_exposure, n_pixel))
 
         model_flux_cube = doppler_shift_planet_star(
             model_flux_cube,
@@ -374,18 +368,14 @@ def calc_log_likelihood(
             reprocessing=True,
         )
 
-        # ok now do the PCA. where does it fall apart?
         if do_pca:
-            # process the model same as the "data"!
+            # this is the "model reprocessing" step.
             model_flux_cube *= A_noplanet[order]
             model_flux_cube, _ = perform_pca(model_flux_cube, n_princ_comp, False)
-        # I = np.ones(n_pixel)
 
         logl, ccf = calc_ccf(model_flux_cube, flux_cube[order], n_pixel)
         CCF += ccf
         logL += logl
-
-        # # todo: airmass detrending reprocessing
 
     return logL, CCF  # returning CCF and logL values
 
@@ -489,6 +479,7 @@ def simulate_observation(
             star_flux, star_wave, v_rot_star, phases, Rstar, inc, lambda_misalign, a, Rp
         )
 
+    # todo: swap out
     Fstar_conv = get_star_spline(
         star_wave, star_flux, wl_model, instrument_kernel, smooth=False
     )

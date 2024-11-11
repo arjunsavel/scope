@@ -6,7 +6,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from exoplanet.orbits.keplerian import KeplerianOrbit
 from numba import njit
-from scipy.interpolate import splev, splrep
+from scipy import signal
+from scipy.interpolate import interp1d
 from scipy.ndimage import gaussian_filter1d
 from tqdm import tqdm
 
@@ -84,12 +85,38 @@ def make_outdir(outdir):
         print("Directory already exists. Continuing!")
 
 
-def get_instrument_kernel(resolution_ratio=250000 / 45000):
-    xker = np.arange(41) - 20
-    sigma = resolution_ratio / (2.0 * np.sqrt(2.0 * np.log(2.0)))  # nominal
-    yker = np.exp(-0.5 * (xker / sigma) ** 2.0)
-    yker /= yker.sum()
-    return yker
+def get_instrument_kernel(resolution_ratio=250000 / 45000, kernel_size=41):
+    """
+    Creates a Gaussian kernel for instrument response using an alternative implementation.
+
+    Parameters
+    ----------
+    resolution_ratio : float
+        Ratio of resolutions (default: 250000/45000)
+    kernel_size : int
+        Size of the kernel (must be odd, default: 41)
+
+    Returns
+    -------
+    numpy.ndarray
+        Normalized Gaussian kernel
+    """
+    # Ensure kernel size is odd
+    if kernel_size % 2 == 0:
+        raise ValueError("Kernel size must be odd")
+
+    # Convert resolution ratio to standard deviation
+    std = resolution_ratio / (2.0 * np.sqrt(2.0 * np.log(2.0)))
+
+    # Create the Gaussian window
+    gaussian_window = signal.windows.gaussian(
+        kernel_size, std=std, sym=True  # Ensure symmetry
+    )
+
+    # Normalize to sum to 1
+    normalized_kernel = gaussian_window / gaussian_window.sum()
+
+    return normalized_kernel
 
 
 def save_data(outdir, run_name, flux_cube, flux_cube_nopca, A_noplanet, just_tellurics):
@@ -387,7 +414,8 @@ def calc_rvs(v_sys, v_sys_measured, Kp, Kstar, phases):
 
 def get_star_spline(star_wave, star_flux, planet_wave, yker, smooth=True):
     """
-    calculates the stellar spline. accounting for convolution and such.
+    Calculates the stellar spline using an alternative implementation with linear interpolation
+    instead of B-splines.
 
     Inputs
     ------
@@ -405,20 +433,31 @@ def get_star_spline(star_wave, star_flux, planet_wave, yker, smooth=True):
     Returns
     -------
     star_flux: array
-        Fluxes of the star. Measured in W/m^2/micron. todo: check.
+        Interpolated and processed stellar fluxes. Measured in W/m^2/micron.
     """
-    star_spline = splrep(star_wave, star_flux, s=0.0)
+    # Create interpolation function using scipy's interp1d
+    # Using cubic interpolation for smoother results
+    interpolator = interp1d(
+        star_wave,
+        star_flux,
+        kind="cubic",
+        bounds_error=False,
+        fill_value=(star_flux[0], star_flux[-1]),  # Extrapolate with edge values
+    )
 
-    star_flux = splev(
-        planet_wave, star_spline, der=0
-    )  # now on same wavelength grid as planet wave
+    # Interpolate onto planet wavelength grid
+    interpolated_flux = interpolator(planet_wave)
 
-    star_flux = np.convolve(star_flux, yker, mode="same")  # convolving star too
+    # Perform convolution
+    convolved_flux = np.convolve(interpolated_flux, yker, mode="same")
 
+    # Apply Gaussian smoothing if requested
     if smooth:
-        star_flux = gaussian_filter1d(star_flux, 200)
+        final_flux = gaussian_filter1d(convolved_flux, sigma=200)
+    else:
+        final_flux = convolved_flux
 
-    return star_flux
+    return final_flux
 
 
 def change_wavelength_solution(wl_cube_model, flux_cube_model, doppler_shifts):
