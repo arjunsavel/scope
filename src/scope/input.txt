@@ -33,7 +33,7 @@ scale                  1.0               # scaling factor for the model spectrum
 LD                     True              # whether to include limb darkening in the simulation or not. only matters if observation is set to transmission.
 u1                     0.1               # first quadratic limb darkening coefficient. not used if limb_darkening is set to False or if observation is set to emission.
 u2                     0.1               # second quadratic limb darkening coefficient. not used if limb_darkening is set to False or if observation is set to emission.
-include_rm             False             # whether to include Rossiter-McLaughlin effect in the simulation or not. only matters if observation is set to transmission.
+include_rm             False             # *experimental*. Whether to include Rossiter-McLaughlin effect in the simulation or not. only matters if observation is set to transmission.
 v_rot_star             3                 # equatorial rotational velocity of the star in km/s. only matters if include_rm is set to True. and observation is set to transmission.
 lambda_misalign        0                 # misalignment angle of the planet's orbit with respect to the star's rotation axis, in degrees. only matters if include_rm is set to True. and observation is set to transmission. [DB]
 inc                    90.0              # inclination of the planet's orbit with respect to the line of sight, in degrees. only matters if include_rm is set to True. and observation is set to transmission.
@@ -58,5 +58,5 @@ time_dep_tell          False         # whether the tellurics are time-dependent 
 
 # Analysis Parameters
 n_princ_comp           4             # number of principal components to remove from the simulated data before cross-correlation.
-divide_out_of_transit  False         # whether to divide the in-transit data by median out-of-transit or not. only used if observation is set to transmission.
-out_of_transit_dur     1.          # duration of the out-of-transit data, in units of transit duration. only used if observation is set to transmission and divide_out_of_transit is set to True.
+divide_out_of_transit  False         # *experimental*. Whether to divide the in-transit data by median out-of-transit or not. only used if observation is set to transmission.
+out_of_transit_dur     1.          # *experimental*. Duration of the out-of-transit data, in units of transit duration. only used if observation is set to transmission and divide_out_of_transit is set to True.

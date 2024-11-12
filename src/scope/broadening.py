@@ -1,5 +1,5 @@
 """
-file to calculate the intensity map and broadening said map. and the velocity profile.
+File to calculate the intensity map and broadening said map. and the velocity profile.
 """
 
 

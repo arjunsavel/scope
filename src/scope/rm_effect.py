@@ -1,3 +1,7 @@
+"""
+Module for simulating the Rossiter-McLaughlin effect. This is experimental for now.
+"""
+
 import matplotlib.pyplot as plt
 import numpy as np
 from astropy import constants as const
