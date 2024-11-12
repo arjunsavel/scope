@@ -62,8 +62,11 @@ def doppler_shift_planet_star(
             ) + 1.0
             if not reprocessing:
                 model_flux_cube[exposure,] *= flux_star * Rstar**2
-
-        else:  # in transmission, after we "divide out" (with PCA) the star and tellurics, we're left with Fp.
+        elif observation == "emission":
+            model_flux_cube[exposure,] = flux_planet * (Rp_solar * rsun) ** 2
+        elif (
+            observation == "transmission"
+        ):  # in transmission, after we "divide out" (with PCA) the star and tellurics, we're left with Fp.
             I = calc_limb_darkening(u1, u2, a, b, Rstar, phases[exposure], LD)
             model_flux_cube[exposure,] = 1.0 - flux_planet * I
             if not reprocessing:
