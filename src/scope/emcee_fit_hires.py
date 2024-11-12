@@ -7,7 +7,6 @@ from schwimmbad import MPIPool  # todo: add these as dependencies...?
 from scope.run_simulation import *
 
 do_pca = True
-np.random.seed(42)
 
 # load the data
 test_data_path = os.path.join(os.path.dirname(__file__), "../data")
@@ -116,6 +115,7 @@ def sample(
     Rp_solar,
     Rstar,
     phases,
+    seed=42,
     do_pca=True,
     best_kp=192.06,
     best_vsys=0.0,
@@ -139,7 +139,7 @@ def sample(
     -------
         :sampler: (emcee.EnsembleSampler) the sampler object.
     """
-    # todo: make the likelhiood function based on the sampling parameters.
+    np.random.seed(seed)
 
     pos = np.array([best_kp, best_vsys, best_log_scale]) + 1e-2 * np.random.randn(
         nchains, 3
