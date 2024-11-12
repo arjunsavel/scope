@@ -37,6 +37,22 @@ def log_prob(
     Inputs
     ------
         :x: (array) array of parameters
+        :best_kp: (float) best-fit planet velocity
+        :wl_cube_model: (array) wavelength cube model
+        :Fp_conv: (array) convolved planet spectrum
+        :n_order: (int) number of orders
+        :n_exposure: (int) number of exposures
+        :n_pixel: (int) number of pixels
+        :A_noplanet: (array) no planet spectrum
+        :star: (array) stellar spectrum
+        :n_princ_comp: (int) number of principal components
+        :flux_cube: (array) flux cube
+        :wl_model: (array) wavelength model
+        :Fstar_conv: (array) convolved stellar spectrum
+        :Rp_solar: (float) planet radius in solar radii
+        :Rstar: (float) stellar radius
+        :phases: (array) array of phases
+        :do_pca: (bool) whether to do PCA
 
     Outputs
     -------
@@ -82,6 +98,7 @@ def prior(x, best_kp):
     Inputs
     ------
         :x: (array) array of parameters
+        :best_kp: (float) best-fit planet velocity
 
     Outputs
     -------
@@ -131,7 +148,19 @@ def sample(
         :nchains: (int) number of chains
         :nsample: (int) number of samples
         :A_noplanet: (array) array of the no planet spectrum
-        :fTemp: (array) array of the stellar spectrum
+        :Fp_conv: (array) array of the stellar spectrum
+        :wl_cube_model: (array) wavelength cube model
+        :n_order: (int) number of orders
+        :n_exposure: (int) number of exposures
+        :n_pixel: (int) number of pixels
+        :star: (array) stellar spectrum
+        :n_princ_comp: (int) number of principal components
+        :flux_cube: (array) flux cube
+        :wl_model: (array) wavelength model
+        :Fstar_conv: (array) convolved stellar spectrum
+        :Rp_solar: (float) planet radius in solar radii
+        :Rstar: (float) stellar radius
+        :phases: (array) array of phases
         :do_pca: (bool) whether to do PCA
         :best_kp: (float) best-fit planet velocity
         :best_vsys: (float) best-fit system velocity
