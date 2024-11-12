@@ -121,24 +121,40 @@ def get_rot_ker(
     else:
         is_transit = True
     # Input validation
-    if not isinstance(wavelengths, jnp.ndarray):
-        raise RotationalBroadeningError("wavelengths must be a JAX array")
-    if len(wavelengths.shape) != 1:
-        raise RotationalBroadeningError(
-            f"wavelengths must be 1D array, got shape {wavelengths.shape}"
-        )
-    if wavelengths.size < 2:
-        raise RotationalBroadeningError("wavelength array must have at least 2 points")
-    if v_sin_i <= 0:
-        raise RotationalBroadeningError(f"v_sin_i must be positive, got {v_sin_i}")
-
     try:
+        # Convert v_sin_i to float or JAX array if needed
+        if isinstance(v_sin_i, (list, np.ndarray)):
+            v_sin_i = jnp.array(v_sin_i)
+
+        # Convert wavelengths to JAX array if needed
+        if not isinstance(wavelengths, jnp.ndarray):
+            wavelengths = jnp.array(wavelengths)
+
+        # Basic input validation
+        if wavelengths.ndim != 1:
+            raise RotationalBroadeningError(
+                f"wavelengths must be 1D array, got shape {wavelengths.shape}"
+            )
+        if wavelengths.size < 2:
+            raise RotationalBroadeningError(
+                "wavelength array must have at least 2 points"
+            )
+        if isinstance(v_sin_i, (float, int)) and v_sin_i <= 0:
+            raise RotationalBroadeningError(f"v_sin_i must be positive, got {v_sin_i}")
+
+        # Calculate kernel
         kernel = get_rotational_kernel(v_sin_i, wavelengths, is_transit)
+
         if jnp.any(jnp.isnan(kernel)):
             raise RotationalBroadeningError("Kernel calculation failed - check inputs")
+
         return kernel
+
     except Exception as e:
-        raise RotationalBroadeningError(f"Calculation failed: {str(e)}")
+        # Convert any generic exceptions to our custom exception
+        if not isinstance(e, RotationalBroadeningError):
+            raise RotationalBroadeningError(f"Calculation failed: {str(e)}")
+        raise
 
 
 # @njit
