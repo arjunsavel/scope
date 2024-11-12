@@ -121,6 +121,7 @@ def sample(
     best_vsys=0.0,
     best_log_scale=0.0,
     multicore=True,
+    walker_dispersion=1e-2,
 ):
     """
     Samples the likelihood. right now, it needs an instantiated best-fit value.
@@ -135,6 +136,7 @@ def sample(
         :best_kp: (float) best-fit planet velocity
         :best_vsys: (float) best-fit system velocity
         :best_log_scale: (float) best-fit log scale
+        :walker_dispersion: (float) scale by which to disperse the walkers at initialization
 
     Outputs
     -------
@@ -142,9 +144,9 @@ def sample(
     """
     np.random.seed(seed)
 
-    pos = np.array([best_kp, best_vsys, best_log_scale]) + 1e-2 * np.random.randn(
-        nchains, 3
-    )
+    pos = np.array(
+        [best_kp, best_vsys, best_log_scale]
+    ) + walker_dispersion * np.random.randn(nchains, 3)
 
     # Our 'pool' is just an object with a 'map' method which points to mpi_map
     with MPIPool() as pool:
