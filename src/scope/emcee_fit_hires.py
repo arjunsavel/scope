@@ -120,6 +120,7 @@ def sample(
     best_kp=192.06,
     best_vsys=0.0,
     best_log_scale=0.0,
+    multicore=True,
 ):
     """
     Samples the likelihood. right now, it needs an instantiated best-fit value.
@@ -150,7 +151,6 @@ def sample(
         if not pool.is_master():
             pool.wait()
             sys.exit(0)
-        np.random.seed(42)
 
         nwalkers, ndim = pos.shape
 
