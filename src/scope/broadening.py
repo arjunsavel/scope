@@ -97,10 +97,10 @@ def get_rotational_kernel(
     return kernel / jnp.sum(kernel)
 
 
-def safe_get_rotational_kernel(
+def get_rot_ker(
     v_sin_i: Union[float, jnp.ndarray],
     wavelengths: jnp.ndarray,
-    is_transit: bool = False,
+    observation: str = "emission",
 ) -> jnp.ndarray:
     """
     Safe wrapper for get_rotational_kernel with proper error handling.
@@ -116,6 +116,10 @@ def safe_get_rotational_kernel(
     Raises:
         RotationalBroadeningError: If calculation fails
     """
+    if observation == "emission":
+        is_transit = False
+    else:
+        is_transit = True
     # Input validation
     if not isinstance(wavelengths, jnp.ndarray):
         raise RotationalBroadeningError("wavelengths must be a JAX array")

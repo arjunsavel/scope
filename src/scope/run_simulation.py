@@ -469,11 +469,7 @@ def simulate_observation(
     wl_model = wl_model.astype(np.float64)
 
     # Fp_conv_rot = broaden_spectrum(wl_model / 1e6, Fp, 0, vl=v_rot)
-    if observation == "emission":
-        kernel_type = "standard"
-    else:
-        kernel_type = "transit"
-    rot_ker = safe_get_rotational_kernel(v_rot, wl_model, kernel_type)
+    rot_ker = get_rot_ker(v_rot, wl_model, observation)
     Fp_conv_rot = np.convolve(Fp, rot_ker, mode="same")
 
     # instrument profile convolution
