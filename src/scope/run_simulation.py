@@ -1,3 +1,9 @@
+"""
+Main module for running a simulation of the HRCCS data.
+This module contains the main functions for simulating the data and
+calculating the log likelihood and cross-correlation function of the data given the model parameters.
+"""
+
 import os
 
 import numpy as np

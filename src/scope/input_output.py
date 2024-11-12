@@ -1,3 +1,7 @@
+"""
+Module to handle the input files.
+"""
+
 import io
 import os
 from datetime import datetime

@@ -1,3 +1,7 @@
+"""
+Utility functions for simulating HRCCS data.
+"""
+
 import os
 import pickle
 

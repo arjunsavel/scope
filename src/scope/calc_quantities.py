@@ -1,3 +1,7 @@
+"""
+This module contains functions to calculate derived quantities from the input data.
+"""
+
 import astropy.units as u
 import numpy as np
 

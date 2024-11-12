@@ -1,4 +1,7 @@
-import pickle
+"""
+Module to fit (simulated) HRCCS data with emcee, using MPI (multi-core).
+The fit is with respect to the velocity parameters (Kp, Vsys) and the scale factor.
+"""
 import sys
 
 import emcee
