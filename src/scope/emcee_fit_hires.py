@@ -2,7 +2,7 @@ import pickle
 import sys
 
 import emcee
-from schwimmbad import MPIPool  # todo: add these as dependencies...?
+from schwimmbad import MPIPool
 
 from scope.run_simulation import *
 
