@@ -12,7 +12,7 @@
 
 
 
-Simulating high-resolution cross-correlation spectroscopy for exoplanet atmospheres.
+Simulating high-resolution cross-correlation spectroscopy for exoplanet atmospheres. Currently supports simulating IGRINS (on GEMINI-S) observations of transmission and emission spectra.
 
 # installation
 You can install `scope` using pip:
