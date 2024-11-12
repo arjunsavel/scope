@@ -6,8 +6,6 @@ from schwimmbad import MPIPool  # todo: add these as dependencies...?
 
 from scope.run_simulation import *
 
-do_pca = True
-
 # load the data
 test_data_path = os.path.join(os.path.dirname(__file__), "../data")
 
