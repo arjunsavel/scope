@@ -3,30 +3,191 @@ File to calculate the intensity map and broadening said map. and the velocity pr
 """
 
 
+from enum import Enum
+from functools import partial
+from typing import Literal, Tuple, Union
+
+import jax
+import jax.numpy as jnp
 import numpy as np
 from numba import njit
 
 from scope.constants import *
 
 
-def get_rot_ker(vsini, wStar):
-    """
-    Broadens by a single velocity?
-    """
-    (nx,) = wStar.shape
-    dRV = np.mean(2.0 * (wStar[1:] - wStar[0:-1]) / (wStar[1:] + wStar[0:-1])) * 2.998e5
-    nker = 401
-    hnker = (nker - 1) // 2
-    rker = np.zeros(nker)
-    for ii in range(nker):
-        ik = ii - hnker
-        x = ik * dRV / vsini
-        if np.abs(x) < 1.0:
-            y = np.sqrt(1 - x**2)
-            rker[ii] = y
-    rker /= rker.sum()
+class KernelType(Enum):
+    STANDARD = "standard"
+    TRANSIT = "transit"
 
-    return rker
+
+class RotationalBroadeningError(Exception):
+    """Custom exception for rotational broadening calculation errors."""
+
+    pass
+
+
+@partial(jax.jit, static_argnames=("kernel_size",))
+def calculate_velocity_step(wavelengths: jnp.ndarray) -> float:
+    """Calculate the velocity step size from wavelength array."""
+    # Check wavelength array is sorted
+    is_sorted = jnp.all(wavelengths[1:] > wavelengths[:-1])
+
+    # Calculate velocity step (dv/c = dλ/λ)
+    delta_wavelengths = wavelengths[1:] - wavelengths[:-1]
+    wavelength_means = (wavelengths[1:] + wavelengths[:-1]) / 2.0
+    dRV = jnp.mean(2.0 * delta_wavelengths / wavelength_means) * 2.998e5
+
+    # Use custom error checking since we're in JAX
+    error_occurred = jnp.logical_or(~is_sorted, jnp.any(jnp.isnan(dRV)))
+
+    return jax.lax.cond(error_occurred, lambda _: jnp.nan, lambda _: dRV, operand=None)
+
+
+@partial(jax.jit, static_argnames=("kernel_size",))
+def create_kernel_grid(kernel_size: int) -> Tuple[jnp.ndarray, int]:
+    """Create the basic grid for the kernel calculation."""
+    half_kernel = (kernel_size - 1) // 2
+    indices = jnp.arange(kernel_size)
+    return indices - half_kernel, half_kernel
+
+
+@partial(jax.jit, static_argnames=("kernel_type", "kernel_size"))
+def calculate_kernel_profile(x_positions: jnp.ndarray, kernel_type: str) -> jnp.ndarray:
+    """
+    Calculate the kernel profile based on the type.
+
+    Args:
+        x_positions: Normalized velocity positions
+        kernel_type: Either 'standard' or 'transit'
+
+    Returns:
+        Kernel profile before normalization
+    """
+
+    def standard_profile(x):
+        return jnp.sqrt(1 - x**2)
+
+    def transit_profile(x):
+        return 1.0 / (jnp.pi * jnp.sqrt(1 - x**2))
+
+    return jax.lax.cond(
+        kernel_type == "standard", standard_profile, transit_profile, x_positions
+    )
+
+
+@partial(jax.jit, static_argnames=("kernel_type", "kernel_size"))
+def get_rotational_kernel(
+    v_sin_i: Union[float, jnp.ndarray],
+    wavelengths: jnp.ndarray,
+    kernel_type: str = "standard",
+    kernel_size: int = None,
+) -> jnp.ndarray:
+    """
+    Calculate the rotational broadening kernel using JAX.
+
+    Args:
+        v_sin_i: Projected rotational velocity in km/s
+        wavelengths: Array of wavelength points (must be sorted)
+        kernel_type: 'standard' or 'transit'
+        kernel_size: Size of the kernel (must be odd).
+                    Defaults to 401 for standard and 51 for transit
+
+    Returns:
+        Normalized rotational broadening kernel
+
+    Raises:
+        RotationalBroadeningError: If inputs are invalid or calculation fails
+    """
+    # Set default kernel size based on type
+    if kernel_size is None:
+        kernel_size = 51 if kernel_type == "transit" else 401
+
+    # Input validation wrapper (will run only during tracing)
+    def validate_inputs(v_sin_i, wavelengths, kernel_size):
+        if not isinstance(kernel_size, int) or kernel_size % 2 == 0:
+            raise RotationalBroadeningError(
+                f"Kernel size must be odd integer, got {kernel_size}"
+            )
+        if v_sin_i <= 0:
+            raise RotationalBroadeningError(f"v_sin_i must be positive, got {v_sin_i}")
+        if len(wavelengths.shape) != 1:
+            raise RotationalBroadeningError(
+                f"Wavelengths must be 1D array, got shape {wavelengths.shape}"
+            )
+        if wavelengths.size < 2:
+            raise RotationalBroadeningError(
+                "Wavelength array must have at least 2 points"
+            )
+
+    validate_inputs(v_sin_i, wavelengths, kernel_size)
+
+    # Calculate velocity step
+    dRV = calculate_velocity_step(wavelengths)
+
+    def calculate_kernel(dRV):
+        # Create kernel grid
+        indices, _ = create_kernel_grid(kernel_size)
+
+        # Calculate normalized velocity positions
+        x_positions = indices * dRV / v_sin_i
+
+        # Calculate kernel profile based on type
+        profile = calculate_kernel_profile(x_positions, kernel_type)
+
+        # Apply mask for valid regions (|x| < 1)
+        kernel = jnp.where(jnp.abs(x_positions) < 1.0, profile, 0.0)
+
+        # Normalize the kernel
+        return kernel / jnp.sum(kernel)
+
+    def handle_nan_error(dRV):
+        return jnp.zeros(kernel_size)
+
+    kernel = jax.lax.cond(jnp.isnan(dRV), handle_nan_error, calculate_kernel, dRV)
+
+    # Final validation of kernel
+    is_valid = jnp.logical_and(
+        jnp.all(jnp.isfinite(kernel)), jnp.abs(jnp.sum(kernel) - 1.0) < 1e-10
+    )
+
+    return jax.lax.cond(
+        is_valid, lambda x: x, lambda _: jnp.full(kernel_size, jnp.nan), kernel
+    )
+
+
+def safe_get_rotational_kernel(
+    v_sin_i: Union[float, jnp.ndarray],
+    wavelengths: jnp.ndarray,
+    kernel_type: str = "standard",
+    kernel_size: int = None,
+) -> jnp.ndarray:
+    """
+    Safe wrapper for get_rotational_kernel with proper error handling.
+
+    Args:
+        v_sin_i: Projected rotational velocity in km/s
+        wavelengths: Array of wavelength points
+        kernel_type: 'standard' or 'transit'
+        kernel_size: Size of the kernel (optional)
+
+    Returns:
+        Normalized kernel array
+
+    Raises:
+        RotationalBroadeningError: If calculation fails
+    """
+    if kernel_type not in ["standard", "transit"]:
+        raise RotationalBroadeningError(
+            f"kernel_type must be 'standard' or 'transit', got {kernel_type}"
+        )
+
+    try:
+        kernel = get_rotational_kernel(v_sin_i, wavelengths, kernel_type, kernel_size)
+        if jnp.any(jnp.isnan(kernel)):
+            raise RotationalBroadeningError("Kernel calculation failed - check inputs")
+        return kernel
+    except Exception as e:
+        raise RotationalBroadeningError(f"Calculation failed: {str(e)}")
 
 
 # @njit
