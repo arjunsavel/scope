@@ -148,38 +148,48 @@ def sample(
         [best_kp, best_vsys, best_log_scale]
     ) + walker_dispersion * np.random.randn(nchains, 3)
 
-    # Our 'pool' is just an object with a 'map' method which points to mpi_map
-    with MPIPool() as pool:
-        if not pool.is_master():
-            pool.wait()
-            sys.exit(0)
+    # set up the arguments passed to the likelihood function
+    args = (
+        best_kp,
+        wl_cube_model,
+        Fp_conv,
+        n_order,
+        n_exposure,
+        n_pixel,
+        A_noplanet,
+        star,
+        n_princ_comp,
+        flux_cube,
+        wl_model,
+        Fstar_conv,
+        Rp_solar,
+        Rstar,
+        phases,
+        do_pca,
+    )
+    nwalkers, ndim = pos.shape
 
-        nwalkers, ndim = pos.shape
+    if multicore:
+        # Our 'pool' is just an object with a 'map' method which points to mpi_map
+        with MPIPool() as pool:
+            if not pool.is_master():
+                pool.wait()
+                sys.exit(0)
 
+            sampler = emcee.EnsembleSampler(
+                nwalkers,
+                ndim,
+                log_prob,
+                args=args,
+                pool=pool,
+            )
+            sampler.run_mcmc(pos, nsample, progress=True)
+    else:
         sampler = emcee.EnsembleSampler(
             nwalkers,
             ndim,
             log_prob,
-            args=(
-                best_kp,
-                wl_cube_model,
-                Fp_conv,
-                n_order,
-                n_exposure,
-                n_pixel,
-                A_noplanet,
-                star,
-                n_princ_comp,
-                flux_cube,
-                wl_model,
-                Fstar_conv,
-                Rp_solar,
-                Rstar,
-                phases,
-                do_pca,
-            ),
-            pool=pool,
+            args=args,
         )
         sampler.run_mcmc(pos, nsample, progress=True)
-
     return sampler
