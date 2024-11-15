@@ -31,3 +31,11 @@ All of the required dependencies will be installed automatically. Our current li
 
 
 In the future, we plan to release `scope` on conda.
+
+You can also download the required data files with::
+
+    cd src/scope
+    chmod +x download_data.bash
+    ./download_data.bash
+
+These files total about 141 MB.
