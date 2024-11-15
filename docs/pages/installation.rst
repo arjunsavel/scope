@@ -2,7 +2,7 @@ Installation
 -------------
 To install `scope`, you can use `pip`::
 
-    pip install scope
+    pip install scope-astr
 
 To install from source, run::
 
