@@ -70,3 +70,8 @@ with the following types of files:
 - `A_noplanet_`: the simulated flux cube with the *lowest-variance* principal component(s) removed.
 - `lls_`: the log-likelihood surface for the simulated flux cube, as a Kp--Vsys map.
 - `ccfs_`: the cross-correlation function for the simulated flux cube, as a Kp--Vsys map.
+- 
+
+# attribution
+
+If you use `scope` in your work, please cite our paper: https://arxiv.org/abs/2411.07303
