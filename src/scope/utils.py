@@ -48,11 +48,11 @@ def doppler_shift_planet_star(
     reprocessing=False,
 ):
     for exposure in range(n_exposure):
-        flux_planet = calc_doppler_shift(
+        _, flux_planet = calc_doppler_shift(
             wlgrid_order, wl_model, Fp_conv, rv_planet[exposure]
         )
         flux_planet *= scale  # apply scale factor
-        flux_star = calc_doppler_shift(
+        _, flux_star = calc_doppler_shift(
             wlgrid_order, wl_model, Fstar_conv, rv_star[exposure]
         )
 
@@ -63,6 +63,7 @@ def doppler_shift_planet_star(
             if not reprocessing:
                 model_flux_cube[exposure,] *= flux_star * Rstar**2
         elif observation == "emission":
+
             model_flux_cube[exposure,] = flux_planet * (Rp_solar * rsun) ** 2
         elif (
             observation == "transmission"
@@ -236,7 +237,7 @@ def calc_doppler_shift(eval_wave, template_wave, template_flux, v):
     delta_lam = eval_wave * beta
     shifted_wave = eval_wave - delta_lam
     shifted_flux = np.interp(shifted_wave, template_wave, template_flux)
-    return shifted_flux
+    return shifted_wave, shifted_flux
 
 
 def calc_crossing_time(
@@ -411,12 +412,13 @@ def calc_rvs(v_sys, v_sys_measured, Kp, Kstar, phases):
     v_sys_tot = v_sys + v_sys_measured  # total offset
     rv_planet = (
         v_sys_tot + Kp * np.sin(2.0 * np.pi * phases)
-    ) * 1e3  # input in km/s, convert to m/s
+    )  # input in km/s, convert to m/s
+
 
     rv_star = (
         v_sys_measured - Kstar * np.sin(2.0 * np.pi * phases)
-    ) * 1e3  # measured in m/s. note opposite sign!
-    return rv_planet, rv_star
+    )   # measured in m/s. note opposite sign!
+    return rv_planet * 1e3, rv_star * 1e3
 
 
 def get_star_spline(star_wave, star_flux, planet_wave, yker, smooth=True):
