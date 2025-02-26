@@ -6,6 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "scope-astr"
 authors = [
     {name = "Arjun Savel", email = "asavel@umd.edu"},
+    {name = "Arjun Savel"},
     {name= "Megan Bedell"},
     {name= "Eliza M.-R. Kempton"},
     {name= "Peter Smith"},
