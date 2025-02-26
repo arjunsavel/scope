@@ -131,7 +131,9 @@ class TestDopplerShift(unittest.TestCase):
         interped_flux = np.interp(eval_wave, template_wave, template_flux)
         v = 1e-6  # m/s. should not change much
 
-        shifted_flux = calc_doppler_shift(eval_wave, template_wave, template_flux, v)
+        shifted_wave, shifted_flux = calc_doppler_shift(
+            eval_wave, template_wave, template_flux, v
+        )
         # test that shifted flux and interpred flux are very similar
         assert (
             np.testing.assert_allclose(shifted_flux, interped_flux, rtol=1e-2) == None
@@ -148,7 +150,9 @@ class TestDopplerShift(unittest.TestCase):
         interped_flux = np.interp(eval_wave, template_wave, template_flux)
         v = 2e3  # m/s. should not change much
 
-        shifted_flux = calc_doppler_shift(eval_wave, template_wave, template_flux, v)
+        shifted_wave, shifted_flux = calc_doppler_shift(
+            eval_wave, template_wave, template_flux, v
+        )
         # test that shifted flux and interpred flux are very similar
         np.testing.assert_raises(
             AssertionError, np.testing.assert_array_equal, shifted_flux, interped_flux
@@ -165,7 +169,9 @@ class TestDopplerShift(unittest.TestCase):
         interped_flux = np.interp(eval_wave, template_wave, template_flux)
 
         v = -5e4  # m/s. should not change much
-        shifted_flux = calc_doppler_shift(eval_wave, template_wave, template_flux, v)
+        shifted_wave, shifted_flux = calc_doppler_shift(
+            eval_wave, template_wave, template_flux, v
+        )
         wav_max_shifted = eval_wave[np.argmax(shifted_flux)]
         wav_max = eval_wave[np.argmax(interped_flux)]
         assert wav_max_shifted < wav_max
