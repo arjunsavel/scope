@@ -126,7 +126,7 @@ def save_results(outdir, run_name, lls, ccfs):
 
 def make_outdir(outdir):
     try:
-        os.mkdir(outdir)
+        os.makedirs(outdir)
     except FileExistsError:
         print("Directory already exists. Continuing!")
 
