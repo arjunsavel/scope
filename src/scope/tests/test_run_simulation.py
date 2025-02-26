@@ -516,3 +516,52 @@ def test_nopca_fluxlevels_deterministic(
 
     # the flux levels must be higher when there's no tellurics.
     np.testing.assert_array_equal(flux_cube_nopca, flux_cube_nopca_b)
+
+
+def test_crires_simulation(test_inputs):
+    data_cube_path = os.path.join(test_data_path, "data_RAW_20201214_wl_algn_03.pic")
+    planet_spectrum_path = os.path.join(
+        test_data_path, "best_fit_spectrum_tran_gj1214_steam_nir.pic"
+    )
+    snr_path = os.path.join(test_data_path, "output1.json")
+    star_spectrum_path = os.path.join(test_data_path, "PHOENIX_5605_4.33.txt")
+    simulate_observation(
+        planet_spectrum_path=planet_spectrum_path,
+        star_spectrum_path=star_spectrum_path,
+        data_cube_path=data_cube_path,
+        phase_start=0,
+        phase_end=1,
+        n_exposures=2,
+        observation="emission",
+        blaze=True,
+        n_princ_comp=4,
+        star=True,
+        SNR=250,
+        telluric=False,
+        tell_type="data-driven",
+        time_dep_tell=False,
+        wav_error=False,
+        rv_semiamp_orbit=0.3229,
+        order_dep_throughput=True,
+        Rp=1.21,  # Jupiter radii,
+        Rstar=0.955,  # solar radii
+        kp=192.02,  # planetary orbital velocity, km/s
+        v_rot=4.5,
+        scale=1.0,
+        v_sys=0.0,
+        modelname="yourfirstsimulation",
+        divide_out_of_transit=False,
+        out_of_transit_dur=0.1,
+        include_rm=False,
+        v_rot_star=3.0,
+        a=0.033,  #
+        lambda_misalign=0.0,
+        inc=90.0,
+        seed=42,
+        vary_throughput=True,
+        snr_path=snr_path,
+    )
+
+    # check that there are nonzeros, basically that it runs
+    ccfs = np.loadtxt("yourfirstsimulation_ccfs.txt")
+    assert np.sum(ccfs) > 0
