@@ -21,6 +21,7 @@ seed                   42               # seed for the random number generator w
 planet_spectrum_path    /home/asavel/scratch/retrieval_stuff/fm_wasp_77ab_noisy/fm_wasp_77ab_noisy/spectrum_emission_LTT-9779b.pic
 star_spectrum_path     /home/asavel/scratch/scope/src/scope/data/PHOENIX_5605_4.33.txt
 data_cube_path         /home/asavel/scratch/scope/src/scope/data/data_RAW_20201214_wl_algn_03.pic
+snr_path               /home/asavel/scratch/scope/src/scope/data/snr_IGRINS_LTT-9779b.json # only required for CRIRES+ simulations
 
 # Astrophysical Parameters. Can specify DATABASE to pull based on name for parameters with [DB]
 Rp                     DATABASE          # planetary radius in Jupiter radii. [DB]
@@ -40,6 +41,7 @@ lambda_misalign        0                 # misalignment angle of the planet's or
 inc                    90.0              # inclination of the planet's orbit with respect to the line of sight, in degrees. only matters if include_rm is set to True. and observation is set to transmission.
 
 # Instrument Parameters
+spectrograph           IGRINS        # name of the spectrograph to simulate. currently spectrographs are ``IGRINS`` and ``CRIRES+``.
 blaze                  True          # whether to include a blaze function or not.
 wav_error              False         # whether to include wavelength solution errors or not.
 order_dep_throughput   True          # whether to include order-dependent throughput variations.
@@ -53,7 +55,7 @@ phase_end              0.45           # phase of the end of the observations. 0 
 n_exposures            10             # number of exposures to simulate. sets the phases of the exposures.
 star                   True          # whether to include the star in the simulation. In general, you'd like to!
 telluric               True          # whether to include tellurics in the simulation. In general, you'd like to!
-SNR                    300           # signal-to-noise ratio of the observations, per pixel. I.e., what sets the photon counts at the detector.
+SNR                    300           # signal-to-noise ratio of the observations, per pixel. I.e., what sets the photon counts at the detector. Ignored for CRIRES+ simulations.
 tell_type              data-driven   # type of telluric simulation. supported modes are ``ATRAN`` and ``data-driven``.
 time_dep_tell          False         # whether the tellurics are time-dependent or not.
 

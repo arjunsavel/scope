@@ -228,7 +228,12 @@ def write_input_file(data, output_file_path="input.txt"):
     # Define the order and categories of parameters
 
     categories = {
-        "Filepaths": ["planet_spectrum_path", "star_spectrum_path", "data_cube_path"],
+        "Filepaths": [
+            "planet_spectrum_path",
+            "star_spectrum_path",
+            "data_cube_path",
+            "snr_path",
+        ],
         "Astrophysical Parameters": ["Rp", "Rp_solar", "Rstar", "kp", "v_rot", "v_sys"],
         "Instrument Parameters": ["SNR"],
         "Observation Parameters": [

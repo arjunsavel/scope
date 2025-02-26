@@ -55,6 +55,7 @@ def make_data(
     out_of_transit_dur=0.1,
     v_sys_measured=0.0,
     vary_throughput=True,
+    instrument="IGRINS",
 ):
     """
     Creates a simulated HRCCS dataset. Main function.
@@ -168,7 +169,7 @@ def make_data(
     flux_cube[np.isnan(flux_cube)] = 0.0
     if SNR > 0:  # 0 means don't add noise!
         if order_dep_throughput:
-            noise_model = "IGRINS"
+            noise_model = instrument
         else:
             noise_model = "constant"
         flux_cube = add_noise_cube(flux_cube, wlgrid, SNR, noise_model=noise_model)
@@ -420,6 +421,8 @@ def simulate_observation(
     inc=90.0,
     seed=42,
     vary_throughput=True,
+    instrument="IGRINS",
+    snr_path=None,
     **kwargs,
 ):
     """
@@ -459,10 +462,17 @@ def simulate_observation(
     Rp_solar = Rp * rjup_rsun  # convert from jupiter radii to solar radii
     Kp_array = np.linspace(kp - 100, kp + 100, 200)
     v_sys_array = np.arange(v_sys - 100, v_sys + 100)
-    n_order, n_pixel = (44, 1848)  # todo: generalize.
-    mike_wave, mike_cube = pickle.load(open(data_cube_path, "rb"), encoding="latin1")
 
-    wl_cube_model = mike_wave.copy().astype(np.float64)
+    if instrument == "IGRINS":
+        n_order, n_pixel = (44, 1848)
+        mike_wave, mike_cube = pickle.load(
+            open(data_cube_path, "rb"), encoding="latin1"
+        )
+
+        wl_cube_model = mike_wave.copy().astype(np.float64)
+    elif instrument == "CRIRES+":
+        # need to read in the filepath
+        n_order, n_pixel, wl_cube_model, SNR = read_crires_data(snr_path)
 
     wl_model, Fp, Fstar = np.load(planet_spectrum_path, allow_pickle=True)
 
@@ -523,6 +533,7 @@ def simulate_observation(
         divide_out_of_transit=False,
         out_of_transit_dur=0.1,
         v_sys_measured=v_sys,
+        instrument=instrument,
     )
 
     run_name = f"{n_princ_comp}_NPC_{blaze}_blaze_{star}_star_{telluric}_telluric_{SNR}_SNR_{tell_type}_{time_dep_tell}_{wav_error}_{order_dep_throughput}"
