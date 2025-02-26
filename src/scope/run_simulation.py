@@ -423,7 +423,7 @@ def simulate_observation(
     vary_throughput=True,
     instrument="IGRINS",
     snr_path=None,
-    **kwargs,
+    planet_name="yourfirstplanet" ** kwargs,
 ):
     """
     Run a simulation of the data, given a grid index and some paths. Side effects:

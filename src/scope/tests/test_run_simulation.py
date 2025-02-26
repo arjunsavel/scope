@@ -550,6 +550,7 @@ def test_crires_simulation(test_inputs):
         scale=1.0,
         v_sys=0.0,
         modelname="yourfirstsimulation",
+        planet_name="GJ1214b",
         divide_out_of_transit=False,
         out_of_transit_dur=0.1,
         include_rm=False,
