@@ -186,7 +186,9 @@ class TestDopplerShift(unittest.TestCase):
         template_flux = np.exp(-0.5 * ((template_wave - 1.5e-6) / 0.01) ** 2)
 
         v = 5e4  # m/s. should not change much
-        shifted_flux = calc_doppler_shift(eval_wave, template_wave, template_flux, v)
+        shifted_wave, shifted_flux = calc_doppler_shift(
+            eval_wave, template_wave, template_flux, v
+        )
         interped_flux = np.interp(eval_wave, template_wave, template_flux)
         wav_max_shifted = eval_wave[np.argmax(shifted_flux)]
         wav_max = eval_wave[np.argmax(interped_flux)]
