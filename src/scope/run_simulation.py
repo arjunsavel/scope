@@ -567,7 +567,6 @@ def simulate_observation(
                 star=star,
                 observation=observation,
                 v_sys_measured=v_sys,
-                vary_throughput=vary_throughput,
             )
             lls[l, k], ccfs[l, k] = res
 
