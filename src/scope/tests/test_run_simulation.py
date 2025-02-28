@@ -564,5 +564,6 @@ def test_crires_simulation(test_inputs):
     )
 
     # check that there are nonzeros, basically that it runs
-    ccfs = np.loadtxt("yourfirstsimulation_ccfs.txt")
+    filetype = glob("output/yourfirstsimulation/*ccf*")
+    ccfs = np.loadtxt(filetype[0])
     assert np.sum(ccfs) > 0
