@@ -172,6 +172,7 @@ def make_data(
             noise_model = instrument
         else:
             noise_model = "constant"
+        print(f"Adding noise with model {noise_model}")
         flux_cube = add_noise_cube(flux_cube, wlgrid, SNR, noise_model=noise_model)
 
     flux_cube = detrend_cube(flux_cube, n_order, n_exposure)
