@@ -240,7 +240,8 @@ def make_data(
 
         # divide out the flux cube
         flux_cube /= median_out_of_transit  # todo: check axes work out
-
+    print("mean flux cube", np.mean(flux_cube))
+    print("std flux cube", np.std(flux_cube))
     if do_pca:
         for j in range(n_order):
             flux_cube[j] -= np.mean(flux_cube[j])
