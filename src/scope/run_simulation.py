@@ -172,7 +172,7 @@ def make_data(
             noise_model = instrument
         else:
             noise_model = "constant"
-        print(f"Adding noise with model {noise_model}")
+        # print(f"Adding noise with model {noise_model}")
         flux_cube = add_noise_cube(flux_cube, wlgrid, SNR, noise_model=noise_model)
 
     flux_cube = detrend_cube(flux_cube, n_order, n_exposure)
@@ -220,7 +220,11 @@ def make_data(
 
         # add blaze
         out_of_transit_flux = add_blaze_function(
-            wlgrid, out_of_transit_flux, n_order, n_exposures_baseline
+            wlgrid,
+            out_of_transit_flux,
+            n_order,
+            n_exposures_baseline,
+            instrument=instrument,
         )
         out_of_transit_flux[flux_cube < 0.0] = 0.0
         out_of_transit_flux[np.isnan(flux_cube)] = 0.0

@@ -533,7 +533,7 @@ def test_crires_simulation(test_inputs):
         phase_end=1,
         n_exposures=2,
         observation="emission",
-        blaze=True,
+        blaze=False,
         n_princ_comp=4,
         star=True,
         SNR=250,

@@ -541,7 +541,9 @@ def change_wavelength_solution(wl_cube_model, flux_cube_model, doppler_shifts):
     return flux_cube_model
 
 
-def add_blaze_function(wl_cube_model, flux_cube_model, n_order, n_exp):
+def add_blaze_function(
+    wl_cube_model, flux_cube_model, n_order, n_exp, instrument="IGRINS"
+):
     """
     Adds the blaze function to the model.
 
@@ -557,6 +559,10 @@ def add_blaze_function(wl_cube_model, flux_cube_model, n_order, n_exp):
         :flux_cube_model: (array) flux cube model with blaze function included.
     """
     # read in...have to somehow match the telluric spectra
+    if instrument != "IGRINS":
+        raise NotImplementedError(
+            "Only the IGRINS blaze function is currently supported."
+        )
 
     with open(abs_path + "/data/K_blaze_spectra.pic", "rb") as f:
         K_blaze_cube = pickle.load(f)
