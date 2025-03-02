@@ -167,7 +167,7 @@ def make_data(
 
     flux_cube = detrend_cube(flux_cube, n_order, n_exposure)
     flux_cube[np.isnan(flux_cube)] = 0.0
-    if SNR > 0:  # 0 means don't add noise!
+    if np.any(SNR > 0):  # 0 means don't add noise!
         if order_dep_throughput:
             noise_model = instrument
         else:
