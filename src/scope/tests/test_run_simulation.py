@@ -554,6 +554,7 @@ def test_crires_simulation(test_inputs):
         divide_out_of_transit=False,
         out_of_transit_dur=0.1,
         include_rm=False,
+        instrument="CRIRES+",
         v_rot_star=3.0,
         a=0.033,  #
         lambda_misalign=0.0,
@@ -564,6 +565,6 @@ def test_crires_simulation(test_inputs):
     )
 
     # check that there are nonzeros, basically that it runs
-    filetype = glob("output/yourfirstsimulation/*ccf*")
+    filetype = glob("src/scope/output/yourfirstsimulation/*ccf*")
     ccfs = np.loadtxt(filetype[0])
     assert np.sum(ccfs) > 0
