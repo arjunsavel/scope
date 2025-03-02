@@ -424,6 +424,8 @@ def simulate_observation(
     instrument="IGRINS",
     snr_path=None,
     planet_name="yourfirstplanet",
+    n_kp=200,
+    n_vsys=200,
     **kwargs,
 ):
     """
@@ -461,8 +463,8 @@ def simulate_observation(
 
     phases = np.linspace(phase_start, phase_end, n_exposures)
     Rp_solar = Rp * rjup_rsun  # convert from jupiter radii to solar radii
-    Kp_array = np.linspace(kp - 100, kp + 100, 200)
-    v_sys_array = np.arange(v_sys - 100, v_sys + 100)
+    Kp_array = np.linspace(kp - 100, kp + 100, n_kp)
+    v_sys_array = np.linspace(v_sys - 100, v_sys + 100, n_vsys)
 
     if instrument == "IGRINS":
         n_order, n_pixel = (44, 1848)
@@ -501,7 +503,7 @@ def simulate_observation(
         star_wave, star_flux, wl_model, instrument_kernel, smooth=False
     )
 
-    lls, ccfs = np.zeros((200, 200)), np.zeros((200, 200))
+    lls, ccfs = np.zeros((n_kp, n_vsys)), np.zeros((n_kp, n_vsys))
 
     # redoing the grid. how close does PCA get to a tellurics-free signal detection?
     A_noplanet, flux_cube, flux_cube_nopca, just_tellurics = make_data(

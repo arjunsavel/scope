@@ -559,6 +559,8 @@ def test_crires_simulation(test_inputs):
         a=0.033,  #
         lambda_misalign=0.0,
         inc=90.0,
+        n_kp=20,
+        n_vsys=20,
         seed=42,
         vary_throughput=True,
         snr_path=snr_path,
