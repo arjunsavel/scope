@@ -1,3 +1,7 @@
+"""
+Calculates the cross-correlation function (and log likelihood function from the Brogi & Line 2019 mapping)
+"""
+
 from functools import wraps
 
 import jax

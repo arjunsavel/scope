@@ -1,3 +1,8 @@
+"""
+Utility functions for simulating HRCCS data.
+"""
+
+import json
 import os
 import pickle
 
@@ -6,7 +11,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from exoplanet.orbits.keplerian import KeplerianOrbit
 from numba import njit
-from scipy.interpolate import splev, splrep
+from scipy import signal
+from scipy.interpolate import interp1d
 from scipy.ndimage import gaussian_filter1d
 from tqdm import tqdm
 
@@ -17,6 +23,44 @@ abs_path = os.path.dirname(__file__)
 np.random.seed(42)
 start_clip = 200
 end_clip = 100
+
+
+def read_crires_data(data_path):
+    """
+    Reads in CRIRES data.
+
+    Inputs
+    ------
+        :data_path: (str) path to the data
+
+    Outputs
+    -------
+        n_orders: (int) number of orders
+        n_pixel: (int) number of pixels
+        wl_cube_model: (array) wavelength cube model
+        snrs: (array) signal-to-noise ratios
+    """
+    with open(data_path, "r") as file:
+        data = json.load(file)
+
+    n_orders = 0  # an integer :)
+    for i in range(len(data["data"]["orders"])):
+        order_len = len(data["data"]["orders"][i]["detectors"])
+        n_orders += order_len
+
+    n_wavs = len(data["data"]["orders"][i]["detectors"][0]["wavelength"])
+
+    wl_grid = np.zeros((n_orders, n_wavs))
+    snr_grid = np.zeros((n_orders, n_wavs))
+
+    for i in range(len(data["data"]["orders"])):
+        order_len = len(data["data"]["orders"][i]["detectors"])
+        for j in range(order_len):
+            wl_grid[i * order_len + j] = data["data"]["orders"][i]["detectors"][j][
+                "wavelength"
+            ]
+
+    return n_orders, n_wavs, wl_grid * 1e6, snr_grid
 
 
 @njit
@@ -43,11 +87,12 @@ def doppler_shift_planet_star(
     reprocessing=False,
 ):
     for exposure in range(n_exposure):
-        flux_planet = calc_doppler_shift(
+        _, flux_planet = calc_doppler_shift(
             wlgrid_order, wl_model, Fp_conv, rv_planet[exposure]
         )
         flux_planet *= scale  # apply scale factor
-        flux_star = calc_doppler_shift(
+        
+        _, flux_star = calc_doppler_shift(
             wlgrid_order, wl_model, Fstar_conv, rv_star[exposure]
         )
 
@@ -57,10 +102,15 @@ def doppler_shift_planet_star(
             ) + 1.0
             if not reprocessing:
                 model_flux_cube[exposure,] *= flux_star * Rstar**2
-
-        else:  # in transmission, after we "divide out" (with PCA) the star and tellurics, we're left with Fp.
+        elif observation == "emission":
+            model_flux_cube[exposure,] = flux_planet * (Rp_solar * rsun) ** 2
+        elif (
+            observation == "transmission"
+        ):  # in transmission, after we "divide out" (with PCA) the star and tellurics, we're left with Fp.
             I = calc_limb_darkening(u1, u2, a, b, Rstar, phases[exposure], LD)
+            
             model_flux_cube[exposure,] = 1.0 - flux_planet * I
+            
             if not reprocessing:
                 model_flux_cube[exposure,] *= flux_star
     return model_flux_cube
@@ -79,17 +129,49 @@ def save_results(outdir, run_name, lls, ccfs):
 
 def make_outdir(outdir):
     try:
-        os.mkdir(outdir)
+        os.makedirs(outdir)
     except FileExistsError:
         print("Directory already exists. Continuing!")
 
 
-def get_instrument_kernel(resolution_ratio=250000 / 45000):
-    xker = np.arange(41) - 20
-    sigma = resolution_ratio / (2.0 * np.sqrt(2.0 * np.log(2.0)))  # nominal
-    yker = np.exp(-0.5 * (xker / sigma) ** 2.0)
-    yker /= yker.sum()
-    return yker
+def get_instrument_kernel(instrument, model_resolution=250000, kernel_size=41):
+    """
+    Creates a Gaussian kernel for instrument response using an alternative implementation.
+
+    Parameters
+    ----------
+    resolution_ratio : float
+        Ratio of resolutions (default: 250000/45000)
+    kernel_size : int
+        Size of the kernel (must be odd, default: 41)
+
+    Returns
+    -------
+    numpy.ndarray
+        Normalized Gaussian kernel
+    """
+    instrument_resolution_dict = {
+        "IGRINS": 45000,
+        "CRIRES+": 145000,
+    }
+    instrument_resolution = instrument_resolution_dict[instrument]
+    resolution_ratio = instrument_resolution / model_resolution
+    # Ensure kernel size is odd
+    if kernel_size % 2 == 0:
+        raise ValueError("Kernel size must be odd")
+
+    # Convert resolution ratio to standard deviation
+    std = resolution_ratio / (2.0 * np.sqrt(2.0 * np.log(2.0)))
+
+    # Create the Gaussian window
+    gaussian_window = signal.windows.gaussian(
+        kernel_size, std=std, sym=True  # Ensure symmetry
+    )
+
+    # Normalize to sum to 1
+    normalized_kernel = gaussian_window / gaussian_window.sum()
+
+    return normalized_kernel
 
 
 def save_data(outdir, run_name, flux_cube, flux_cube_nopca, A_noplanet, just_tellurics):
@@ -202,7 +284,7 @@ def calc_doppler_shift(eval_wave, template_wave, template_flux, v):
     delta_lam = eval_wave * beta
     shifted_wave = eval_wave - delta_lam
     shifted_flux = np.interp(shifted_wave, template_wave, template_flux)
-    return shifted_flux
+    return shifted_wave, shifted_flux
 
 
 def calc_crossing_time(
@@ -375,19 +457,21 @@ def calc_rvs(v_sys, v_sys_measured, Kp, Kstar, phases):
 
     """
     v_sys_tot = v_sys + v_sys_measured  # total offset
-    rv_planet = (
-        v_sys_tot + Kp * np.sin(2.0 * np.pi * phases) * 1e3
+    rv_planet = v_sys_tot + Kp * np.sin(
+        2.0 * np.pi * phases
     )  # input in km/s, convert to m/s
 
-    rv_star = (
-        v_sys_measured - Kstar * np.sin(2.0 * np.pi * phases)
-    ) * 1e3  # measured in m/s. note opposite sign!
-    return rv_planet, rv_star
+    rv_star = v_sys_measured - Kstar * np.sin(
+        2.0 * np.pi * phases
+    )  # measured in m/s. note opposite sign!
+
+    return rv_planet * 1e3, rv_star * 1e3
 
 
 def get_star_spline(star_wave, star_flux, planet_wave, yker, smooth=True):
     """
-    calculates the stellar spline. accounting for convolution and such.
+    Calculates the stellar spline using an alternative implementation with linear interpolation
+    instead of B-splines.
 
     Inputs
     ------
@@ -405,20 +489,31 @@ def get_star_spline(star_wave, star_flux, planet_wave, yker, smooth=True):
     Returns
     -------
     star_flux: array
-        Fluxes of the star. Measured in W/m^2/micron. todo: check.
+        Interpolated and processed stellar fluxes. Measured in W/m^2/micron.
     """
-    star_spline = splrep(star_wave, star_flux, s=0.0)
+    # Create interpolation function using scipy's interp1d
+    # Using cubic interpolation for smoother results
+    interpolator = interp1d(
+        star_wave,
+        star_flux,
+        kind="cubic",
+        bounds_error=False,
+        fill_value=(star_flux[0], star_flux[-1]),  # Extrapolate with edge values
+    )
 
-    star_flux = splev(
-        planet_wave, star_spline, der=0
-    )  # now on same wavelength grid as planet wave
+    # Interpolate onto planet wavelength grid
+    interpolated_flux = interpolator(planet_wave)
 
-    star_flux = np.convolve(star_flux, yker, mode="same")  # convolving star too
+    # Perform convolution
+    convolved_flux = np.convolve(interpolated_flux, yker, mode="same")
 
+    # Apply Gaussian smoothing if requested
     if smooth:
-        star_flux = gaussian_filter1d(star_flux, 200)
+        final_flux = gaussian_filter1d(convolved_flux, sigma=200)
+    else:
+        final_flux = convolved_flux
 
-    return star_flux
+    return final_flux
 
 
 def change_wavelength_solution(wl_cube_model, flux_cube_model, doppler_shifts):
@@ -456,7 +551,9 @@ def change_wavelength_solution(wl_cube_model, flux_cube_model, doppler_shifts):
     return flux_cube_model
 
 
-def add_blaze_function(wl_cube_model, flux_cube_model, n_order, n_exp):
+def add_blaze_function(
+    wl_cube_model, flux_cube_model, n_order, n_exp, instrument="IGRINS"
+):
     """
     Adds the blaze function to the model.
 
@@ -472,6 +569,10 @@ def add_blaze_function(wl_cube_model, flux_cube_model, n_order, n_exp):
         :flux_cube_model: (array) flux cube model with blaze function included.
     """
     # read in...have to somehow match the telluric spectra
+    if instrument != "IGRINS":
+        raise NotImplementedError(
+            "Only the IGRINS blaze function is currently supported."
+        )
 
     with open(abs_path + "/data/K_blaze_spectra.pic", "rb") as f:
         K_blaze_cube = pickle.load(f)

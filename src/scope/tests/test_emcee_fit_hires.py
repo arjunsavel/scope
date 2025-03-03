@@ -4,7 +4,7 @@ from scope.emcee_fit_hires import *
 from scope.tests.conftest import test_baseline_outouts, test_inputs
 
 test_data_path = os.path.join(os.path.dirname(__file__), "../data")
-
+do_pca=True
 
 @pytest.mark.parametrize(
     "values, output",

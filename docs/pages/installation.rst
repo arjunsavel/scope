@@ -2,9 +2,9 @@ Installation
 -------------
 To install `scope`, you can use `pip`::
 
-    pip install scope
+    pip install scope-astr
 
-To install from source, run::
+To install the package from source, run::
 
     python3 -m pip install -U pip
     python3 -m pip install -U setuptools setuptools_scm pep517
@@ -31,3 +31,11 @@ All of the required dependencies will be installed automatically. Our current li
 
 
 In the future, we plan to release `scope` on conda.
+
+You can also download the required data files with::
+
+    cd src/scope
+    chmod +x download_data.bash
+    ./download_data.bash
+
+These files total about 141 MB.

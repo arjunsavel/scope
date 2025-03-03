@@ -7,9 +7,12 @@
 [![Tests](https://github.com/arjunsavel/scope/actions/workflows/python-package.yml/badge.svg)](https://github.com/arjunsavel/scope/actions/workflows/python-package.yml)
 [![codecov](https://codecov.io/gh/arjunsavel/scope/graph/badge.svg?token=2Q1NPQ4817)](https://codecov.io/gh/arjunsavel/scope)
 [![Maintainability](https://api.codeclimate.com/v1/badges/d70a25a6766ee132bd94/maintainability)](https://codeclimate.com/github/arjunsavel/scope/maintainability)
+![PyPI - Version](https://img.shields.io/pypi/v/scope-astr)
 
 
-Simulating cross-correlation of planetary emission.
+
+
+Simulating high-resolution cross-correlation spectroscopy for exoplanet atmospheres. Currently supports simulating IGRINS (on GEMINI-S) observations of transmission and emission spectra.
 
 # installation
 You can install `scope` using pip:
@@ -67,3 +70,8 @@ with the following types of files:
 - `A_noplanet_`: the simulated flux cube with the *lowest-variance* principal component(s) removed.
 - `lls_`: the log-likelihood surface for the simulated flux cube, as a Kp--Vsys map.
 - `ccfs_`: the cross-correlation function for the simulated flux cube, as a Kp--Vsys map.
+- 
+
+# attribution
+
+If you use `scope` in your work, please cite our paper: https://arxiv.org/abs/2411.07303

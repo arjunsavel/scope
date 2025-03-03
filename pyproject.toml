@@ -3,9 +3,10 @@ requires = ["setuptools>=64", "setuptools_scm[toml]>=8", "setuptools-git-version
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "scope"
+name = "scope-astr"
 authors = [
     {name = "Arjun Savel", email = "asavel@umd.edu"},
+    {name = "Arjun Savel"},
     {name= "Megan Bedell"},
     {name= "Eliza M.-R. Kempton"},
     {name= "Peter Smith"},
@@ -61,18 +62,27 @@ docs = ["nbsphinx",
 
 
 [tool.setuptools_scm]
-write_to = "src/scope/__version.py"
+write_to = "src/scope/_version.py"
+version_scheme = "release-branch-semver"
+local_scheme = "no-local-version"
+git_describe_command = "git describe --tags --exact-match"
 
 [tool.setuptools-git-versioning]
 enabled = true
 template = "{tag}"
-dev_template = "{tag}.post{ccount}+git.{sha}"
-dirty_template = "{tag}.post{ccount}+git.{sha}.dirty"
+dev_template = "{tag}"
+dirty_template = "{tag}"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src"]  # if using src layout
 
 [project.urls]
 Homepage = "https://github.com/arjunsavel/scope"
 Issues = "https://github.com/arjunsavel/scope/issues"
-Documentation = "scope-astr.readthedocs.io"
+Documentation = "https://scope-astr.readthedocs.io/en/latest/"
 
 [tool.black]
 target_version = ['py310', 'py311']

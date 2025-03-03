@@ -84,7 +84,7 @@ These parameters set the underlying simulated physical objects.
    * - u2
      - | Second quadratic limb darkening coefficient
        | Not used if LD=False or in emission mode
-   * - include_rm
+   * - include_rm (experimental)
      - | Enable/disable the Rossiter-McLaughlin effect
        | Only affects transmission observations
    * - v_rot_star
@@ -158,9 +158,9 @@ The only analysis currently implemented is Principal Components Analysis (PCA).
 
    * - n_princ_comp
      - Number of principal components to remove before cross-correlation.
-   * - divide_out_of_transit
+   * - divide_out_of_transit (experimental)
      - | Enable/disable division by median out-of-transit data
        | Only used in transmission mode
-   * - out_of_transit_dur
+   * - out_of_transit_dur (experimental)
      - | Duration of out-of-transit data in units of transit duration
        | Only used if divide_out_of_transit=True in transmission mode
