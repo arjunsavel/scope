@@ -81,6 +81,7 @@ def add_quadratic_noise(flux_cube_model, wl_grid, SNR, IGRINS=False, **kwargs):
                     * flux_cube_model[order][exposure]
                     / np.nanmax(flux_cube_model[order][exposure])
                 )
+                
                 noisy_flux[order][exposure] = np.random.poisson(flux_level)
 
                 # a few quick checks to make sure that nothing has gone wrong with adding noise

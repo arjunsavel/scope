@@ -91,6 +91,7 @@ def doppler_shift_planet_star(
             wlgrid_order, wl_model, Fp_conv, rv_planet[exposure]
         )
         flux_planet *= scale  # apply scale factor
+        
         _, flux_star = calc_doppler_shift(
             wlgrid_order, wl_model, Fstar_conv, rv_star[exposure]
         )
@@ -107,7 +108,9 @@ def doppler_shift_planet_star(
             observation == "transmission"
         ):  # in transmission, after we "divide out" (with PCA) the star and tellurics, we're left with Fp.
             I = calc_limb_darkening(u1, u2, a, b, Rstar, phases[exposure], LD)
+            
             model_flux_cube[exposure,] = 1.0 - flux_planet * I
+            
             if not reprocessing:
                 model_flux_cube[exposure,] *= flux_star
     return model_flux_cube
@@ -461,6 +464,7 @@ def calc_rvs(v_sys, v_sys_measured, Kp, Kstar, phases):
     rv_star = v_sys_measured - Kstar * np.sin(
         2.0 * np.pi * phases
     )  # measured in m/s. note opposite sign!
+
     return rv_planet * 1e3, rv_star * 1e3
 
 

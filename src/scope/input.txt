@@ -10,15 +10,15 @@
 #·······································:
 Created:                2024-08-15
 Author:                 Arjun Savel!
-Planet name:            LTT-9779 b
+Planet name:            WASP-166 b
 
 # Simulation setup
 
-modelname              LTT-9779b_dayside          # name of the model. used for saving the output files.
-seed                   42               # seed for the random number generator when generating noisy data. set to None for a random seed.
+modelname              wasp_166_150seed_ld          # name of the model. used for saving the output files.
+seed                   150               # seed for the random number generator when generating noisy data. set to None for a random seed.
 
 # Filepaths
-planet_spectrum_path    /home/asavel/scratch/retrieval_stuff/fm_wasp_77ab_noisy/fm_wasp_77ab_noisy/spectrum_emission_LTT-9779b.pic
+planet_spectrum_path    /home/asavel/scratch/retrieval_stuff/fm_wasp_77ab_noisy/fm_wasp_77ab_noisy/spectrum_tran_WASP-166b_0.3_c_to_o.pic
 star_spectrum_path     /home/asavel/scratch/scope/src/scope/data/PHOENIX_5605_4.33.txt
 data_cube_path         /home/asavel/scratch/scope/src/scope/data/data_RAW_20201214_wl_algn_03.pic
 snr_path               /home/asavel/scratch/scope/src/scope/data/snr_IGRINS_LTT-9779b.json # only required for CRIRES+ simulations
@@ -26,8 +26,8 @@ snr_path               /home/asavel/scratch/scope/src/scope/data/snr_IGRINS_LTT-
 # Astrophysical Parameters. Can specify DATABASE to pull based on name for parameters with [DB]
 Rp                     DATABASE          # planetary radius in Jupiter radii. [DB]
 Rstar                  DATABASE          # stellar radius, in solar radii. [DB]
-kp                     NULL              # expected planetary orbital velocity assuming circular orbit, in km/s. input NULL if you'd like to calculate from orbital parameters.
-v_sys                  DATABASE          # systemic velocity, in km/s.  [DB]
+kp                     128.1              # expected planetary orbital velocity assuming circular orbit, in km/s. input NULL if you'd like to calculate from orbital parameters.
+v_sys                  0.0          # systemic velocity, in km/s.  [DB]
 v_rot                  NULL              # equatorial rotational velocity. input NULL if you'd like to calculate from orbital parameters.
 P_rot                  DATABASE          # orbital period of the planet, in days. [DB]
 a                      DATABASE          # semi-major axis of the planet, in AU. [DB]
@@ -49,13 +49,14 @@ vary_throughput        True          # whether to include throughput variations.
 
 
 # Observation Parameters
-observation            emission      # type of observation to perform. supported observations are ``emission`` and ``transmission``.
-phase_start            0.27           # phase of the beginning of the observations. 0 is center of transit, 0.5 is secondary eclipse. If DATABASE, just the transit duration. [DB]
-phase_end              0.45           # phase of the end of the observations. 0 is center of transit, 0.5 is secondary eclipse. If DATABASE, just the transit duration. [DB]
-n_exposures            10             # number of exposures to simulate. sets the phases of the exposures.
+observation            transmission      # type of observation to perform. supported observations are ``emission`` and ``transmission``.
+phase_start            0.986222200994206           # phase of the beginning of the observations. 0 is center of transit, 0.5 is secondary eclipse. If DATABASE, just the transit duration. [DB]
+phase_end              1.0137777990057941           # phase of the end of the observations. 0 is center of transit, 0.5 is secondary eclipse. If DATABASE, just the transit duration. [DB]
+n_exposures            17             # number of exposures to simulate. sets the phases of the exposures.
 star                   True          # whether to include the star in the simulation. In general, you'd like to!
 telluric               True          # whether to include tellurics in the simulation. In general, you'd like to!
-SNR                    300           # signal-to-noise ratio of the observations, per pixel. I.e., what sets the photon counts at the detector. Ignored for CRIRES+ simulations.
+SNR                    250           # signal-to-noise ratio of the observations, per pixel. I.e., what sets the photon counts at the detector.
+
 tell_type              data-driven   # type of telluric simulation. supported modes are ``ATRAN`` and ``data-driven``.
 time_dep_tell          False         # whether the tellurics are time-dependent or not.
 
