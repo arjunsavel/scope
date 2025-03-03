@@ -261,6 +261,8 @@ def make_data(
         pca_noise_matrix = np.ones_like(pca_noise_matrix)
     if tellurics:
         return pca_noise_matrix, flux_cube, flux_cube_nopca, just_tellurics
+    print("mean flux cube", np.mean(flux_cube))
+    print("std flux cube", np.std(flux_cube))
     return (
         pca_noise_matrix,
         flux_cube,
