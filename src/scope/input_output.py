@@ -4,6 +4,7 @@ Module to handle the input files.
 
 import io
 import os
+import argparse
 from datetime import datetime
 
 import pandas as pd
@@ -88,11 +89,12 @@ def coerce_nulls(data, key, value):
     if value == "NULL":
         data[key] = np.nan
 
+
     return data
 
 
 def coerce_integers(data, key, value):
-    integer_fields = ["n_exposures", "n_princ_comp"]
+    integer_fields = ["n_exposures", "n_princ_comp", "seed"]
     if key in integer_fields:
         data[key] = int(value)
     else:
@@ -288,3 +290,51 @@ Planet name: {data['planet_name']}
             f.write("\n")
 
     print(f"Input file written to {output_file_path}")
+
+
+
+def parse_arguments():
+    parser = argparse.ArgumentParser(description='Simulate observation')
+    
+    # Required parameters
+    parser.add_argument('--planet_spectrum_path', type=str, default=".", help='Path to planet spectrum')
+    parser.add_argument('--star_spectrum_path', type=str, default=".", help='Path to star spectrum')
+    parser.add_argument('--data_cube_path', type=str, default=".", help='Path to data cube')
+    
+    # Optional parameters with their defaults matching your function
+    parser.add_argument('--phase_start', type=float, default=0, help='Start phase of the simulated observations')
+    parser.add_argument('--phase_end', type=float, default=1, help='End phase of the simulated observations')
+    parser.add_argument('--n_exposures', type=int, default=10, help='Number of exposures')
+    parser.add_argument('--observation', type=str, default="emission", help='Observation type')
+    parser.add_argument('--blaze', type=bool, default=True, help='Blaze flag')
+    parser.add_argument('--n_princ_comp', type=int, default=4, help='Number of principal components')
+    parser.add_argument('--star', type=bool, default=True, help='Star flag')
+    parser.add_argument('--SNR', type=float, default=250, help='Signal to noise ratio')
+    parser.add_argument('--telluric', type=bool, default=True, help='Telluric flag')
+    parser.add_argument('--tell_type', type=str, default="data-driven", help='Telluric type')
+    parser.add_argument('--time_dep_tell', type=bool, default=False, help='Time dependent telluric')
+    parser.add_argument('--wav_error', type=bool, default=False, help='Wavelength error flag')
+    parser.add_argument('--rv_semiamp_orbit', type=float, default=0.3229, help='RV semi-amplitude orbit')
+    parser.add_argument('--order_dep_throughput', type=bool, default=True, help='Order dependent throughput')
+    parser.add_argument('--Rp', type=float, default=1.21, help='Planet radius (Jupiter radii)')
+    parser.add_argument('--Rstar', type=float, default=0.955, help='Star radius (solar radii)')
+    parser.add_argument('--kp', type=float, default=192.02, help='Planetary orbital velocity (km/s)')
+    parser.add_argument('--v_rot', type=float, default=4.5, help='Rotation velocity')
+    parser.add_argument('--scale', type=float, default=1.0, help='Scale factor')
+    parser.add_argument('--v_sys', type=float, default=0.0, help='Systemic velocity')
+    parser.add_argument('--modelname', type=str, default="yourfirstsimulation", help='Model name')
+    parser.add_argument('--divide_out_of_transit', type=bool, default=False, help='Divide out of transit')
+    parser.add_argument('--out_of_transit_dur', type=float, default=0.1, help='Out of transit duration')
+    parser.add_argument('--include_rm', type=bool, default=False, help='Include RM effect')
+    parser.add_argument('--v_rot_star', type=float, default=3.0, help='Star rotation velocity')
+    parser.add_argument('--a', type=float, default=0.033, help='Semi-major axis')
+    parser.add_argument('--lambda_misalign', type=float, default=0.0, help='Misalignment angle')
+    parser.add_argument('--inc', type=float, default=90.0, help='Inclination')
+    parser.add_argument('--seed', type=int, default=42, help='Random seed')
+    parser.add_argument('--LD', type=bool, default=True, help='Limb darkening')
+    parser.add_argument('--vary_throughput', type=bool, default=True, help='Vary throughput')
+    
+    # For file input option
+    parser.add_argument('--input_file', type=str, default="input.txt", help='Input file with parameters')
+    
+    return parser.parse_args()

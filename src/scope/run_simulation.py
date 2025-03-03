@@ -11,7 +11,7 @@ from tqdm import tqdm
 
 from scope.broadening import *
 from scope.ccf import *
-from scope.input_output import parse_input_file, write_input_file
+from scope.input_output import parse_input_file, write_input_file, parse_arguments
 from scope.noise import *
 from scope.tellurics import *
 from scope.utils import *
@@ -85,12 +85,13 @@ def make_data(
         :just_tellurics: (array) the telluric model that's multiplied to the dataset.
 
     """
+    print(seed)
     np.random.seed(seed)
 
     rv_planet, rv_star = calc_rvs(
         v_sys, v_sys_measured, Kp, rv_semiamp_orbit, phases
     )  # measured in m/s now
-
+    
     flux_cube = np.zeros(
         (n_order, n_exposure, n_pixel)
     )  # will store planet and star signal
@@ -118,7 +119,7 @@ def make_data(
             star,
             observation,
         )
-
+    
     throughput_baselines = np.loadtxt(abs_path + "/data/throughputs.txt")
 
     flux_cube = detrend_cube(flux_cube, n_order, n_exposure)
@@ -171,6 +172,7 @@ def make_data(
             noise_model = "IGRINS"
         else:
             noise_model = "constant"
+        
         flux_cube = add_noise_cube(flux_cube, wlgrid, SNR, noise_model=noise_model)
 
     flux_cube = detrend_cube(flux_cube, n_order, n_exposure)
@@ -262,7 +264,7 @@ def make_data(
     )  # returning CCF and logL values
 
 
-# @njit
+#@njit
 def calc_log_likelihood(
     v_sys,
     Kp,
@@ -419,6 +421,7 @@ def simulate_observation(
     lambda_misalign=0.0,
     inc=90.0,
     seed=42,
+        LD=True,
     vary_throughput=True,
     **kwargs,
 ):
@@ -458,6 +461,8 @@ def simulate_observation(
     phases = np.linspace(phase_start, phase_end, n_exposures)
     Rp_solar = Rp * rjup_rsun  # convert from jupiter radii to solar radii
     Kp_array = np.linspace(kp - 100, kp + 100, 200)
+    print(v_sys)
+    print('that was vsys')
     v_sys_array = np.arange(v_sys - 100, v_sys + 100)
     n_order, n_pixel = (44, 1848)  # todo: generalize.
     mike_wave, mike_cube = pickle.load(open(data_cube_path, "rb"), encoding="latin1")
@@ -475,7 +480,8 @@ def simulate_observation(
     # instrument profile convolution
     instrument_kernel = get_instrument_kernel()
     Fp_conv = np.convolve(Fp_conv_rot, instrument_kernel, mode="same")
-
+    print('here spectrum')
+    print(Fp_conv)
     star_wave, star_flux = np.loadtxt(
         star_spectrum_path
     ).T  # Phoenix stellar model packing
@@ -520,9 +526,10 @@ def simulate_observation(
         wav_error=wav_error,
         order_dep_throughput=order_dep_throughput,
         observation=observation,
-        divide_out_of_transit=False,
+        divide_out_of_transit=divide_out_of_transit,
         out_of_transit_dur=0.1,
         v_sys_measured=v_sys,
+        LD=LD,
     )
 
     run_name = f"{n_princ_comp}_NPC_{blaze}_blaze_{star}_star_{telluric}_telluric_{SNR}_SNR_{tell_type}_{time_dep_tell}_{wav_error}_{order_dep_throughput}"
@@ -555,7 +562,8 @@ def simulate_observation(
                 star=star,
                 observation=observation,
                 v_sys_measured=v_sys,
-                vary_throughput=vary_throughput,
+                LD=LD
+                
             )
             lls[l, k], ccfs[l, k] = res
 
@@ -563,6 +571,20 @@ def simulate_observation(
 
 
 if __name__ == "__main__":
-    file = "input.txt"
-    inputs = parse_input_file(file)
+    args = parse_arguments()
+    # First, parse the input file to get base parameters
+    inputs = parse_input_file(args.input_file)
+    
+    # Then override with any command line arguments that were explicitly provided
+    args_dict = vars(args)
+    for key, value in args_dict.items():
+        # Skip the input_file parameter
+        if key == 'input_file':
+            continue
+        
+        # Only override if the argument was explicitly provided (not None)
+        if value is not None:
+            inputs[key] = value
+    
+    # Call the simulation function with the merged parameters
     simulate_observation(**inputs)
