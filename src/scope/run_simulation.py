@@ -599,11 +599,8 @@ def simulate_observation(
 if __name__ == "__main__":
     args = parse_arguments()
 
-    logger = setup_logging(log_file=args.log_file, log_level=args.log_level)
-
     # First, parse the input file to get base parameters
     inputs = parse_input_file(args.input_file)
-    logger.debug(f"Parsed inputs: {inputs}")
 
     # Then override with any command line arguments that were explicitly provided
     args_dict = vars(args)
@@ -615,6 +612,9 @@ if __name__ == "__main__":
         # Only override if the argument was explicitly provided (not None)
         if value is not None:
             inputs[key] = value
+
+    logger = setup_logging(log_level=inputs["log_level"])
+    logger.debug(f"Parsed inputs: {inputs}")
 
     # Call the simulation function with the merged parameters
     try:
