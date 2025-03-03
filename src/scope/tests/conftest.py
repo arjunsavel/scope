@@ -28,7 +28,7 @@ def test_inputs():
     rot_ker = get_rot_ker(v_rot, wl_model)
     Fp_conv_rot = np.convolve(Fp, rot_ker, mode="same")
     # instrument profile convolution
-    instrument_kernel = get_instrument_kernel()
+    instrument_kernel = get_instrument_kernel("IGRINS")
     Fp_conv = np.convolve(Fp_conv_rot, instrument_kernel, mode="same")
     star_spectrum_path = os.path.join(test_data_path, "PHOENIX_5605_4.33.txt")
     star_wave, star_flux = np.loadtxt(

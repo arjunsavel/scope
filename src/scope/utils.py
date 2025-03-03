@@ -2,6 +2,7 @@
 Utility functions for simulating HRCCS data.
 """
 
+import json
 import os
 import pickle
 
@@ -22,6 +23,44 @@ abs_path = os.path.dirname(__file__)
 np.random.seed(42)
 start_clip = 200
 end_clip = 100
+
+
+def read_crires_data(data_path):
+    """
+    Reads in CRIRES data.
+
+    Inputs
+    ------
+        :data_path: (str) path to the data
+
+    Outputs
+    -------
+        n_orders: (int) number of orders
+        n_pixel: (int) number of pixels
+        wl_cube_model: (array) wavelength cube model
+        snrs: (array) signal-to-noise ratios
+    """
+    with open(data_path, "r") as file:
+        data = json.load(file)
+
+    n_orders = 0  # an integer :)
+    for i in range(len(data["data"]["orders"])):
+        order_len = len(data["data"]["orders"][i]["detectors"])
+        n_orders += order_len
+
+    n_wavs = len(data["data"]["orders"][i]["detectors"][0]["wavelength"])
+
+    wl_grid = np.zeros((n_orders, n_wavs))
+    snr_grid = np.zeros((n_orders, n_wavs))
+
+    for i in range(len(data["data"]["orders"])):
+        order_len = len(data["data"]["orders"][i]["detectors"])
+        for j in range(order_len):
+            wl_grid[i * order_len + j] = data["data"]["orders"][i]["detectors"][j][
+                "wavelength"
+            ]
+
+    return n_orders, n_wavs, wl_grid * 1e6, snr_grid
 
 
 @njit
@@ -64,7 +103,6 @@ def doppler_shift_planet_star(
             if not reprocessing:
                 model_flux_cube[exposure,] *= flux_star * Rstar**2
         elif observation == "emission":
-
             model_flux_cube[exposure,] = flux_planet * (Rp_solar * rsun) ** 2
         elif (
             observation == "transmission"
@@ -91,12 +129,12 @@ def save_results(outdir, run_name, lls, ccfs):
 
 def make_outdir(outdir):
     try:
-        os.mkdir(outdir)
+        os.makedirs(outdir)
     except FileExistsError:
         print("Directory already exists. Continuing!")
 
 
-def get_instrument_kernel(resolution_ratio=250000 / 45000, kernel_size=41):
+def get_instrument_kernel(instrument, model_resolution=250000, kernel_size=41):
     """
     Creates a Gaussian kernel for instrument response using an alternative implementation.
 
@@ -112,6 +150,12 @@ def get_instrument_kernel(resolution_ratio=250000 / 45000, kernel_size=41):
     numpy.ndarray
         Normalized Gaussian kernel
     """
+    instrument_resolution_dict = {
+        "IGRINS": 45000,
+        "CRIRES+": 145000,
+    }
+    instrument_resolution = instrument_resolution_dict[instrument]
+    resolution_ratio = instrument_resolution / model_resolution
     # Ensure kernel size is odd
     if kernel_size % 2 == 0:
         raise ValueError("Kernel size must be odd")
@@ -413,15 +457,14 @@ def calc_rvs(v_sys, v_sys_measured, Kp, Kstar, phases):
 
     """
     v_sys_tot = v_sys + v_sys_measured  # total offset
-    rv_planet = (
-        v_sys_tot + Kp * np.sin(2.0 * np.pi * phases)
+    rv_planet = v_sys_tot + Kp * np.sin(
+        2.0 * np.pi * phases
     )  # input in km/s, convert to m/s
 
+    rv_star = v_sys_measured - Kstar * np.sin(
+        2.0 * np.pi * phases
+    )  # measured in m/s. note opposite sign!
 
-    rv_star = (
-        v_sys_measured - Kstar * np.sin(2.0 * np.pi * phases)
-    )   # measured in m/s. note opposite sign!
-    
     return rv_planet * 1e3, rv_star * 1e3
 
 
@@ -508,7 +551,9 @@ def change_wavelength_solution(wl_cube_model, flux_cube_model, doppler_shifts):
     return flux_cube_model
 
 
-def add_blaze_function(wl_cube_model, flux_cube_model, n_order, n_exp):
+def add_blaze_function(
+    wl_cube_model, flux_cube_model, n_order, n_exp, instrument="IGRINS"
+):
     """
     Adds the blaze function to the model.
 
@@ -524,6 +569,10 @@ def add_blaze_function(wl_cube_model, flux_cube_model, n_order, n_exp):
         :flux_cube_model: (array) flux cube model with blaze function included.
     """
     # read in...have to somehow match the telluric spectra
+    if instrument != "IGRINS":
+        raise NotImplementedError(
+            "Only the IGRINS blaze function is currently supported."
+        )
 
     with open(abs_path + "/data/K_blaze_spectra.pic", "rb") as f:
         K_blaze_cube = pickle.load(f)

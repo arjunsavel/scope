@@ -55,6 +55,7 @@ def make_data(
     out_of_transit_dur=0.1,
     v_sys_measured=0.0,
     vary_throughput=True,
+    instrument="IGRINS",
 ):
     """
     Creates a simulated HRCCS dataset. Main function.
@@ -137,6 +138,11 @@ def make_data(
             flux_cube[:, i, :] *= throughput_factor
 
     if tellurics:
+        if instrument != "IGRINS":
+            raise NotImplementedError(
+                "Only IGRINS data is currently supported for telluric simulations."
+                "Please set tellurics=False, and at minimum ensure that your SNR input includes telluric losses."
+            )
         flux_cube = add_tellurics(
             wlgrid,
             flux_cube,
@@ -167,14 +173,15 @@ def make_data(
 
     flux_cube = detrend_cube(flux_cube, n_order, n_exposure)
     flux_cube[np.isnan(flux_cube)] = 0.0
-    if SNR > 0:  # 0 means don't add noise!
+    if np.any(SNR > 0):  # 0 means don't add noise!
         if order_dep_throughput:
-            noise_model = "IGRINS"
+            noise_model = instrument
         else:
             noise_model = "constant"
-        
-        flux_cube = add_noise_cube(flux_cube, wlgrid, SNR, noise_model=noise_model)
 
+        print(f"Adding noise with model {noise_model}")
+
+        flux_cube = add_noise_cube(flux_cube, wlgrid, SNR, noise_model=noise_model)
     flux_cube = detrend_cube(flux_cube, n_order, n_exposure)
 
     if wav_error:
@@ -186,7 +193,6 @@ def make_data(
     flux_cube = detrend_cube(flux_cube, n_order, n_exposure)
     flux_cube[np.isnan(flux_cube)] = 0.0
     flux_cube_nopca = flux_cube.copy()
-
     if observation == "transmission" and divide_out_of_transit:
         # generate the out of transit baseline
         n_exposures_baseline = (
@@ -220,7 +226,11 @@ def make_data(
 
         # add blaze
         out_of_transit_flux = add_blaze_function(
-            wlgrid, out_of_transit_flux, n_order, n_exposures_baseline
+            wlgrid,
+            out_of_transit_flux,
+            n_order,
+            n_exposures_baseline,
+            instrument=instrument,
         )
         out_of_transit_flux[flux_cube < 0.0] = 0.0
         out_of_transit_flux[np.isnan(flux_cube)] = 0.0
@@ -252,10 +262,11 @@ def make_data(
                 flux_cube[j][i] -= np.mean(flux_cube[j][i])
 
     if np.all(pca_noise_matrix == 0):
-        print("was all zero")
         pca_noise_matrix = np.ones_like(pca_noise_matrix)
+
     if tellurics:
         return pca_noise_matrix, flux_cube, flux_cube_nopca, just_tellurics
+
     return (
         pca_noise_matrix,
         flux_cube,
@@ -423,6 +434,11 @@ def simulate_observation(
     seed=42,
         LD=True,
     vary_throughput=True,
+    instrument="IGRINS",
+    snr_path=None,
+    planet_name="yourfirstplanet",
+    n_kp=200,
+    n_vsys=200,
     **kwargs,
 ):
     """
@@ -460,14 +476,20 @@ def simulate_observation(
 
     phases = np.linspace(phase_start, phase_end, n_exposures)
     Rp_solar = Rp * rjup_rsun  # convert from jupiter radii to solar radii
-    Kp_array = np.linspace(kp - 100, kp + 100, 200)
-    print(v_sys)
-    print('that was vsys')
-    v_sys_array = np.arange(v_sys - 100, v_sys + 100)
-    n_order, n_pixel = (44, 1848)  # todo: generalize.
-    mike_wave, mike_cube = pickle.load(open(data_cube_path, "rb"), encoding="latin1")
 
-    wl_cube_model = mike_wave.copy().astype(np.float64)
+    Kp_array = np.linspace(kp - 100, kp + 100, n_kp)
+    v_sys_array = np.linspace(v_sys - 100, v_sys + 100, n_vsys)
+
+    if instrument == "IGRINS":
+        n_order, n_pixel = (44, 1848)
+        mike_wave, mike_cube = pickle.load(
+            open(data_cube_path, "rb"), encoding="latin1"
+        )
+
+        wl_cube_model = mike_wave.copy().astype(np.float64)
+    elif instrument == "CRIRES+":
+        # need to read in the filepath
+        n_order, n_pixel, wl_cube_model, SNR = read_crires_data(snr_path)
 
     wl_model, Fp, Fstar = np.load(planet_spectrum_path, allow_pickle=True)
 
@@ -478,7 +500,7 @@ def simulate_observation(
     Fp_conv_rot = np.convolve(Fp, rot_ker, mode="same")
 
     # instrument profile convolution
-    instrument_kernel = get_instrument_kernel()
+    instrument_kernel = get_instrument_kernel(instrument)
     Fp_conv = np.convolve(Fp_conv_rot, instrument_kernel, mode="same")
     print('here spectrum')
     print(Fp_conv)
@@ -496,7 +518,7 @@ def simulate_observation(
         star_wave, star_flux, wl_model, instrument_kernel, smooth=False
     )
 
-    lls, ccfs = np.zeros((200, 200)), np.zeros((200, 200))
+    lls, ccfs = np.zeros((n_kp, n_vsys)), np.zeros((n_kp, n_vsys))
 
     # redoing the grid. how close does PCA get to a tellurics-free signal detection?
     A_noplanet, flux_cube, flux_cube_nopca, just_tellurics = make_data(
@@ -530,6 +552,7 @@ def simulate_observation(
         out_of_transit_dur=0.1,
         v_sys_measured=v_sys,
         LD=LD,
+        instrument=instrument,
     )
 
     run_name = f"{n_princ_comp}_NPC_{blaze}_blaze_{star}_star_{telluric}_telluric_{SNR}_SNR_{tell_type}_{time_dep_tell}_{wav_error}_{order_dep_throughput}"
@@ -563,7 +586,6 @@ def simulate_observation(
                 observation=observation,
                 v_sys_measured=v_sys,
                 LD=LD
-                
             )
             lls[l, k], ccfs[l, k] = res
 

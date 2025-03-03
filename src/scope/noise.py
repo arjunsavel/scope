@@ -113,6 +113,26 @@ def add_igrins_noise(flux_cube_model, wl_grid, SNR):
     return add_quadratic_noise(flux_cube_model, wl_grid, SNR, IGRINS=True)
 
 
+def add_crires_plus_noise(flux_cube_model, wl_grid, SNR):
+    """
+    Adds CRIRES+ noise to the flux cube model.
+    """
+    noisy_flux = np.zeros_like(flux_cube_model)
+    for exposure in range(flux_cube_model.shape[1]):
+        for order in range(flux_cube_model.shape[0]):
+            flux_level = (
+                SNR**2
+                * flux_cube_model[order][exposure]
+                / np.nanmax(flux_cube_model[order][exposure])
+            )
+            noisy_flux[order][exposure] = np.random.poisson(flux_level)
+
+            # a few quick checks to make sure that nothing has gone wrong with adding noise
+            noisy_flux[order][exposure][noisy_flux[order][exposure] < 0.0] = 0.0
+            noisy_flux[order][exposure][~np.isfinite(noisy_flux[order][exposure])] = 0.0
+    return noisy_flux
+
+
 def add_custom_noise(SNR):
     """
     Adds custom noise to the flux cube model.
@@ -143,6 +163,7 @@ def add_noise_cube(flux_cube_model, wl_grid, SNR, noise_model="constant", **kwar
     noise_models = {
         "constant": add_constant_noise,
         "IGRINS": add_igrins_noise,
+        "CRIRES+": add_crires_plus_noise,
         "custom_quadratic": add_quadratic_noise,
         "custom": add_custom_noise,
     }
