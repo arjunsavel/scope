@@ -526,6 +526,7 @@ def test_crires_simulation(test_inputs):
     snr_path = os.path.join(test_data_path, "output1.json")
     star_spectrum_path = os.path.join(test_data_path, "PHOENIX_5605_4.33.txt")
     simulate_observation(
+        # problem: this is all 1s!
         planet_spectrum_path=planet_spectrum_path,
         star_spectrum_path=star_spectrum_path,
         data_cube_path=data_cube_path,
@@ -554,7 +555,7 @@ def test_crires_simulation(test_inputs):
         divide_out_of_transit=False,
         out_of_transit_dur=0.1,
         include_rm=False,
-        instrument="CRIRES+",
+        instrument="IGRINS",
         v_rot_star=3.0,
         a=0.033,  #
         lambda_misalign=0.0,
