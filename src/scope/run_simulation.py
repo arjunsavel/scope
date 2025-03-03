@@ -594,6 +594,7 @@ def simulate_observation(
 
 if __name__ == "__main__":
     args = parse_arguments()
+    
     # First, parse the input file to get base parameters
     inputs = parse_input_file(args.input_file)
     
