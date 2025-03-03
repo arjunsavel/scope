@@ -302,6 +302,7 @@ Planet name: {data['planet_name']}
 
 
 def parse_arguments():
+
     parser = argparse.ArgumentParser(description="Simulate observation")
 
     # Required parameters
@@ -411,5 +412,6 @@ def parse_arguments():
     parser.add_argument(
         "--input_file", type=str, default="input.txt", help="Input file with parameters"
     )
+
 
     return parser.parse_args()

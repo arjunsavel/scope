@@ -4,6 +4,7 @@ This module contains the main functions for simulating the data and
 calculating the log likelihood and cross-correlation function of the data given the model parameters.
 """
 
+
 import logging
 import os
 
@@ -14,6 +15,8 @@ from scope.broadening import *
 from scope.ccf import *
 from scope.input_output import *
 from scope.logger import *
+
+
 from scope.noise import *
 from scope.tellurics import *
 from scope.utils import *
@@ -95,7 +98,9 @@ def make_data(
     rv_planet, rv_star = calc_rvs(
         v_sys, v_sys_measured, Kp, rv_semiamp_orbit, phases
     )  # measured in m/s now
+
     logger.debug(f"RV planet: {rv_planet}, RV star: {rv_star}")
+
 
     flux_cube = np.zeros(
         (n_order, n_exposure, n_pixel)
@@ -559,7 +564,7 @@ def simulate_observation(
         instrument=instrument,
     )
 
-    run_name = f"{n_princ_comp}_NPC_{blaze}_blaze_{star}_star_{telluric}_telluric_{SNR}_SNR_{tell_type}_{time_dep_tell}_{wav_error}_{order_dep_throughput}"
+    run_name = f"{n_princ_comp}_NPC_{blaze}_blaze_{star}_star_{telluric}_telluric_{SNR}_SNR_{tell_type}_{time_dep_tell}_{wav_error}_{order_dep_throughput}_{seed}"
 
     save_data(outdir, run_name, flux_cube, flux_cube_nopca, A_noplanet, just_tellurics)
 
@@ -615,6 +620,7 @@ if __name__ == "__main__":
 
     logger = setup_logging(log_level=inputs["log_level"])
     logger.debug(f"Parsed inputs: {inputs}")
+
 
     # Call the simulation function with the merged parameters
     try:
