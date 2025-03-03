@@ -4,9 +4,19 @@ This module contains the main functions for simulating the data and
 calculating the log likelihood and cross-correlation function of the data given the model parameters.
 """
 
+
+import logging
+import os
+
+import numpy as np
+from tqdm import tqdm
+
 from scope.broadening import *
 from scope.ccf import *
 from scope.input_output import *
+from scope.logger import *
+
+
 from scope.noise import *
 from scope.tellurics import *
 from scope.utils import *
@@ -81,12 +91,16 @@ def make_data(
         :just_tellurics: (array) the telluric model that's multiplied to the dataset.
 
     """
-    print(seed)
+
     np.random.seed(seed)
+    logger.info(f"Seed set to {seed}")
 
     rv_planet, rv_star = calc_rvs(
         v_sys, v_sys_measured, Kp, rv_semiamp_orbit, phases
     )  # measured in m/s now
+
+    logger.debug(f"RV planet: {rv_planet}, RV star: {rv_star}")
+
 
     flux_cube = np.zeros(
         (n_order, n_exposure, n_pixel)
@@ -589,7 +603,7 @@ def simulate_observation(
 
 if __name__ == "__main__":
     args = parse_arguments()
-    
+
     # First, parse the input file to get base parameters
     inputs = parse_input_file(args.input_file)
 
@@ -604,5 +618,12 @@ if __name__ == "__main__":
         if value is not None:
             inputs[key] = value
 
+    logger = setup_logging(log_level=inputs["log_level"])
+    logger.debug(f"Parsed inputs: {inputs}")
+
+
     # Call the simulation function with the merged parameters
-    simulate_observation(**inputs)
+    try:
+        simulate_observation(**inputs)
+    except Exception as e:
+        logger.error(f"An error occurred: {e}", exc_info=True)

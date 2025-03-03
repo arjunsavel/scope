@@ -16,6 +16,7 @@ Planet name:            WASP-166 b
 
 modelname              wasp_166_150seed_ld          # name of the model. used for saving the output files.
 seed                   150               # seed for the random number generator when generating noisy data. set to None for a random seed.
+log_level              INFO              # logging level above which statements are printed. Supported levels are ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
 
 # Filepaths
 planet_spectrum_path    /home/asavel/scratch/retrieval_stuff/fm_wasp_77ab_noisy/fm_wasp_77ab_noisy/spectrum_tran_WASP-166b_0.3_c_to_o.pic
