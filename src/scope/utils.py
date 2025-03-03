@@ -60,7 +60,7 @@ def read_crires_data(data_path):
                 "wavelength"
             ]
 
-    return n_orders, n_wavs, wl_grid, snr_grid
+    return n_orders, n_wavs, wl_grid * 1e6, snr_grid
 
 
 @njit

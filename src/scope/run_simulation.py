@@ -137,6 +137,11 @@ def make_data(
             flux_cube[:, i, :] *= throughput_factor
 
     if tellurics:
+        if instrument != "IGRINS":
+            raise NotImplementedError(
+                "Only IGRINS data is currently supported for telluric simulations."
+                "Please set tellurics=False, and at minimum ensure that your SNR input includes telluric losses."
+            )
         flux_cube = add_tellurics(
             wlgrid,
             flux_cube,
@@ -172,9 +177,8 @@ def make_data(
             noise_model = instrument
         else:
             noise_model = "constant"
-        # print(f"Adding noise with model {noise_model}")
+        print(f"Adding noise with model {noise_model}")
         flux_cube = add_noise_cube(flux_cube, wlgrid, SNR, noise_model=noise_model)
-
     flux_cube = detrend_cube(flux_cube, n_order, n_exposure)
 
     if wav_error:
@@ -186,7 +190,6 @@ def make_data(
     flux_cube = detrend_cube(flux_cube, n_order, n_exposure)
     flux_cube[np.isnan(flux_cube)] = 0.0
     flux_cube_nopca = flux_cube.copy()
-
     if observation == "transmission" and divide_out_of_transit:
         # generate the out of transit baseline
         n_exposures_baseline = (
@@ -240,8 +243,7 @@ def make_data(
 
         # divide out the flux cube
         flux_cube /= median_out_of_transit  # todo: check axes work out
-    print("mean flux cube", np.mean(flux_cube))
-    print("std flux cube", np.std(flux_cube))
+
     if do_pca:
         for j in range(n_order):
             flux_cube[j] -= np.mean(flux_cube[j])
@@ -257,12 +259,11 @@ def make_data(
                 flux_cube[j][i] -= np.mean(flux_cube[j][i])
 
     if np.all(pca_noise_matrix == 0):
-        print("was all zero")
         pca_noise_matrix = np.ones_like(pca_noise_matrix)
+
     if tellurics:
         return pca_noise_matrix, flux_cube, flux_cube_nopca, just_tellurics
-    print("mean flux cube", np.mean(flux_cube))
-    print("std flux cube", np.std(flux_cube))
+
     return (
         pca_noise_matrix,
         flux_cube,
