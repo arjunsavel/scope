@@ -131,7 +131,7 @@ def make_outdir(outdir):
         print("Directory already exists. Continuing!")
 
 
-def get_instrument_kernel(resolution_ratio=250000 / 45000, kernel_size=41):
+def get_instrument_kernel(instrument, model_resolution=250000, kernel_size=41):
     """
     Creates a Gaussian kernel for instrument response using an alternative implementation.
 
@@ -147,6 +147,12 @@ def get_instrument_kernel(resolution_ratio=250000 / 45000, kernel_size=41):
     numpy.ndarray
         Normalized Gaussian kernel
     """
+    instrument_resolution_dict = {
+        "IGRINS": 45000,
+        "CRIRES+": 145000,
+    }
+    instrument_resolution = instrument_resolution_dict[instrument]
+    resolution_ratio = instrument_resolution / model_resolution
     # Ensure kernel size is odd
     if kernel_size % 2 == 0:
         raise ValueError("Kernel size must be odd")

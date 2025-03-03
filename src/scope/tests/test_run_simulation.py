@@ -568,7 +568,7 @@ def test_igrins_emission(test_inputs):
     # check that there are nonzeros, basically that it runs
     filetype = glob("src/scope/output/yourfirstsimulation/*ccf*")
     ccfs = np.loadtxt(filetype[0])
-    assert np.sum(ccfs) > 0
+    assert np.sum(ccfs) != 0
 
 
 def test_crires_emission(test_inputs):

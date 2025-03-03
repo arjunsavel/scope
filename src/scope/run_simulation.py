@@ -495,7 +495,7 @@ def simulate_observation(
     Fp_conv_rot = np.convolve(Fp, rot_ker, mode="same")
 
     # instrument profile convolution
-    instrument_kernel = get_instrument_kernel()
+    instrument_kernel = get_instrument_kernel(instrument)
     Fp_conv = np.convolve(Fp_conv_rot, instrument_kernel, mode="same")
 
     star_wave, star_flux = np.loadtxt(
