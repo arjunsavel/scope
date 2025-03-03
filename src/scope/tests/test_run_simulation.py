@@ -538,7 +538,7 @@ def test_crires_simulation(test_inputs):
         n_princ_comp=4,
         star=True,
         SNR=250,
-        telluric=False,
+        telluric=True,
         tell_type="data-driven",
         time_dep_tell=False,
         wav_error=False,
