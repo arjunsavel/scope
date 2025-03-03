@@ -4,6 +4,7 @@ This module contains the main functions for simulating the data and
 calculating the log likelihood and cross-correlation function of the data given the model parameters.
 """
 
+import logging
 import os
 
 import numpy as np
@@ -11,7 +12,8 @@ from tqdm import tqdm
 
 from scope.broadening import *
 from scope.ccf import *
-from scope.input_output import parse_input_file, write_input_file, parse_arguments
+from scope.input_output import *
+from scope.logger import *
 from scope.noise import *
 from scope.tellurics import *
 from scope.utils import *
@@ -86,13 +88,15 @@ def make_data(
         :just_tellurics: (array) the telluric model that's multiplied to the dataset.
 
     """
-    print(seed)
+
     np.random.seed(seed)
+    logger.info(f"Seed set to {seed}")
 
     rv_planet, rv_star = calc_rvs(
         v_sys, v_sys_measured, Kp, rv_semiamp_orbit, phases
     )  # measured in m/s now
-    
+    logger.debug(f"RV planet: {rv_planet}, RV star: {rv_star}")
+
     flux_cube = np.zeros(
         (n_order, n_exposure, n_pixel)
     )  # will store planet and star signal
@@ -120,7 +124,7 @@ def make_data(
             star,
             observation,
         )
-    
+
     throughput_baselines = np.loadtxt(abs_path + "/data/throughputs.txt")
 
     flux_cube = detrend_cube(flux_cube, n_order, n_exposure)
@@ -275,7 +279,7 @@ def make_data(
     )  # returning CCF and logL values
 
 
-#@njit
+# @njit
 def calc_log_likelihood(
     v_sys,
     Kp,
@@ -432,7 +436,7 @@ def simulate_observation(
     lambda_misalign=0.0,
     inc=90.0,
     seed=42,
-        LD=True,
+    LD=True,
     vary_throughput=True,
     instrument="IGRINS",
     snr_path=None,
@@ -502,7 +506,7 @@ def simulate_observation(
     # instrument profile convolution
     instrument_kernel = get_instrument_kernel(instrument)
     Fp_conv = np.convolve(Fp_conv_rot, instrument_kernel, mode="same")
-    print('here spectrum')
+    print("here spectrum")
     print(Fp_conv)
     star_wave, star_flux = np.loadtxt(
         star_spectrum_path
@@ -585,7 +589,7 @@ def simulate_observation(
                 star=star,
                 observation=observation,
                 v_sys_measured=v_sys,
-                LD=LD
+                LD=LD,
             )
             lls[l, k], ccfs[l, k] = res
 
@@ -594,19 +598,26 @@ def simulate_observation(
 
 if __name__ == "__main__":
     args = parse_arguments()
+
+    logger = setup_logging(log_file=args.log_file, log_level=args.log_level)
+
     # First, parse the input file to get base parameters
     inputs = parse_input_file(args.input_file)
-    
+    logger.debug(f"Parsed inputs: {inputs}")
+
     # Then override with any command line arguments that were explicitly provided
     args_dict = vars(args)
     for key, value in args_dict.items():
         # Skip the input_file parameter
-        if key == 'input_file':
+        if key == "input_file":
             continue
-        
+
         # Only override if the argument was explicitly provided (not None)
         if value is not None:
             inputs[key] = value
-    
+
     # Call the simulation function with the merged parameters
-    simulate_observation(**inputs)
+    try:
+        simulate_observation(**inputs)
+    except Exception as e:
+        logger.error(f"An error occurred: {e}", exc_info=True)
