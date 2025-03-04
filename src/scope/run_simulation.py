@@ -448,7 +448,8 @@ def simulate_observation(
     planet_name="yourfirstplanet",
     n_kp=200,
     n_vsys=200,
-    pca_removal="subtract" ** kwargs,
+    pca_removal="subtract",
+    **kwargs,
 ):
     """
     Run a simulation of the data, given a grid index and some paths. Side effects:
