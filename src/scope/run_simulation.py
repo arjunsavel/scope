@@ -59,6 +59,7 @@ def make_data(
     v_sys_measured=0.0,
     vary_throughput=True,
     instrument="IGRINS",
+    pca_removal="subtract",
 ):
     """
     Creates a simulated HRCCS dataset. Main function.
@@ -258,10 +259,9 @@ def make_data(
             flux_cube[j] -= np.mean(flux_cube[j])
             flux_cube[j] /= np.std(flux_cube[j])
             flux_cube[j], pca_noise_matrix[j] = perform_pca(
-                flux_cube[j], n_princ_comp, return_noplanet=True
+                flux_cube[j], n_princ_comp, pca_removal=pca_removal
             )
-            # todo: think about the svd
-            # todo: redo all analysis centering on 0?
+
     else:
         for j in range(n_order):
             for i in range(n_exposure):
@@ -309,6 +309,7 @@ def calc_log_likelihood(
     LD=True,
     b=0.0,  # impact parameter
     v_sys_measured=0.0,
+    pca_removal="subtract",
 ):
     """
     Calculates the log likelihood and cross-correlation function of the data given the model parameters.
@@ -396,7 +397,9 @@ def calc_log_likelihood(
         if do_pca:
             # this is the "model reprocessing" step.
             model_flux_cube *= A_noplanet[order]
-            model_flux_cube, _ = perform_pca(model_flux_cube, n_princ_comp, False)
+            model_flux_cube, _ = perform_pca(
+                model_flux_cube, n_princ_comp, pca_removal=pca_removal
+            )
 
         logl, ccf = calc_ccf(model_flux_cube, flux_cube[order], n_pixel)
         CCF += ccf
@@ -445,6 +448,7 @@ def simulate_observation(
     planet_name="yourfirstplanet",
     n_kp=200,
     n_vsys=200,
+    pca_removal="subtract",
     **kwargs,
 ):
     """
@@ -560,6 +564,7 @@ def simulate_observation(
         v_sys_measured=v_sys,
         LD=LD,
         instrument=instrument,
+        pca_removal=pca_removal,
     )
 
     run_name = f"{n_princ_comp}_NPC_{blaze}_blaze_{star}_star_{telluric}_telluric_{SNR}_SNR_{tell_type}_{time_dep_tell}_{wav_error}_{order_dep_throughput}_{seed}"
@@ -593,6 +598,7 @@ def simulate_observation(
                 observation=observation,
                 v_sys_measured=v_sys,
                 LD=LD,
+                pca_removal=pca_removal,
             )
             lls[l, k], ccfs[l, k] = res
 

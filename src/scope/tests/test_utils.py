@@ -77,7 +77,7 @@ class TestPca(unittest.TestCase):
         """
 
         n_princ_comp = 5
-        scaled_cube, pca = perform_pca(self.cube, n_princ_comp, return_noplanet=True)
+        scaled_cube, pca = perform_pca(self.cube, n_princ_comp)
         assert scaled_cube.shape == self.cube.shape
         assert pca.shape == self.cube.shape
 
@@ -87,7 +87,7 @@ class TestPca(unittest.TestCase):
         """
 
         n_princ_comp = 5
-        scaled_cube, pca = perform_pca(self.cube, n_princ_comp, return_noplanet=True)
+        scaled_cube, pca = perform_pca(self.cube, n_princ_comp)
         assert np.std(scaled_cube) < np.std(
             pca
         )  # the variance should be contained in the main components
@@ -98,7 +98,7 @@ class TestPca(unittest.TestCase):
         """
 
         n_princ_comp = 5
-        scaled_cube, pca = perform_pca(self.cube, n_princ_comp, return_noplanet=True)
+        scaled_cube, pca = perform_pca(self.cube, n_princ_comp)
         assert np.std(scaled_cube) < np.std(
             self.cube
         )  # the variance should be contained in the main components
@@ -109,10 +109,11 @@ class TestPca(unittest.TestCase):
         """
 
         n_princ_comp = 5
-        scaled_cube5, pca5 = perform_pca(self.cube, n_princ_comp, return_noplanet=True)
+        scaled_cube5, pca5 = perform_pca(self.cube, n_princ_comp)
         n_princ_comp = 10
         scaled_cube10, pca10 = perform_pca(
-            self.cube, n_princ_comp, return_noplanet=True
+            self.cube,
+            n_princ_comp,
         )
         assert np.std(scaled_cube10) < np.std(
             scaled_cube5

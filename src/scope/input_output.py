@@ -379,6 +379,9 @@ def parse_arguments():
     parser.add_argument("--scale", type=float, default=1.0, help="Scale factor")
     parser.add_argument("--v_sys", type=float, default=0.0, help="Systemic velocity")
     parser.add_argument(
+        "--pca_rmeove", type=str, default="subtract", help="PCA removal scheme"
+    )
+    parser.add_argument(
         "--modelname", type=str, default="yourfirstsimulation", help="Model name"
     )
     parser.add_argument(
