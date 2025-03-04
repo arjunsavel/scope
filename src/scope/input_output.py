@@ -25,7 +25,9 @@ class ScopeConfigError(Exception):
 # Mapping between input file parameters and database columns
 parameter_mapping = {
     "Rp": "pl_radj",
+    "Mp": "pl_massj",
     "Rstar": "st_rad",
+    "Mstar": "st_mass",
     "v_sys": "system_velocity",
     "a": "pl_orbsmax",
     "P_rot": "pl_orbper",
@@ -33,6 +35,8 @@ parameter_mapping = {
     "planet_name": "pl_name",
     "Rp_solar": "planet_radius_solar",
     "lambda_misalign": "pl_projobliq",
+    "e": "pl_orbeccen",
+    "peri": "pl_orblper",
 }
 
 
@@ -198,6 +202,9 @@ def parse_input_file(
         "a",
         "u1",
         "u2",
+        "Mstar",
+        "Mp",
+        "peri",
     ]
 
     # Convert values to appropriate types
@@ -302,7 +309,6 @@ Planet name: {data['planet_name']}
 
 
 def parse_arguments():
-
     parser = argparse.ArgumentParser(description="Simulate observation")
 
     # Required parameters
@@ -412,6 +418,5 @@ def parse_arguments():
     parser.add_argument(
         "--input_file", type=str, default="input.txt", help="Input file with parameters"
     )
-
 
     return parser.parse_args()

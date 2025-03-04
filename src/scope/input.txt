@@ -26,7 +26,12 @@ snr_path               /home/asavel/scratch/scope/src/scope/data/snr_IGRINS_LTT-
 
 # Astrophysical Parameters. Can specify DATABASE to pull based on name for parameters with [DB]
 Rp                     DATABASE          # planetary radius in Jupiter radii. [DB]
+Mp                     DATABASE          # planetary mass in Jupiter masses. [DB]
+e                      DATABASE          # eccentricity of the planet's orbit. [DB]
+omega                  DATABASE          # argument of periastron of the planet's orbit, in degrees. [DB]
+b                      DATABASE          # impact parameter of the planet's orbit. [DB]
 Rstar                  DATABASE          # stellar radius, in solar radii. [DB]
+Mstar                  DATABASE          # stellar mass, in solar masses. [DB]
 kp                     128.1              # expected planetary orbital velocity assuming circular orbit, in km/s. input NULL if you'd like to calculate from orbital parameters.
 v_sys                  0.0          # systemic velocity, in km/s.  [DB]
 v_rot                  NULL              # equatorial rotational velocity. input NULL if you'd like to calculate from orbital parameters.
@@ -53,7 +58,7 @@ vary_throughput        True          # whether to include throughput variations.
 observation            transmission      # type of observation to perform. supported observations are ``emission`` and ``transmission``.
 phase_start            0.986222200994206           # phase of the beginning of the observations. 0 is center of transit, 0.5 is secondary eclipse. If DATABASE, just the transit duration. [DB]
 phase_end              1.0137777990057941           # phase of the end of the observations. 0 is center of transit, 0.5 is secondary eclipse. If DATABASE, just the transit duration. [DB]
-n_exposures            17             # number of exposures to simulate. sets the phases of the exposures.
+n_exposures            0             # number of exposures to simulate. sets the phases of the exposures. if set to 0, the minimum number of exposures that prevent pixel crossing for the provided instrument is used.
 star                   True          # whether to include the star in the simulation. In general, you'd like to!
 telluric               True          # whether to include tellurics in the simulation. In general, you'd like to!
 SNR                    250           # signal-to-noise ratio of the observations, per pixel. I.e., what sets the photon counts at the detector.
