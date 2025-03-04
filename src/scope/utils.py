@@ -234,33 +234,45 @@ def calc_limb_darkening(u1, u2, a, b, Rstar, ph, LD):
 
 
 @njit
-def perform_pca(input_matrix, n_princ_comp, return_noplanet=False):
+def perform_pca(input_matrix, n_princ_comp, pca_removal="subtract"):
     """
-    Perform PCA using SVD.
+    Perform PCA using SVD and remove principal components via subtraction or division.
 
-    SVD is written as A = USV^H, where ^H is the Hermitian operator.
+    Parameters
+    ----------
+    input_matrix : ndarray
+        2D array where rows are observations and columns are features.
+    n_princ_comp : int
+        Number of principal components to retain.
+    mode : str, optional
+        Method for removing PCA fit, either "subtract" or "divide".
+        Default is "subtract".
 
-    Inputs
-    ------
-        :input_matrix:
-        :n_princ_comp: number of principal components to keep
+    Returns
+    -------
+    corrected_data : ndarray
+        The input matrix with PCA components removed.
+    A_pca_fit : ndarray
+        The PCA reconstruction used for removal.
     """
-    u, singular_values, vh = np.linalg.svd(
-        input_matrix, full_matrices=False
-    )  # decompose
-    if return_noplanet:
-        s_high_variance = singular_values.copy()
-        s_high_variance[n_princ_comp:] = 0.0  # keeping the high-variance terms here
-        s_matrix = np.diag(s_high_variance)
-        A_noplanet = np.dot(u, np.dot(s_matrix, vh))
+    # Perform SVD decomposition
+    u, singular_values, vh = np.linalg.svd(input_matrix, full_matrices=False)
 
-    singular_values[:n_princ_comp] = 0.0  # zero out the high-variance terms here
-    s_matrix = np.diag(singular_values)
-    arr_planet = np.dot(u, np.dot(s_matrix, vh))
+    # Construct PCA model of systematics
+    s_high_variance = singular_values.copy()
+    s_high_variance[n_princ_comp:] = 0.0  # Keep the high-variance trends
+    s_matrix = np.diag(s_high_variance)
+    A_pca_fit = np.dot(u, np.dot(s_matrix, vh))  # Systematics model
 
-    if return_noplanet:
-        return arr_planet, A_noplanet
-    return arr_planet, arr_planet
+    # Apply chosen removal method
+    if pca_removal == "subtract":
+        corrected_data = input_matrix - A_pca_fit
+    elif pca_removal == "divide":
+        corrected_data = input_matrix / (A_pca_fit + 1e-8)  # Avoid division by zero
+    else:
+        raise ValueError("Mode must be 'subtract' or 'divide'.")
+
+    return corrected_data, A_pca_fit
 
 
 @njit
