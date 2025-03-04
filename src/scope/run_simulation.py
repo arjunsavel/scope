@@ -15,8 +15,6 @@ from scope.broadening import *
 from scope.ccf import *
 from scope.input_output import *
 from scope.logger import *
-
-
 from scope.noise import *
 from scope.tellurics import *
 from scope.utils import *
@@ -100,7 +98,6 @@ def make_data(
     )  # measured in m/s now
 
     logger.debug(f"RV planet: {rv_planet}, RV star: {rv_star}")
-
 
     flux_cube = np.zeros(
         (n_order, n_exposure, n_pixel)
@@ -527,7 +524,8 @@ def simulate_observation(
         star_wave, star_flux, wl_model, instrument_kernel, smooth=False
     )
 
-    lls, ccfs = np.zeros((n_kp, n_vsys)), np.zeros((n_kp, n_vsys))
+    # fill with NaNs because we're checkpointing. 0 would be a valid value, NaNs indicate that we haven't calculated it yet.
+    lls, ccfs = np.zeros((n_kp, n_vsys)) * np.nan, np.zeros((n_kp, n_vsys)) * np.nan
 
     # redoing the grid. how close does PCA get to a tellurics-free signal detection?
     A_noplanet, flux_cube, flux_cube_nopca, just_tellurics = make_data(
@@ -598,7 +596,8 @@ def simulate_observation(
             )
             lls[l, k], ccfs[l, k] = res
 
-    save_results(outdir, run_name, lls, ccfs)
+        # "checkpoint" by saving the results after each iteration!
+        save_results(outdir, run_name, lls, ccfs)
 
 
 if __name__ == "__main__":
@@ -620,7 +619,6 @@ if __name__ == "__main__":
 
     logger = setup_logging(log_level=inputs["log_level"])
     logger.debug(f"Parsed inputs: {inputs}")
-
 
     # Call the simulation function with the merged parameters
     try:
