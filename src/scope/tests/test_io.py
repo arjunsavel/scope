@@ -1,5 +1,6 @@
 import os
 import tempfile
+import pandas as pd
 
 import numpy as np
 import pytest
@@ -8,7 +9,10 @@ from scope.input_output import (  # Replace 'your_module' with the actual module
     parse_input_file,
     write_input_file,
     ScopeConfigError,
+    parameter_mapping,
 )
+
+test_data_path = os.path.join(os.path.dirname(__file__), "../data")
 
 
 @pytest.fixture
@@ -195,3 +199,14 @@ def test_calc_n_max_when_input_0(sample_files_second):
     data = parse_input_file(input_file_path, db_file_path)
 
     assert data["n_exposures"] > 0 and type(data["n_exposures"]) == int
+
+
+def test_database_columns():
+    # read in the exoplanet archive data
+    input_file_path = os.path.join(
+        test_data_path, "default_params_exoplanet_archive.csv"
+    )
+    db = pd.read_csv(input_file_path)
+
+    for value in parameter_mapping.values():
+        assert value in db.columns
