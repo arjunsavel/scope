@@ -3,6 +3,7 @@
 # Get Dropbox shared link and local path from command-line arguments
 local_path="data"
 download_link="https://www.dropbox.com/scl/fo/p3fzn032ibrm83t3l2i7d/AKztDkDyeJ3aYqokJsRjZxQ?rlkey=llb2auihdx7xt5qy5sfkvfxtv&st=id2i1prz&dl=1"
+rm -r $local_path
 mkdir $local_path
 
 # Download the folder as a zip file
