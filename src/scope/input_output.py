@@ -25,7 +25,7 @@ class ScopeConfigError(Exception):
 # Mapping between input file parameters and database columns
 parameter_mapping = {
     "Rp": "pl_radj",
-    "Mp": "pl_massj",
+    "Mp": "pl_bmassj",
     "Rstar": "st_rad",
     "Mstar": "st_mass",
     "v_sys": "system_velocity",
@@ -33,10 +33,10 @@ parameter_mapping = {
     "P_rot": "pl_orbper",
     "v_sys": "st_radv",
     "planet_name": "pl_name",
-    "Rp_solar": "planet_radius_solar",
     "lambda_misalign": "pl_projobliq",
     "e": "pl_orbeccen",
     "peri": "pl_orblper",
+    "v_rot_star": "st_vsin",
 }
 
 

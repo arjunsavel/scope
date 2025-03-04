@@ -42,7 +42,7 @@ LD                     True              # whether to include limb darkening in 
 u1                     0.1               # first quadratic limb darkening coefficient. not used if limb_darkening is set to False or if observation is set to emission.
 u2                     0.1               # second quadratic limb darkening coefficient. not used if limb_darkening is set to False or if observation is set to emission.
 include_rm             False             # *experimental*. Whether to include Rossiter-McLaughlin effect in the simulation or not. only matters if observation is set to transmission.
-v_rot_star             3                 # equatorial rotational velocity of the star in km/s. only matters if include_rm is set to True. and observation is set to transmission.
+v_rot_star             3                 # equatorial rotational velocity of the star in km/s. only matters if include_rm is set to True. and observation is set to transmission. [DB]
 lambda_misalign        0                 # misalignment angle of the planet's orbit with respect to the star's rotation axis, in degrees. only matters if include_rm is set to True. and observation is set to transmission. [DB]
 inc                    90.0              # inclination of the planet's orbit with respect to the line of sight, in degrees. only matters if include_rm is set to True. and observation is set to transmission.
 
