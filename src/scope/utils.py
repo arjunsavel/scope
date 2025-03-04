@@ -9,7 +9,6 @@ import pickle
 import astropy.units as u
 import matplotlib.pyplot as plt
 import numpy as np
-from exoplanet.orbits.keplerian import KeplerianOrbit
 from numba import njit
 from scipy import signal
 from scipy.interpolate import interp1d
@@ -91,7 +90,7 @@ def doppler_shift_planet_star(
             wlgrid_order, wl_model, Fp_conv, rv_planet[exposure]
         )
         flux_planet *= scale  # apply scale factor
-        
+
         _, flux_star = calc_doppler_shift(
             wlgrid_order, wl_model, Fstar_conv, rv_star[exposure]
         )
@@ -108,9 +107,9 @@ def doppler_shift_planet_star(
             observation == "transmission"
         ):  # in transmission, after we "divide out" (with PCA) the star and tellurics, we're left with Fp.
             I = calc_limb_darkening(u1, u2, a, b, Rstar, phases[exposure], LD)
-            
+
             model_flux_cube[exposure,] = 1.0 - flux_planet * I
-            
+
             if not reprocessing:
                 model_flux_cube[exposure,] *= flux_star
     return model_flux_cube
@@ -285,149 +284,6 @@ def calc_doppler_shift(eval_wave, template_wave, template_flux, v):
     shifted_wave = eval_wave - delta_lam
     shifted_flux = np.interp(shifted_wave, template_wave, template_flux)
     return shifted_wave, shifted_flux
-
-
-def calc_crossing_time(
-    period=1.80988198,
-    mstar=1.458,
-    e=0.000,
-    inc=89.623,
-    mplanet=0.894,
-    rstar=1.756,
-    peri=0,
-    b=0.027,
-    R=45000,
-    pix_per_res=3.3,
-    phase_start=0.9668567402328337,
-    phase_end=1.0331432597671664,
-    plot=False,
-):
-    """
-
-    todo: refactor this into separate functions, maybe?
-
-    Inputs
-    -------
-    autofilled for WASP-76b and IGRINS.
-
-    R: (int) resolution of spectrograph.
-    pix_per_res: (float) pixels per resolution element
-
-
-    Outputs
-    -------
-
-    min_time: minimum time during transit before lines start smearing across resolution elements.
-
-    min_time_per_pixel: minimum time during transit before lines start smearing across a single pixel.
-    dphase_per_exp: the amount of phase (values from 0 to 1) taken up by a single exposure, given above constraints.
-    n_exp: number of exposures you can take during transit.
-
-    """
-
-    orbit = KeplerianOrbit(
-        m_star=mstar,  # solar masses!
-        r_star=rstar,  # solar radii!
-        #     m_planet_units = u.jupiterMass,
-        t0=0,  # reference transit at 0!
-        period=period,
-        ecc=e,
-        b=b,
-        omega=np.radians(peri),  # periastron, radians
-        Omega=np.radians(peri),  # periastron, radians
-        m_planet=mplanet * 0.0009543,
-    )
-    t = np.linspace(0, period * 1.1, 1000)  # days
-    z_vel = orbit.get_relative_velocity(t)[2].eval()
-
-    z_vel *= 695700 / 86400  # km / s
-
-    phases = t / period
-    if plot:
-        plt.plot(phases, z_vel)
-
-        plt.axvline(0.5, color="gray", label="Eclipse")
-        plt.axvline(0.25, label="Quadrature (should be maximized)", color="teal")
-
-        plt.axvline(0.75, label="Quadrature (should be maximized)", color="teal")
-
-        plt.legend()
-        plt.xlabel("Time (days)")
-        plt.ylabel("Radial velocity (km/s)")
-    acceleration = (
-        np.diff(z_vel) / np.diff((t * u.day).to(u.s).si.value) * u.km / (u.s**2)
-    )
-
-    if plot:
-        plt.plot(phases[:-1], acceleration)
-
-        plt.axvline(0.5, color="gray", label="Eclipse")
-        plt.axvline(0.25, label="Quadrature (should be minimized)", color="teal")
-
-        plt.axvline(0.75, label="Quadrature (should be minimized)", color="teal")
-        plt.xlabel("Orbital phase")
-        plt.ylabel("Radial acceleration (km/s^2)")
-
-        # cool, this is the acceleration.
-
-        # now want the pixel crossing time.
-
-        plt.legend()
-
-    # R = c / delta v
-    # delta v = c / R
-
-    delta_v = const.c / R
-    delta_v = delta_v.to(u.km / u.s)
-    res_crossing_time = abs(delta_v / acceleration).to(u.s)
-    if plot:
-        plt.figure()
-        plt.plot(phases[:-1], res_crossing_time)
-        plt.axvline(0.5, color="gray", label="Eclipse")
-        plt.axvline(0.25, label="Quadrature (should be maximized)", color="teal")
-
-        plt.axvline(0.75, label="Quadrature (should be maximized)", color="teal")
-
-        plt.legend()
-        plt.xlabel("Orbital phase")
-        plt.ylabel("Resolution crossing time (s)")
-        plt.yscale("log")
-
-        plt.figure()
-        plt.plot(phases[:-1], res_crossing_time)
-        plt.legend()
-
-        # plt.yscale('log')
-        plt.ylim(820, 900)
-        plt.xlabel("Orbital phase")
-        plt.ylabel("Resolution crossing time (s)")
-
-        plt.xlim(0.96, 1.041)
-
-    # todo: generalize this!
-    ingress = phase_start
-    egress = phase_end
-    during_transit = (phases[:-1] > ingress) & (phases[:-1] < egress)
-
-    res_crossing_time_transit = res_crossing_time[during_transit]
-
-    max_time = np.min(res_crossing_time_transit)
-
-    max_time_per_pixel = max_time / pix_per_res
-    period = period * u.day
-    dphase_per_exp = (np.min(res_crossing_time_transit) / period).si
-
-    transit_dur = (4.3336 / 24) / period.value  # degrees. todo: calculate.
-    print(transit_dur)
-    print(4.3336 * 60 * 60)  # this is how many seconds long it is
-    n_exp = transit_dur / dphase_per_exp
-
-    # then query https://igrins-jj.firebaseapp.com/etc/simple:
-    # this gives us, for the given exposure time, what the SNR is going to be.
-    # well that's more the maximum time
-    # so that's the maximum time, but we want more than that many exposures.
-    # don't have to worry about pixel-crossing time.
-    return max_time, max_time_per_pixel, dphase_per_exp, n_exp
 
 
 @njit

@@ -49,6 +49,72 @@ phase_start                 0.3
 phase_end                 0.5
 blaze                  True
 star                   False
+n_exposures            10
+tell_type              data-driven   # type of telluric simulation. supported modes are ``ATRAN`` and ``data-driven``.
+time_dep_tell          False         # whether the tellurics are time-dependent or not.
+"""
+        input_file_path = os.path.join(test_dir, "test_input.txt")
+        with open(input_file_path, "w") as f:
+            f.write(input_file_content)
+
+        # Create a sample database file
+        db_content = """
+pl_name,planet_radius_solar
+GJ 1214b,0.15
+"""
+        db_file_path = os.path.join(test_dir, "test_db.csv")
+        with open(db_file_path, "w") as f:
+            f.write(db_content)
+
+        yield input_file_path, db_file_path
+
+
+@pytest.fixture
+def sample_files_second():
+    # Create a temporary directory for test files
+    with tempfile.TemporaryDirectory() as test_dir:
+        # Create a sample input file
+        input_file_content = """:········································
+:                                       :
+:    ▄▄▄▄▄   ▄█▄    ████▄ █ ▄▄  ▄███▄   :
+:   █     ▀▄ █▀ ▀▄  █   █ █   █ █▀   ▀  :
+: ▄  ▀▀▀▀▄   █   ▀  █   █ █▀▀▀  ██▄▄    :
+:  ▀▄▄▄▄▀    █▄  ▄▀ ▀████ █     █▄   ▄▀ :
+:            ▀███▀         █    ▀███▀   :
+:                           ▀           :
+:                                       :
+:········································
+Created:                2024-08-15
+Author:                 Arjun Savel!
+Planet name:            GJ 1214 b
+
+# Astrophysical Parameters
+Rp                     1.5
+Mp                     2
+Rp_solar               DATABASE
+e                      0.0
+omega                  0.0
+b                      0.0
+Rstar                  1
+Mstar                  1
+kp                     150.0
+v_rot                  5.0
+P_rot                  1.0
+v_sys                  0.0
+
+# Instrument Parameters
+blaze                  True          # whether to include a blaze function or not.
+wav_error              False         # whether to include wavelength solution errors or not.
+order_dep_throughput   True          # whether to include order-dependent throughput variations.
+
+# Observation Parameters
+observation            emission
+phase_start                 0.3
+phase_end                 0.5
+blaze                  True
+star                   False
+instrument              IGRINS
+n_exposures            0
 tell_type              data-driven   # type of telluric simulation. supported modes are ``ATRAN`` and ``data-driven``.
 time_dep_tell          False         # whether the tellurics are time-dependent or not.
 """
@@ -122,3 +188,10 @@ def test_error_on_data_driven_tell(sample_files):
         parse_input_file(test_file, db_file_path)
 
     assert "Data-driven tellurics requires blaze set to True." in str(exc.value)
+
+
+def test_calc_n_max_when_input_0(sample_files_second):
+    input_file_path, db_file_path = sample_files_second
+    data = parse_input_file(input_file_path, db_file_path)
+
+    assert data["n_exposures"] > 0 and type(data["n_exposures"]) == int
