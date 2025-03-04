@@ -43,6 +43,13 @@ jobs:
           chmod +x download_data.bash
           ./download_data.bash
           cd ../../
+          
+      - name: Update cache with new data
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.bypass_cache == 'true' }}
+        uses: actions/cache/save@v3
+        with:
+          path: src/scope/data
+          key: ${{ runner.os }}-test-data-${{ github.run_id }}
         
             
       - name: Set up Python ${{ matrix.python-version }}
