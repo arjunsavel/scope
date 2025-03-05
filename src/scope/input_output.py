@@ -4,16 +4,20 @@ Module to handle the input files.
 
 import argparse
 import io
+import json
 import os
 import warnings
 from datetime import datetime
 
 import pandas as pd
+from astroquery.ipac.nexsci.nasa_exoplanet_archive import NasaExoplanetArchive
 
 from scope.calc_quantities import *
 from scope.logger import *
 
 logger = get_logger()
+
+data_dir = os.path.join(os.path.dirname(__file__), "./data")
 
 
 class ScopeConfigError(Exception):
@@ -37,7 +41,8 @@ parameter_mapping = {
     "e": "pl_orbeccen",
     "peri": "pl_orblper",
     "v_rot_star": "st_vsin",
-    "b": "pl_imppar"
+    "b": "pl_imppar",
+    "Kmag": "sy_kmag",
 }
 
 
@@ -384,6 +389,9 @@ def parse_arguments():
     parser.add_argument("--scale", type=float, help="Scale factor")
     parser.add_argument("--v_sys", type=float, help="Systemic velocity")
     parser.add_argument(
+        "--pca_rmeove", type=str, help="PCA removal scheme"
+    )
+    parser.add_argument(
         "--modelname", type=str, help="Model name"
     )
     parser.add_argument(
@@ -425,3 +433,65 @@ def parse_arguments():
     )
 
     return parser.parse_args()
+
+
+def read_crires_data(data_path):
+    """
+    Reads in CRIRES data.
+
+    Inputs
+    ------
+        :data_path: (str) path to the data
+
+    Outputs
+    -------
+        n_orders: (int) number of orders
+        n_pixel: (int) number of pixels
+        wl_cube_model: (array) wavelength cube model
+        snrs: (array) signal-to-noise ratios
+    """
+    with open(data_path, "r") as file:
+        data = json.load(file)
+
+    n_orders = 0  # an integer :)
+    for i in range(len(data["data"]["orders"])):
+        order_len = len(data["data"]["orders"][i]["detectors"])
+        n_orders += order_len
+
+    n_wavs = len(data["data"]["orders"][i]["detectors"][0]["wavelength"])
+
+    wl_grid = np.zeros((n_orders, n_wavs))
+    snr_grid = np.zeros((n_orders, n_wavs))
+
+    for i in range(len(data["data"]["orders"])):
+        order_len = len(data["data"]["orders"][i]["detectors"])
+        for j in range(order_len):
+            wl_grid[i * order_len + j] = data["data"]["orders"][i]["detectors"][j][
+                "wavelength"
+            ]
+
+            snr_grid[i * order_len + j] = data["data"]["orders"][i]["detectors"][j][
+                "plots"
+            ]["snr"]["snr"]
+
+    return n_orders, n_wavs, wl_grid * 1e6, snr_grid
+
+
+def refresh_db():
+    """
+    Refresh the database with the latest exoplanet data.
+    """
+    # Download the latest exoplanet data
+    # Update the database file
+
+    table = NasaExoplanetArchive.query_criteria(
+        table="pscomppars", select="*", where="pl_name is not null"
+    )
+
+    # Convert to Pandas DataFrame for easier handling
+    df = table.to_pandas()
+
+    # Save to CSV
+    filepath = os.path.join(data_dir, "default_params_exoplanet_archive.csv")
+    df.to_csv(filepath, index=False)
+    return df

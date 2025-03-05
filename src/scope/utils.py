@@ -24,44 +24,6 @@ start_clip = 200
 end_clip = 100
 
 
-def read_crires_data(data_path):
-    """
-    Reads in CRIRES data.
-
-    Inputs
-    ------
-        :data_path: (str) path to the data
-
-    Outputs
-    -------
-        n_orders: (int) number of orders
-        n_pixel: (int) number of pixels
-        wl_cube_model: (array) wavelength cube model
-        snrs: (array) signal-to-noise ratios
-    """
-    with open(data_path, "r") as file:
-        data = json.load(file)
-
-    n_orders = 0  # an integer :)
-    for i in range(len(data["data"]["orders"])):
-        order_len = len(data["data"]["orders"][i]["detectors"])
-        n_orders += order_len
-
-    n_wavs = len(data["data"]["orders"][i]["detectors"][0]["wavelength"])
-
-    wl_grid = np.zeros((n_orders, n_wavs))
-    snr_grid = np.zeros((n_orders, n_wavs))
-
-    for i in range(len(data["data"]["orders"])):
-        order_len = len(data["data"]["orders"][i]["detectors"])
-        for j in range(order_len):
-            wl_grid[i * order_len + j] = data["data"]["orders"][i]["detectors"][j][
-                "wavelength"
-            ]
-
-    return n_orders, n_wavs, wl_grid * 1e6, snr_grid
-
-
 @njit
 def doppler_shift_planet_star(
     model_flux_cube,
@@ -218,7 +180,7 @@ def calc_limb_darkening(u1, u2, a, b, Rstar, ph, LD):
     """
     if LD:  # apply limb darkening. 1D style!
         x = (a * np.sin(2 * np.pi * ph)) / (Rstar * rsun)
-        mu = np.sqrt(1 - x**2 - b**2)
+        mu = np.sqrt(np.clip(1 - x**2 - b**2, 0, 1))
         if x**2 <= 1 - b**2:
             I = 1 - u1 * (1 - mu) - u2 * (1 - mu) ** 2
         else:
@@ -234,33 +196,45 @@ def calc_limb_darkening(u1, u2, a, b, Rstar, ph, LD):
 
 
 @njit
-def perform_pca(input_matrix, n_princ_comp, return_noplanet=False):
+def perform_pca(input_matrix, n_princ_comp, pca_removal="subtract"):
     """
-    Perform PCA using SVD.
+    Perform PCA using SVD and remove principal components via subtraction or division.
 
-    SVD is written as A = USV^H, where ^H is the Hermitian operator.
+    Parameters
+    ----------
+    input_matrix : ndarray
+        2D array where rows are observations and columns are features.
+    n_princ_comp : int
+        Number of principal components to retain.
+    mode : str, optional
+        Method for removing PCA fit, either "subtract" or "divide".
+        Default is "subtract".
 
-    Inputs
-    ------
-        :input_matrix:
-        :n_princ_comp: number of principal components to keep
+    Returns
+    -------
+    corrected_data : ndarray
+        The input matrix with PCA components removed.
+    A_pca_fit : ndarray
+        The PCA reconstruction used for removal.
     """
-    u, singular_values, vh = np.linalg.svd(
-        input_matrix, full_matrices=False
-    )  # decompose
-    if return_noplanet:
-        s_high_variance = singular_values.copy()
-        s_high_variance[n_princ_comp:] = 0.0  # keeping the high-variance terms here
-        s_matrix = np.diag(s_high_variance)
-        A_noplanet = np.dot(u, np.dot(s_matrix, vh))
+    # Perform SVD decomposition
+    u, singular_values, vh = np.linalg.svd(input_matrix, full_matrices=False)
 
-    singular_values[:n_princ_comp] = 0.0  # zero out the high-variance terms here
-    s_matrix = np.diag(singular_values)
-    arr_planet = np.dot(u, np.dot(s_matrix, vh))
+    # Construct PCA model of systematics
+    s_high_variance = singular_values.copy()
+    s_high_variance[n_princ_comp:] = 0.0  # Keep the high-variance trends
+    s_matrix = np.diag(s_high_variance)
+    A_pca_fit = np.dot(u, np.dot(s_matrix, vh))  # Systematics model
 
-    if return_noplanet:
-        return arr_planet, A_noplanet
-    return arr_planet, arr_planet
+    # Apply chosen removal method
+    if pca_removal == "subtract":
+        corrected_data = input_matrix - A_pca_fit
+    elif pca_removal == "divide":
+        corrected_data = input_matrix / (A_pca_fit + 1e-8)  # Avoid division by zero
+    else:
+        raise ValueError("Mode must be 'subtract' or 'divide'.")
+
+    return corrected_data, A_pca_fit
 
 
 @njit

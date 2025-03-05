@@ -212,10 +212,12 @@ def I_darken_disk(x, y, epsilon):
     -------
         :res1: the intensity at that point on the disk.
     """
-    lon = np.arcsin(x)
-    lat = np.arcsin(y)
-
-    return I_darken(lon, lat, epsilon)
+    if x**2 + y**2 <= 1:
+        lon = np.arcsin(x)
+        lat = np.arcsin(y)
+        return I_darken(lon, lat, epsilon)
+    else:
+        return 0.0
 
 
 def I_darken_disk_integrated(x, y, epsilon):

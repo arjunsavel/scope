@@ -46,6 +46,10 @@ dependencies = [
     "exoplanet-core",
     "pymc>=4",
     "schwimmbad",
+    "selenium",
+    "requests",
+    "astroquery",
+    "webdriver_manager"
 ]
 dynamic = ["version"]
 
