@@ -19,10 +19,11 @@ seed                   150               # seed for the random number generator 
 log_level              DEBUG              # logging level above which statements are printed. Supported levels are ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
 
 # Filepaths
-planet_spectrum_path    /home/asavel/scratch/retrieval_stuff/fm_wasp_77ab_noisy/fm_wasp_77ab_noisy/spectrum_tran_WASP-166b_0.3_c_to_o.pic
-star_spectrum_path     /home/asavel/scratch/scope/src/scope/data/PHOENIX_5605_4.33.txt
-data_cube_path         /home/asavel/scratch/scope/src/scope/data/data_RAW_20201214_wl_algn_03.pic
-snr_path               /home/asavel/scratch/scope/src/scope/data/snr_IGRINS_LTT-9779b.json # only required for CRIRES+ simulations
+planet_spectrum_path    /Users/arjunsavel/Desktop/research/gj1214_hires_sims/best_fit_spectrum_tran_gj1214_steam_nir.pic
+star_spectrum_path     /Users/arjunsavel/Desktop/research/scope/src/scope/data/PHOENIX_5605_4.33.txt
+data_cube_path         /Users/arjunsavel/Desktop/research/scope/src/scope/data/data_RAW_20201214_wl_algn_03.pic
+planet_and_star_path   NULL              # path to *combined* planet and star spectrum, if applicable. If not set to NULL, the planet and stellar spectrum are combined from the individual files specified above.
+
 
 # Astrophysical Parameters. Can specify DATABASE to pull based on name for parameters with [DB]
 Rp                     DATABASE          # planetary radius in Jupiter radii. [DB]

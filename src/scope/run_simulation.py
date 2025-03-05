@@ -4,7 +4,6 @@ This module contains the main functions for simulating the data and
 calculating the log likelihood and cross-correlation function of the data given the model parameters.
 """
 
-
 import logging
 import os
 
@@ -26,14 +25,14 @@ def make_data(
     scale,
     wlgrid,
     wl_model,
-    Fp_conv,
-    Fstar_conv,
     n_order,
     n_exposure,
     n_pixel,
     phases,
     Rp_solar,
     Rstar,
+    Fp_conv=np.ones(3),
+    Fstar_conv=np.ones(3),
     seed=42,
     do_pca=True,
     blaze=False,
@@ -58,6 +57,7 @@ def make_data(
     out_of_transit_dur=0.1,
     v_sys_measured=0.0,
     vary_throughput=True,
+    combined_spectrum=np.nan,
     instrument="IGRINS",
     pca_removal="subtract",
 ):
@@ -106,27 +106,31 @@ def make_data(
     pca_noise_matrix = np.zeros((n_order, n_exposure, n_pixel))
     for order in range(n_order):
         wlgrid_order = np.copy(wlgrid[order,])  # Cropped wavelengths
-        flux_cube[order] = doppler_shift_planet_star(
-            flux_cube[order],
-            n_exposure,
-            phases,
-            rv_planet,
-            rv_star,
-            wlgrid_order,
-            wl_model,
-            Fp_conv,
-            Rp_solar,
-            Fstar_conv,
-            Rstar,
-            u1,
-            u2,
-            a,
-            b,
-            LD,
-            scale,
-            star,
-            observation,
-        )
+
+        if combined_spectrum is not np.nan:
+            flux_cube[order] = np.interp(wlgrid_order, wl_model, combined_spectrum)
+        else:
+            flux_cube[order] = doppler_shift_planet_star(
+                flux_cube[order],
+                n_exposure,
+                phases,
+                rv_planet,
+                rv_star,
+                wlgrid_order,
+                wl_model,
+                Fp_conv,
+                Rp_solar,
+                Fstar_conv,
+                Rstar,
+                u1,
+                u2,
+                a,
+                b,
+                LD,
+                scale,
+                star,
+                observation,
+            )
 
     throughput_baselines = np.loadtxt(abs_path + "/data/throughputs.txt")
 
@@ -443,6 +447,7 @@ def simulate_observation(
     seed=42,
     LD=True,
     vary_throughput=True,
+    combined_planet_star_path=np.nan,
     instrument="IGRINS",
     snr_path=None,
     planet_name="yourfirstplanet",
@@ -501,8 +506,9 @@ def simulate_observation(
         # need to read in the filepath
         n_order, n_pixel, wl_cube_model, SNR = read_crires_data(snr_path)
 
-    wl_model, Fp, Fstar = np.load(planet_spectrum_path, allow_pickle=True)
 
+    # read in the planet spectrum and stellar spectrum
+    wl_model, Fp, Fstar = np.load(planet_spectrum_path, allow_pickle=True)
     wl_model = wl_model.astype(np.float64)
 
     # Fp_conv_rot = broaden_spectrum(wl_model / 1e6, Fp, 0, vl=v_rot)
@@ -512,21 +518,36 @@ def simulate_observation(
     # instrument profile convolution
     instrument_kernel = get_instrument_kernel(instrument)
     Fp_conv = np.convolve(Fp_conv_rot, instrument_kernel, mode="same")
-    print("here spectrum")
-    print(Fp_conv)
-    star_wave, star_flux = np.loadtxt(
-        star_spectrum_path
-    ).T  # Phoenix stellar model packing
 
-    if include_rm:
-        star_flux, _ = make_stellar_disk(
-            star_flux, star_wave, v_rot_star, phases, Rstar, inc, lambda_misalign, a, Rp
+
+    if combined_planet_star_path is np.nan:
+        star_wave, star_flux = np.loadtxt(
+            star_spectrum_path
+        ).T  # Phoenix stellar model packing
+
+
+        if include_rm:
+            star_flux, _ = make_stellar_disk(
+                star_flux,
+                star_wave,
+                v_rot_star,
+                phases,
+                Rstar,
+                inc,
+                lambda_misalign,
+                a,
+                Rp,
+            )
+
+        Fstar_conv = get_star_spline(
+            star_wave, star_flux, wl_model, instrument_kernel, smooth=False
         )
+    else:
+        wl_model, combined_spectrum = np.load(
+            combined_planet_star_path, allow_pickle=True
+        )
+        Fstar_conv = np.ones_like(Fp_conv)
 
-    # todo: swap out
-    Fstar_conv = get_star_spline(
-        star_wave, star_flux, wl_model, instrument_kernel, smooth=False
-    )
 
     # fill with NaNs because we're checkpointing. 0 would be a valid value, NaNs indicate that we haven't calculated it yet.
     lls, ccfs = np.zeros((n_kp, n_vsys)) * np.nan, np.zeros((n_kp, n_vsys)) * np.nan
@@ -536,14 +557,14 @@ def simulate_observation(
         scale,
         wl_cube_model,
         wl_model,
-        Fp_conv,
-        Fstar_conv,
         n_order,
         n_exposures,
         n_pixel,
         phases,
         Rp_solar,
         Rstar,
+        Fp_conv=Fp_conv,
+        Fstar_conv=Fstar_conv,
         seed=seed,
         do_pca=True,
         blaze=blaze,
@@ -562,6 +583,7 @@ def simulate_observation(
         divide_out_of_transit=divide_out_of_transit,
         out_of_transit_dur=0.1,
         v_sys_measured=v_sys,
+        combined_spectrum=True,
         LD=LD,
         instrument=instrument,
         pca_removal=pca_removal,
