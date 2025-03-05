@@ -3,6 +3,7 @@ channels:
   - conda-forge
   - defaults
 dependencies:
+  - selenium
   - bzip2=1.0.8=h99b78c6_7
   - ca-certificates=2024.7.4=hf0a4a13_0
   - colorama=0.4.6=pyhd8ed1ab_0

@@ -14,8 +14,6 @@ from scope.broadening import *
 from scope.ccf import *
 from scope.input_output import *
 from scope.logger import *
-
-
 from scope.noise import *
 from scope.tellurics import *
 from scope.utils import *
@@ -61,6 +59,7 @@ def make_data(
     vary_throughput=True,
     combined_spectrum=np.nan,
     instrument="IGRINS",
+    pca_removal="subtract",
 ):
     """
     Creates a simulated HRCCS dataset. Main function.
@@ -100,7 +99,6 @@ def make_data(
     )  # measured in m/s now
 
     logger.debug(f"RV planet: {rv_planet}, RV star: {rv_star}")
-
 
     flux_cube = np.zeros(
         (n_order, n_exposure, n_pixel)
@@ -265,10 +263,9 @@ def make_data(
             flux_cube[j] -= np.mean(flux_cube[j])
             flux_cube[j] /= np.std(flux_cube[j])
             flux_cube[j], pca_noise_matrix[j] = perform_pca(
-                flux_cube[j], n_princ_comp, return_noplanet=True
+                flux_cube[j], n_princ_comp, pca_removal=pca_removal
             )
-            # todo: think about the svd
-            # todo: redo all analysis centering on 0?
+
     else:
         for j in range(n_order):
             for i in range(n_exposure):
@@ -316,6 +313,7 @@ def calc_log_likelihood(
     LD=True,
     b=0.0,  # impact parameter
     v_sys_measured=0.0,
+    pca_removal="subtract",
 ):
     """
     Calculates the log likelihood and cross-correlation function of the data given the model parameters.
@@ -403,7 +401,9 @@ def calc_log_likelihood(
         if do_pca:
             # this is the "model reprocessing" step.
             model_flux_cube *= A_noplanet[order]
-            model_flux_cube, _ = perform_pca(model_flux_cube, n_princ_comp, False)
+            model_flux_cube, _ = perform_pca(
+                model_flux_cube, n_princ_comp, pca_removal=pca_removal
+            )
 
         logl, ccf = calc_ccf(model_flux_cube, flux_cube[order], n_pixel)
         CCF += ccf
@@ -453,6 +453,7 @@ def simulate_observation(
     planet_name="yourfirstplanet",
     n_kp=200,
     n_vsys=200,
+    pca_removal="subtract",
     **kwargs,
 ):
     """
@@ -548,7 +549,8 @@ def simulate_observation(
         Fstar_conv = np.ones_like(Fp_conv)
 
 
-    lls, ccfs = np.zeros((n_kp, n_vsys)), np.zeros((n_kp, n_vsys))
+    # fill with NaNs because we're checkpointing. 0 would be a valid value, NaNs indicate that we haven't calculated it yet.
+    lls, ccfs = np.zeros((n_kp, n_vsys)) * np.nan, np.zeros((n_kp, n_vsys)) * np.nan
 
     # redoing the grid. how close does PCA get to a tellurics-free signal detection?
     A_noplanet, flux_cube, flux_cube_nopca, just_tellurics = make_data(
@@ -584,10 +586,10 @@ def simulate_observation(
         combined_spectrum=True,
         LD=LD,
         instrument=instrument,
-
+        pca_removal=pca_removal,
     )
 
-    run_name = f"{n_princ_comp}_NPC_{blaze}_blaze_{star}_star_{telluric}_telluric_{SNR}_SNR_{tell_type}_{time_dep_tell}_{wav_error}_{order_dep_throughput}_{seed}"
+    run_name = f"{n_princ_comp}_NPC_{blaze}_blaze_{star}_star_{telluric}_telluric_{round(np.mean(SNR))}_SNR_{tell_type}_{time_dep_tell}_{wav_error}_{order_dep_throughput}_{seed}"
 
     save_data(outdir, run_name, flux_cube, flux_cube_nopca, A_noplanet, just_tellurics)
 
@@ -618,10 +620,12 @@ def simulate_observation(
                 observation=observation,
                 v_sys_measured=v_sys,
                 LD=LD,
+                pca_removal=pca_removal,
             )
             lls[l, k], ccfs[l, k] = res
 
-    save_results(outdir, run_name, lls, ccfs)
+        # "checkpoint" by saving the results after each iteration!
+        save_results(outdir, run_name, lls, ccfs)
 
 
 if __name__ == "__main__":
@@ -643,8 +647,7 @@ if __name__ == "__main__":
 
     logger = setup_logging(log_level=inputs["log_level"])
     logger.debug(f"Parsed inputs: {inputs}")
-
-
+    print(inputs)
     # Call the simulation function with the merged parameters
     try:
         simulate_observation(**inputs)

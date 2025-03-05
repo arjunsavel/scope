@@ -4,16 +4,20 @@ Module to handle the input files.
 
 import argparse
 import io
+import json
 import os
 import warnings
 from datetime import datetime
 
 import pandas as pd
+from astroquery.ipac.nexsci.nasa_exoplanet_archive import NasaExoplanetArchive
 
 from scope.calc_quantities import *
 from scope.logger import *
 
 logger = get_logger()
+
+data_dir = os.path.join(os.path.dirname(__file__), "./data")
 
 
 class ScopeConfigError(Exception):
@@ -25,14 +29,20 @@ class ScopeConfigError(Exception):
 # Mapping between input file parameters and database columns
 parameter_mapping = {
     "Rp": "pl_radj",
+    "Mp": "pl_bmassj",
     "Rstar": "st_rad",
+    "Mstar": "st_mass",
     "v_sys": "system_velocity",
     "a": "pl_orbsmax",
     "P_rot": "pl_orbper",
     "v_sys": "st_radv",
     "planet_name": "pl_name",
-    "Rp_solar": "planet_radius_solar",
     "lambda_misalign": "pl_projobliq",
+    "e": "pl_orbeccen",
+    "peri": "pl_orblper",
+    "v_rot_star": "st_vsin",
+    "b": "pl_imppar",
+    "Kmag": "sy_kmag",
 }
 
 
@@ -113,6 +123,7 @@ def coerce_integers(data, key, value):
 def coerce_database(data, key, value, astrophysical_params, planet_name, database_path):
     if value == "DATABASE" and key in astrophysical_params:
         data[key] = query_database(planet_name, key, database_path)
+
     elif value == "DATABASE" and key in ["phase_start", "phase_end"]:
         tdur = query_database(planet_name, "pl_trandur", database_path)
         period = query_database(planet_name, "pl_orbper", database_path)
@@ -197,7 +208,13 @@ def parse_input_file(
         "P_rot",
         "a",
         "u1",
+        "e",
+        "b",
         "u2",
+        "Mstar",
+        "Mp",
+        "peri",
+        "Kmag",
     ]
 
     # Convert values to appropriate types
@@ -302,108 +319,73 @@ Planet name: {data['planet_name']}
 
 
 def parse_arguments():
-
     parser = argparse.ArgumentParser(description="Simulate observation")
 
     # Required parameters
     parser.add_argument(
-        "--planet_spectrum_path", type=str, default=".", help="Path to planet spectrum"
+        "--planet_spectrum_path", type=str, help="Path to planet spectrum"
     )
-    parser.add_argument(
-        "--star_spectrum_path", type=str, default=".", help="Path to star spectrum"
-    )
-    parser.add_argument(
-        "--data_cube_path", type=str, default=".", help="Path to data cube"
-    )
+    parser.add_argument("--star_spectrum_path", type=str, help="Path to star spectrum")
+    parser.add_argument("--data_cube_path", type=str, help="Path to data cube")
 
     # Optional parameters with their defaults matching your function
     parser.add_argument(
         "--phase_start",
         type=float,
-        default=0,
         help="Start phase of the simulated observations",
     )
     parser.add_argument(
         "--phase_end",
         type=float,
-        default=1,
         help="End phase of the simulated observations",
     )
+    parser.add_argument("--n_exposures", type=int, help="Number of exposures")
+    parser.add_argument("--observation", type=str, help="Observation type")
+    parser.add_argument("--blaze", type=bool, help="Blaze flag")
     parser.add_argument(
-        "--n_exposures", type=int, default=10, help="Number of exposures"
+        "--n_princ_comp", type=int, help="Number of principal components"
     )
+    parser.add_argument("--star", type=bool, help="Star flag")
+    parser.add_argument("--SNR", type=float, help="Signal to noise ratio")
+    parser.add_argument("--telluric", type=bool, help="Telluric flag")
+    parser.add_argument("--tell_type", type=str, help="Telluric type")
+    parser.add_argument("--time_dep_tell", type=bool, help="Time dependent telluric")
+    parser.add_argument("--wav_error", type=bool, help="Wavelength error flag")
     parser.add_argument(
-        "--observation", type=str, default="emission", help="Observation type"
-    )
-    parser.add_argument("--blaze", type=bool, default=True, help="Blaze flag")
-    parser.add_argument(
-        "--n_princ_comp", type=int, default=4, help="Number of principal components"
-    )
-    parser.add_argument("--star", type=bool, default=True, help="Star flag")
-    parser.add_argument("--SNR", type=float, default=250, help="Signal to noise ratio")
-    parser.add_argument("--telluric", type=bool, default=True, help="Telluric flag")
-    parser.add_argument(
-        "--tell_type", type=str, default="data-driven", help="Telluric type"
-    )
-    parser.add_argument(
-        "--time_dep_tell", type=bool, default=False, help="Time dependent telluric"
-    )
-    parser.add_argument(
-        "--wav_error", type=bool, default=False, help="Wavelength error flag"
-    )
-    parser.add_argument(
-        "--rv_semiamp_orbit", type=float, default=0.3229, help="RV semi-amplitude orbit"
+        "--rv_semiamp_orbit", type=float, help="RV semi-amplitude orbit"
     )
     parser.add_argument(
         "--order_dep_throughput",
         type=bool,
-        default=True,
         help="Order dependent throughput",
     )
-    parser.add_argument(
-        "--Rp", type=float, default=1.21, help="Planet radius (Jupiter radii)"
-    )
-    parser.add_argument(
-        "--Rstar", type=float, default=0.955, help="Star radius (solar radii)"
-    )
-    parser.add_argument(
-        "--kp", type=float, default=192.02, help="Planetary orbital velocity (km/s)"
-    )
-    parser.add_argument("--v_rot", type=float, default=4.5, help="Rotation velocity")
-    parser.add_argument("--scale", type=float, default=1.0, help="Scale factor")
-    parser.add_argument("--v_sys", type=float, default=0.0, help="Systemic velocity")
-    parser.add_argument(
-        "--modelname", type=str, default="yourfirstsimulation", help="Model name"
-    )
+    parser.add_argument("--Rp", type=float, help="Planet radius (Jupiter radii)")
+    parser.add_argument("--Rstar", type=float, help="Star radius (solar radii)")
+    parser.add_argument("--kp", type=float, help="Planetary orbital velocity (km/s)")
+    parser.add_argument("--v_rot", type=float, help="Rotation velocity")
+    parser.add_argument("--scale", type=float, help="Scale factor")
+    parser.add_argument("--v_sys", type=float, help="Systemic velocity")
+    parser.add_argument("--pca_rmeove", type=str, help="PCA removal scheme")
+    parser.add_argument("--modelname", type=str, help="Model name")
     parser.add_argument(
         "--divide_out_of_transit",
         type=bool,
-        default=False,
         help="Divide out of transit",
     )
     parser.add_argument(
-        "--out_of_transit_dur", type=float, default=0.1, help="Out of transit duration"
+        "--out_of_transit_dur", type=float, help="Out of transit duration"
     )
-    parser.add_argument(
-        "--include_rm", type=bool, default=False, help="Include RM effect"
-    )
-    parser.add_argument(
-        "--v_rot_star", type=float, default=3.0, help="Star rotation velocity"
-    )
-    parser.add_argument("--a", type=float, default=0.033, help="Semi-major axis")
-    parser.add_argument(
-        "--lambda_misalign", type=float, default=0.0, help="Misalignment angle"
-    )
-    parser.add_argument("--inc", type=float, default=90.0, help="Inclination")
-    parser.add_argument("--seed", type=int, default=42, help="Random seed")
-    parser.add_argument("--LD", type=bool, default=True, help="Limb darkening")
-    parser.add_argument(
-        "--vary_throughput", type=bool, default=True, help="Vary throughput"
-    )
+    parser.add_argument("--include_rm", type=bool, help="Include RM effect")
+    parser.add_argument("--v_rot_star", type=float, help="Star rotation velocity")
+    parser.add_argument("--a", type=float, help="Semi-major axis")
+    parser.add_argument("--lambda_misalign", type=float, help="Misalignment angle")
+    parser.add_argument("--inc", type=float, help="Inclination")
+    parser.add_argument("--seed", type=int, help="Random seed")
+    parser.add_argument("--LD", type=bool, help="Limb darkening")
+    parser.add_argument("--vary_throughput", type=bool, help="Vary throughput")
     parser.add_argument(
         "--log_level",
         type=str,
-        default="INFO",
         choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
         help="Logging level (default: INFO)",
     )
@@ -413,5 +395,66 @@ def parse_arguments():
         "--input_file", type=str, default="input.txt", help="Input file with parameters"
     )
 
-
     return parser.parse_args()
+
+
+def read_crires_data(data_path):
+    """
+    Reads in CRIRES data.
+
+    Inputs
+    ------
+        :data_path: (str) path to the data
+
+    Outputs
+    -------
+        n_orders: (int) number of orders
+        n_pixel: (int) number of pixels
+        wl_cube_model: (array) wavelength cube model
+        snrs: (array) signal-to-noise ratios
+    """
+    with open(data_path, "r") as file:
+        data = json.load(file)
+
+    n_orders = 0  # an integer :)
+    for i in range(len(data["data"]["orders"])):
+        order_len = len(data["data"]["orders"][i]["detectors"])
+        n_orders += order_len
+
+    n_wavs = len(data["data"]["orders"][i]["detectors"][0]["wavelength"])
+
+    wl_grid = np.zeros((n_orders, n_wavs))
+    snr_grid = np.zeros((n_orders, n_wavs))
+
+    for i in range(len(data["data"]["orders"])):
+        order_len = len(data["data"]["orders"][i]["detectors"])
+        for j in range(order_len):
+            wl_grid[i * order_len + j] = data["data"]["orders"][i]["detectors"][j][
+                "wavelength"
+            ]
+
+            snr_grid[i * order_len + j] = data["data"]["orders"][i]["detectors"][j][
+                "plots"
+            ]["snr"]["snr"]
+
+    return n_orders, n_wavs, wl_grid * 1e6, snr_grid
+
+
+def refresh_db():
+    """
+    Refresh the database with the latest exoplanet data.
+    """
+    # Download the latest exoplanet data
+    # Update the database file
+
+    table = NasaExoplanetArchive.query_criteria(
+        table="pscomppars", select="*", where="pl_name is not null"
+    )
+
+    # Convert to Pandas DataFrame for easier handling
+    df = table.to_pandas()
+
+    # Save to CSV
+    filepath = os.path.join(data_dir, "default_params_exoplanet_archive.csv")
+    df.to_csv(filepath, index=False)
+    return df

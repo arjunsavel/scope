@@ -9,7 +9,6 @@ import pickle
 import astropy.units as u
 import matplotlib.pyplot as plt
 import numpy as np
-from exoplanet.orbits.keplerian import KeplerianOrbit
 from numba import njit
 from scipy import signal
 from scipy.interpolate import interp1d
@@ -23,44 +22,6 @@ abs_path = os.path.dirname(__file__)
 np.random.seed(42)
 start_clip = 200
 end_clip = 100
-
-
-def read_crires_data(data_path):
-    """
-    Reads in CRIRES data.
-
-    Inputs
-    ------
-        :data_path: (str) path to the data
-
-    Outputs
-    -------
-        n_orders: (int) number of orders
-        n_pixel: (int) number of pixels
-        wl_cube_model: (array) wavelength cube model
-        snrs: (array) signal-to-noise ratios
-    """
-    with open(data_path, "r") as file:
-        data = json.load(file)
-
-    n_orders = 0  # an integer :)
-    for i in range(len(data["data"]["orders"])):
-        order_len = len(data["data"]["orders"][i]["detectors"])
-        n_orders += order_len
-
-    n_wavs = len(data["data"]["orders"][i]["detectors"][0]["wavelength"])
-
-    wl_grid = np.zeros((n_orders, n_wavs))
-    snr_grid = np.zeros((n_orders, n_wavs))
-
-    for i in range(len(data["data"]["orders"])):
-        order_len = len(data["data"]["orders"][i]["detectors"])
-        for j in range(order_len):
-            wl_grid[i * order_len + j] = data["data"]["orders"][i]["detectors"][j][
-                "wavelength"
-            ]
-
-    return n_orders, n_wavs, wl_grid * 1e6, snr_grid
 
 
 @njit
@@ -91,7 +52,7 @@ def doppler_shift_planet_star(
             wlgrid_order, wl_model, Fp_conv, rv_planet[exposure]
         )
         flux_planet *= scale  # apply scale factor
-        
+
         _, flux_star = calc_doppler_shift(
             wlgrid_order, wl_model, Fstar_conv, rv_star[exposure]
         )
@@ -108,9 +69,9 @@ def doppler_shift_planet_star(
             observation == "transmission"
         ):  # in transmission, after we "divide out" (with PCA) the star and tellurics, we're left with Fp.
             I = calc_limb_darkening(u1, u2, a, b, Rstar, phases[exposure], LD)
-            
+
             model_flux_cube[exposure,] = 1.0 - flux_planet * I
-            
+
             if not reprocessing:
                 model_flux_cube[exposure,] *= flux_star
     return model_flux_cube
@@ -219,8 +180,9 @@ def calc_limb_darkening(u1, u2, a, b, Rstar, ph, LD):
     """
     if LD:  # apply limb darkening. 1D style!
         x = (a * np.sin(2 * np.pi * ph)) / (Rstar * rsun)
-        mu = np.sqrt(1 - x**2 - b**2)
+
         if x**2 <= 1 - b**2:
+            mu = np.sqrt(1 - x**2 - b**2)
             I = 1 - u1 * (1 - mu) - u2 * (1 - mu) ** 2
         else:
             I = 0.0
@@ -235,33 +197,45 @@ def calc_limb_darkening(u1, u2, a, b, Rstar, ph, LD):
 
 
 @njit
-def perform_pca(input_matrix, n_princ_comp, return_noplanet=False):
+def perform_pca(input_matrix, n_princ_comp, pca_removal="subtract"):
     """
-    Perform PCA using SVD.
+    Perform PCA using SVD and remove principal components via subtraction or division.
 
-    SVD is written as A = USV^H, where ^H is the Hermitian operator.
+    Parameters
+    ----------
+    input_matrix : ndarray
+        2D array where rows are observations and columns are features.
+    n_princ_comp : int
+        Number of principal components to retain.
+    mode : str, optional
+        Method for removing PCA fit, either "subtract" or "divide".
+        Default is "subtract".
 
-    Inputs
-    ------
-        :input_matrix:
-        :n_princ_comp: number of principal components to keep
+    Returns
+    -------
+    corrected_data : ndarray
+        The input matrix with PCA components removed.
+    A_pca_fit : ndarray
+        The PCA reconstruction used for removal.
     """
-    u, singular_values, vh = np.linalg.svd(
-        input_matrix, full_matrices=False
-    )  # decompose
-    if return_noplanet:
-        s_high_variance = singular_values.copy()
-        s_high_variance[n_princ_comp:] = 0.0  # keeping the high-variance terms here
-        s_matrix = np.diag(s_high_variance)
-        A_noplanet = np.dot(u, np.dot(s_matrix, vh))
+    # Perform SVD decomposition
+    u, singular_values, vh = np.linalg.svd(input_matrix, full_matrices=False)
 
-    singular_values[:n_princ_comp] = 0.0  # zero out the high-variance terms here
-    s_matrix = np.diag(singular_values)
-    arr_planet = np.dot(u, np.dot(s_matrix, vh))
+    # Construct PCA model of systematics
+    s_high_variance = singular_values.copy()
+    s_high_variance[n_princ_comp:] = 0.0  # Keep the high-variance trends
+    s_matrix = np.diag(s_high_variance)
+    A_pca_fit = np.dot(u, np.dot(s_matrix, vh))  # Systematics model
 
-    if return_noplanet:
-        return arr_planet, A_noplanet
-    return arr_planet, arr_planet
+    # Apply chosen removal method
+    if pca_removal == "subtract":
+        corrected_data = input_matrix - A_pca_fit
+    elif pca_removal == "divide":
+        corrected_data = input_matrix / (A_pca_fit + 1e-8)  # Avoid division by zero
+    else:
+        raise ValueError("Mode must be 'subtract' or 'divide'.")
+
+    return corrected_data, A_pca_fit
 
 
 @njit
@@ -285,149 +259,6 @@ def calc_doppler_shift(eval_wave, template_wave, template_flux, v):
     shifted_wave = eval_wave - delta_lam
     shifted_flux = np.interp(shifted_wave, template_wave, template_flux)
     return shifted_wave, shifted_flux
-
-
-def calc_crossing_time(
-    period=1.80988198,
-    mstar=1.458,
-    e=0.000,
-    inc=89.623,
-    mplanet=0.894,
-    rstar=1.756,
-    peri=0,
-    b=0.027,
-    R=45000,
-    pix_per_res=3.3,
-    phase_start=0.9668567402328337,
-    phase_end=1.0331432597671664,
-    plot=False,
-):
-    """
-
-    todo: refactor this into separate functions, maybe?
-
-    Inputs
-    -------
-    autofilled for WASP-76b and IGRINS.
-
-    R: (int) resolution of spectrograph.
-    pix_per_res: (float) pixels per resolution element
-
-
-    Outputs
-    -------
-
-    min_time: minimum time during transit before lines start smearing across resolution elements.
-
-    min_time_per_pixel: minimum time during transit before lines start smearing across a single pixel.
-    dphase_per_exp: the amount of phase (values from 0 to 1) taken up by a single exposure, given above constraints.
-    n_exp: number of exposures you can take during transit.
-
-    """
-
-    orbit = KeplerianOrbit(
-        m_star=mstar,  # solar masses!
-        r_star=rstar,  # solar radii!
-        #     m_planet_units = u.jupiterMass,
-        t0=0,  # reference transit at 0!
-        period=period,
-        ecc=e,
-        b=b,
-        omega=np.radians(peri),  # periastron, radians
-        Omega=np.radians(peri),  # periastron, radians
-        m_planet=mplanet * 0.0009543,
-    )
-    t = np.linspace(0, period * 1.1, 1000)  # days
-    z_vel = orbit.get_relative_velocity(t)[2].eval()
-
-    z_vel *= 695700 / 86400  # km / s
-
-    phases = t / period
-    if plot:
-        plt.plot(phases, z_vel)
-
-        plt.axvline(0.5, color="gray", label="Eclipse")
-        plt.axvline(0.25, label="Quadrature (should be maximized)", color="teal")
-
-        plt.axvline(0.75, label="Quadrature (should be maximized)", color="teal")
-
-        plt.legend()
-        plt.xlabel("Time (days)")
-        plt.ylabel("Radial velocity (km/s)")
-    acceleration = (
-        np.diff(z_vel) / np.diff((t * u.day).to(u.s).si.value) * u.km / (u.s**2)
-    )
-
-    if plot:
-        plt.plot(phases[:-1], acceleration)
-
-        plt.axvline(0.5, color="gray", label="Eclipse")
-        plt.axvline(0.25, label="Quadrature (should be minimized)", color="teal")
-
-        plt.axvline(0.75, label="Quadrature (should be minimized)", color="teal")
-        plt.xlabel("Orbital phase")
-        plt.ylabel("Radial acceleration (km/s^2)")
-
-        # cool, this is the acceleration.
-
-        # now want the pixel crossing time.
-
-        plt.legend()
-
-    # R = c / delta v
-    # delta v = c / R
-
-    delta_v = const.c / R
-    delta_v = delta_v.to(u.km / u.s)
-    res_crossing_time = abs(delta_v / acceleration).to(u.s)
-    if plot:
-        plt.figure()
-        plt.plot(phases[:-1], res_crossing_time)
-        plt.axvline(0.5, color="gray", label="Eclipse")
-        plt.axvline(0.25, label="Quadrature (should be maximized)", color="teal")
-
-        plt.axvline(0.75, label="Quadrature (should be maximized)", color="teal")
-
-        plt.legend()
-        plt.xlabel("Orbital phase")
-        plt.ylabel("Resolution crossing time (s)")
-        plt.yscale("log")
-
-        plt.figure()
-        plt.plot(phases[:-1], res_crossing_time)
-        plt.legend()
-
-        # plt.yscale('log')
-        plt.ylim(820, 900)
-        plt.xlabel("Orbital phase")
-        plt.ylabel("Resolution crossing time (s)")
-
-        plt.xlim(0.96, 1.041)
-
-    # todo: generalize this!
-    ingress = phase_start
-    egress = phase_end
-    during_transit = (phases[:-1] > ingress) & (phases[:-1] < egress)
-
-    res_crossing_time_transit = res_crossing_time[during_transit]
-
-    max_time = np.min(res_crossing_time_transit)
-
-    max_time_per_pixel = max_time / pix_per_res
-    period = period * u.day
-    dphase_per_exp = (np.min(res_crossing_time_transit) / period).si
-
-    transit_dur = (4.3336 / 24) / period.value  # degrees. todo: calculate.
-    print(transit_dur)
-    print(4.3336 * 60 * 60)  # this is how many seconds long it is
-    n_exp = transit_dur / dphase_per_exp
-
-    # then query https://igrins-jj.firebaseapp.com/etc/simple:
-    # this gives us, for the given exposure time, what the SNR is going to be.
-    # well that's more the maximum time
-    # so that's the maximum time, but we want more than that many exposures.
-    # don't have to worry about pixel-crossing time.
-    return max_time, max_time_per_pixel, dphase_per_exp, n_exp
 
 
 @njit
