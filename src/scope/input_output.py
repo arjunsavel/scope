@@ -4,6 +4,7 @@ Module to handle the input files.
 
 import argparse
 import io
+import json
 import os
 import warnings
 from datetime import datetime
@@ -464,6 +465,10 @@ def read_crires_data(data_path):
             wl_grid[i * order_len + j] = data["data"]["orders"][i]["detectors"][j][
                 "wavelength"
             ]
+
+            snr_grid[i * order_len + j] = data["data"]["orders"][i]["detectors"][j][
+                "plots"
+            ]["snr"]["snr"]
 
     return n_orders, n_wavs, wl_grid * 1e6, snr_grid
 

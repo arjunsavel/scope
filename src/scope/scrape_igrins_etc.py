@@ -14,7 +14,12 @@ import numpy as np
 import requests
 from selenium import webdriver
 from selenium.common.exceptions import ElementNotInteractableException
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
+from selenium.webdriver.edge.options import Options
+from webdriver_manager.chrome import ChromeDriverManager
+from webdriver_manager.microsoft import EdgeChromiumDriverManager
 
 from scope.logger import *
 
@@ -37,8 +42,17 @@ def scrape_igrins_etc(kmag, exposure_time):
     float
         Exposure time in seconds.
     """
+    options = Options()
+    options.add_argument("--headless")  # Run in headless mode
 
-    driver = webdriver.Chrome()
+    # Use WebDriver Manager to handle ChromeDriver installation
+    service = Service(ChromeDriverManager().install())
+
+    # Start Chrome WebDriver with options
+    driver = webdriver.Chrome(service=service, options=options)
+
+    # Start Edge WebDriver with options
+
     web_address = "https://igrins-jj.firebaseapp.com/etc/simple"
 
     driver.get(web_address)
@@ -187,49 +201,7 @@ def create_json(
     with open("input.json", "w") as json_file:
         json.dump(data, json_file, indent=4)
 
-    print("JSON file 'output.json' has been created.")
-
-
-# Example usage of the function with sample values
-create_json(
-    target_morphology_type="point",
-    target_catalog="MARCS",
-    target_id="5750:4.5",
-    target_brightness_mag=10,
-    target_brightness_magsys="vega",
-    sky_airmass=1.2,
-    sky_moon_fli=0.5,
-    sky_pwv=2.5,
-    instrument_slit=0.2,
-    instrument_settingkey="H1567",
-    instrument_polarimetry="free",
-    instrument_order=[39, 38, 37, 36, 35, 34, 33, 32, 31],
-    timesnr_nDIT=1,
-    timesnr_DIT=10,
-    output_throughput_atmosphere=False,
-    output_throughput_telescope=False,
-    output_throughput_instrument=False,
-    output_throughput_blaze=False,
-    output_throughput_enslittedenergy=False,
-    output_throughput_detector=False,
-    output_throughput_totalinclsky=False,
-    output_snr_snr=True,
-    output_snr_noise_components=True,
-    output_sed_target=False,
-    output_sed_sky=False,
-    output_signals_obstarget=False,
-    output_signals_obssky=False,
-    output_signals_obstotal=False,
-    output_maxsignals_maxpixeltarget=False,
-    output_maxsignals_maxpixelsky=False,
-    output_maxsignals_maxpixeltotal=False,
-    output_dispersion_dispersion=False,
-    output_psf_psf=False,
-    instrument_name="crires2",
-    seeingiqao_mode="noao",
-    seeingiqao_turbulence_category=50,
-    seeingiqao_aperturepix=21,
-)
+    logger.info("JSON file 'output.json' has been created.")
 
 
 def collapse(jsondata):
@@ -343,7 +315,7 @@ def getPostdata(instrument_name, postdatafile):
         with open(postdatafile) as f:
             postdata = json.loads(f.read())
     except OSError:
-        print("cannot open", postdatafile)
+        logger.error("cannot open", postdatafile)
         sys.exit()
     return postdata
 
@@ -356,7 +328,7 @@ def main_etc_caller(uploadfile, outputfile):
     indent = 4
     collapse = False
 
-    postdata = getPostdata(etcname, outputfile)  # prepare input
+    postdata = getPostdata(etcname, uploadfile)  # prepare input
     jsondata = callEtc(postdata, url, uploadfile).json()  # output
 
     output(jsondata, outputfile, indent, collapse)
