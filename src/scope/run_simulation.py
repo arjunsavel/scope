@@ -625,7 +625,7 @@ if __name__ == "__main__":
 
     logger = setup_logging(log_level=inputs["log_level"])
     logger.debug(f"Parsed inputs: {inputs}")
-
+    print(inputs)
     # Call the simulation function with the merged parameters
     try:
         simulate_observation(**inputs)

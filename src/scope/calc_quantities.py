@@ -210,7 +210,7 @@ def calc_crossing_time(
     n_exp: number of exposures you can take during transit.
 
     """
-
+    print(mstar, rstar, period, e, b, peri, mplanet)
     orbit = KeplerianOrbit(
         m_star=mstar,  # solar masses!
         r_star=rstar,  # solar radii!
