@@ -41,6 +41,11 @@ def scrape_igrins_etc(kmag, exposure_time):
     float
         Exposure time in seconds.
     """
+    pdb.set_trace()
+    logger.debug(
+        f"Scraping IGRINS SNR for Kmag={kmag} and exposure time={exposure_time}."
+    )
+    logger.handlers[0].flush()
     options = Options()
     options.add_argument("--headless")  # Run in headless mode
 
@@ -73,6 +78,7 @@ def scrape_igrins_etc(kmag, exposure_time):
         logger.error("Could not interact with IGRINS SNR website.")
 
     snr_value = extract_snr_from_html(response_page)
+    logger.debug(f"Scraped SNR value: {snr_value}")
 
     return snr_value
 
@@ -90,6 +96,7 @@ def extract_snr_from_html(html_content):
         logger.info(f"Extracted SNR value: {snr_value}")
     else:
         logger.warning("SNR value not found.")
+    pdb.set_trace()
     return snr_value
 
 

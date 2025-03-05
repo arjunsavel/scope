@@ -121,10 +121,9 @@ def coerce_integers(data, key, value):
 
 
 def coerce_database(data, key, value, astrophysical_params, planet_name, database_path):
-    
     if value == "DATABASE" and key in astrophysical_params:
         data[key] = query_database(planet_name, key, database_path)
-        
+
     elif value == "DATABASE" and key in ["phase_start", "phase_end"]:
         tdur = query_database(planet_name, "pl_trandur", database_path)
         period = query_database(planet_name, "pl_orbper", database_path)
@@ -215,6 +214,7 @@ def parse_input_file(
         "Mstar",
         "Mp",
         "peri",
+        "Kmag",
     ]
 
     # Convert values to appropriate types
@@ -325,32 +325,22 @@ def parse_arguments():
     parser.add_argument(
         "--planet_spectrum_path", type=str, help="Path to planet spectrum"
     )
-    parser.add_argument(
-        "--star_spectrum_path", type=str, help="Path to star spectrum"
-    )
-    parser.add_argument(
-        "--data_cube_path", type=str, help="Path to data cube"
-    )
+    parser.add_argument("--star_spectrum_path", type=str, help="Path to star spectrum")
+    parser.add_argument("--data_cube_path", type=str, help="Path to data cube")
 
     # Optional parameters with their defaults matching your function
     parser.add_argument(
         "--phase_start",
         type=float,
-        
         help="Start phase of the simulated observations",
     )
     parser.add_argument(
         "--phase_end",
         type=float,
-        
         help="End phase of the simulated observations",
     )
-    parser.add_argument(
-        "--n_exposures", type=int, help="Number of exposures"
-    )
-    parser.add_argument(
-        "--observation", type=str,  help="Observation type"
-    )
+    parser.add_argument("--n_exposures", type=int, help="Number of exposures")
+    parser.add_argument("--observation", type=str, help="Observation type")
     parser.add_argument("--blaze", type=bool, help="Blaze flag")
     parser.add_argument(
         "--n_princ_comp", type=int, help="Number of principal components"
@@ -358,78 +348,51 @@ def parse_arguments():
     parser.add_argument("--star", type=bool, help="Star flag")
     parser.add_argument("--SNR", type=float, help="Signal to noise ratio")
     parser.add_argument("--telluric", type=bool, help="Telluric flag")
-    parser.add_argument(
-        "--tell_type", type=str, help="Telluric type"
-    )
-    parser.add_argument(
-        "--time_dep_tell", type=bool, help="Time dependent telluric"
-    )
-    parser.add_argument(
-        "--wav_error", type=bool, help="Wavelength error flag"
-    )
+    parser.add_argument("--tell_type", type=str, help="Telluric type")
+    parser.add_argument("--time_dep_tell", type=bool, help="Time dependent telluric")
+    parser.add_argument("--wav_error", type=bool, help="Wavelength error flag")
     parser.add_argument(
         "--rv_semiamp_orbit", type=float, help="RV semi-amplitude orbit"
     )
     parser.add_argument(
         "--order_dep_throughput",
         type=bool,
-        
         help="Order dependent throughput",
     )
-    parser.add_argument(
-        "--Rp", type=float, help="Planet radius (Jupiter radii)"
-    )
-    parser.add_argument(
-        "--Rstar", type=float, help="Star radius (solar radii)"
-    )
-    parser.add_argument(
-        "--kp", type=float, help="Planetary orbital velocity (km/s)"
-    )
+    parser.add_argument("--Rp", type=float, help="Planet radius (Jupiter radii)")
+    parser.add_argument("--Rstar", type=float, help="Star radius (solar radii)")
+    parser.add_argument("--kp", type=float, help="Planetary orbital velocity (km/s)")
     parser.add_argument("--v_rot", type=float, help="Rotation velocity")
     parser.add_argument("--scale", type=float, help="Scale factor")
     parser.add_argument("--v_sys", type=float, help="Systemic velocity")
-    parser.add_argument(
-        "--pca_rmeove", type=str, help="PCA removal scheme"
-    )
-    parser.add_argument(
-        "--modelname", type=str, help="Model name"
-    )
+    parser.add_argument("--pca_rmeove", type=str, help="PCA removal scheme")
+    parser.add_argument("--modelname", type=str, help="Model name")
     parser.add_argument(
         "--divide_out_of_transit",
         type=bool,
-        
         help="Divide out of transit",
     )
     parser.add_argument(
         "--out_of_transit_dur", type=float, help="Out of transit duration"
     )
-    parser.add_argument(
-        "--include_rm", type=bool, help="Include RM effect"
-    )
-    parser.add_argument(
-        "--v_rot_star", type=float, help="Star rotation velocity"
-    )
+    parser.add_argument("--include_rm", type=bool, help="Include RM effect")
+    parser.add_argument("--v_rot_star", type=float, help="Star rotation velocity")
     parser.add_argument("--a", type=float, help="Semi-major axis")
-    parser.add_argument(
-        "--lambda_misalign", type=float, help="Misalignment angle"
-    )
+    parser.add_argument("--lambda_misalign", type=float, help="Misalignment angle")
     parser.add_argument("--inc", type=float, help="Inclination")
     parser.add_argument("--seed", type=int, help="Random seed")
     parser.add_argument("--LD", type=bool, help="Limb darkening")
-    parser.add_argument(
-        "--vary_throughput", type=bool, help="Vary throughput"
-    )
+    parser.add_argument("--vary_throughput", type=bool, help="Vary throughput")
     parser.add_argument(
         "--log_level",
         type=str,
-        
         choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
         help="Logging level (default: INFO)",
     )
 
     # For file input option
     parser.add_argument(
-        "--input_file", type=str, default='input.txt',help="Input file with parameters"
+        "--input_file", type=str, default="input.txt", help="Input file with parameters"
     )
 
     return parser.parse_args()
