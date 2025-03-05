@@ -41,7 +41,7 @@ def scrape_igrins_etc(kmag, exposure_time):
     float
         Exposure time in seconds.
     """
-    pdb.set_trace()
+
     logger.debug(
         f"Scraping IGRINS SNR for Kmag={kmag} and exposure time={exposure_time}."
     )
@@ -96,7 +96,7 @@ def extract_snr_from_html(html_content):
         logger.info(f"Extracted SNR value: {snr_value}")
     else:
         logger.warning("SNR value not found.")
-    pdb.set_trace()
+
     return snr_value
 
 
