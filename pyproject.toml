@@ -48,7 +48,8 @@ dependencies = [
     "schwimmbad",
     "selenium",
     "requests",
-    "astroquery"
+    "astroquery",
+    "webdriver_manager"
 ]
 dynamic = ["version"]
 
