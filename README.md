@@ -52,7 +52,7 @@ For more details, see <a href="https://scope-astr.readthedocs.io/en/latest/">the
 Ideally, most user interaction with `scope` will simply occur through the input file (`scope/input.txt`).
 Any data field in a row marked with the [DB] flag can be pulled from a local database by inputting `DATABASE`. In our case, a database simply refers
 to a CSV containing contents from <a href="https://exoplanetarchive.ipac.caltech.edu/">the Exoplanet Archive</a>,
-with planet parameters resolved with the planet name.
+with planet parameters resolved with the planet name. You can also specify most arguments from the command line, overwriting the input file.
 
 Simply edit the input file to the desired parameters, then run:
 
@@ -70,7 +70,7 @@ with the following types of files:
 - `A_noplanet_`: the simulated flux cube with the *lowest-variance* principal component(s) removed.
 - `lls_`: the log-likelihood surface for the simulated flux cube, as a Kp--Vsys map.
 - `ccfs_`: the cross-correlation function for the simulated flux cube, as a Kp--Vsys map.
-- 
+
 
 # attribution
 
