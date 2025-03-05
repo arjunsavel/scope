@@ -1,6 +1,7 @@
 """
 This module contains functions to calculate derived quantities from the input data.
 """
+import os
 from math import floor
 
 import astropy.constants as const
@@ -8,6 +9,11 @@ import astropy.units as u
 import matplotlib.pyplot as plt
 import numpy as np
 from exoplanet.orbits.keplerian import KeplerianOrbit
+
+from scope.logger import get_logger
+from scope.scrape_igrins_etc import scrape_crires_plus_etc, scrape_igrins_etc
+
+logger = get_logger()
 
 # refactor the below two functions to be a single function
 
@@ -72,6 +78,34 @@ def calculate_derived_parameters(data):
     return data
 
 
+def calc_snr(param, args, data):
+    detector_reset_times = {
+        "IGRINS": 60,
+        "CRIRES+": 0,
+    }  # these are in seconds. crires+ considers this as part of DIT in the ETC.
+    if data[param] == -1:  # only calculate if set to -1
+        kmag = data["Kmag"]
+        n_exposures = data["n_exposures"]
+        instrument = data["instrument"]
+        detector_reset_time = detector_reset_times[instrument]
+        duration = (
+            data["P_rot"] * (data["phase_end"] - data["phase_start"]) * 24 * 3600
+        )  # in seconds
+        exptime = duration / n_exposures - detector_reset_time
+        # ok this is pretty good lol
+
+        if instrument == "IGRINS":
+            snr = scrape_igrins_etc(kmag, exptime)
+        elif instrument == "CRIRES+":
+            snr = scrape_crires_plus_etc(kmag, exptime)
+        else:
+            logger.error(f"Unknown instrument {instrument}!")
+        # need to construct a JSON object to send to the CRRIES+ SNR calculator.
+        # ok need to submit the job automatically to the IGRINS SNR calculator.
+        data[param] = snr
+        data["snr_path"] = os.getcwd() + "/snr.json"
+
+
 def calc_max_npix(param, args, data):
     # todo: refactor the instrument data to be somwhere!
     instrument_resolutions_dict = {
@@ -80,7 +114,7 @@ def calc_max_npix(param, args, data):
     }
     pixel_per_res = {"IGRINS": 3.3, "CRIRES+": 3.3}
 
-    if data[param] == 0:
+    if data[param] == -1:
         check_args(args, data, param)
         period = data["P_rot"]
         mstar = data["Mstar"]
@@ -262,7 +296,7 @@ def calc_crossing_time(
     period = period * u.day
     dphase_per_exp = (np.min(res_crossing_time_phases) / period).si
 
-    phasedur = phase_end - phase_start  # degrees. todo: calculate.
+    phasedur = phase_end - phase_start
     n_exp = phasedur / dphase_per_exp
     # todo: actually get phase_start and phase_end in there
 
