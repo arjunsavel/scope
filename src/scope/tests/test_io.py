@@ -119,7 +119,7 @@ phase_end                 0.5
 blaze                  True
 star                   False
 instrument              IGRINS
-n_exposures            0
+n_exposures            -1
 tell_type              data-driven   # type of telluric simulation. supported modes are ``ATRAN`` and ``data-driven``.
 time_dep_tell          False         # whether the tellurics are time-dependent or not.
 """
@@ -195,7 +195,7 @@ def test_error_on_data_driven_tell(sample_files):
     assert "Data-driven tellurics requires blaze set to True." in str(exc.value)
 
 
-def test_calc_n_max_when_input_0(sample_files_second):
+def test_calc_n_max_when_input_neg(sample_files_second):
     input_file_path, db_file_path = sample_files_second
     data = parse_input_file(input_file_path, db_file_path)
 
