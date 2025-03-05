@@ -40,6 +40,7 @@ Rp                     1.5
 Rp_solar               DATABASE
 Rstar                  NULL
 kp                     150.0
+Kmag                    10
 v_rot                  5.0
 v_sys                  0.0
 
@@ -54,6 +55,7 @@ phase_start                 0.3
 phase_end                 0.5
 blaze                  True
 star                   False
+SNR                    350
 n_exposures            10
 tell_type              data-driven   # type of telluric simulation. supported modes are ``ATRAN`` and ``data-driven``.
 time_dep_tell          False         # whether the tellurics are time-dependent or not.
@@ -106,6 +108,7 @@ kp                     150.0
 v_rot                  5.0
 P_rot                  1.0
 v_sys                  0.0
+Kmag                    10
 
 # Instrument Parameters
 blaze                  True          # whether to include a blaze function or not.
@@ -118,6 +121,7 @@ phase_start                 0.3
 phase_end                 0.5
 blaze                  True
 star                   False
+SNR                    -1
 instrument              IGRINS
 n_exposures            -1
 tell_type              data-driven   # type of telluric simulation. supported modes are ``ATRAN`` and ``data-driven``.

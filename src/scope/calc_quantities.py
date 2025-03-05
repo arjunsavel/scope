@@ -74,6 +74,7 @@ def calculate_derived_parameters(data):
         ],
         data,
     )
+    calc_snr("SNR", ["Kmag", "n_exposures", "P_rot", "phase_start", "phase_end"], data)
 
     return data
 
