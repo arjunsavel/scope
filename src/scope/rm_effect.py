@@ -135,7 +135,9 @@ def occult_grid(occulted_grid, grid, planet_location, r_p):
     theta2 = planet_location[1]
 
     # calculate the distance between the planet and the grid points
-    r = np.sqrt(r1**2 + r2**2 - 2 * r1 * r2 * np.cos(theta1 - theta2))
+    r = np.sqrt(
+        np.clip(r1**2 + r2**2 - 2 * r1 * r2 * np.cos(theta1 - theta2), 0, None)
+    )
 
     # find the points where the planet is
     planet_points = np.where(r <= r_p)
