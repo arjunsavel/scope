@@ -41,7 +41,7 @@ parameter_mapping = {
     "e": "pl_orbeccen",
     "peri": "pl_orblper",
     "v_rot_star": "st_vsin",
-    "Kmag": "st_kmag",
+    "Kmag": "sy_kmag",
 }
 
 
@@ -430,7 +430,6 @@ def parse_arguments():
     return parser.parse_args()
 
 
-
 def read_crires_data(data_path):
     """
     Reads in CRIRES data.
@@ -472,6 +471,7 @@ def read_crires_data(data_path):
 
     return n_orders, n_wavs, wl_grid * 1e6, snr_grid
 
+
 def refresh_db():
     """
     Refresh the database with the latest exoplanet data.
@@ -490,4 +490,3 @@ def refresh_db():
     filepath = os.path.join(data_dir, "default_params_exoplanet_archive.csv")
     df.to_csv(filepath, index=False)
     return df
-
