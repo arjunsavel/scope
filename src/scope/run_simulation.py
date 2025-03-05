@@ -567,7 +567,7 @@ def simulate_observation(
         pca_removal=pca_removal,
     )
 
-    run_name = f"{n_princ_comp}_NPC_{blaze}_blaze_{star}_star_{telluric}_telluric_{SNR}_SNR_{tell_type}_{time_dep_tell}_{wav_error}_{order_dep_throughput}_{seed}"
+    run_name = f"{n_princ_comp}_NPC_{blaze}_blaze_{star}_star_{telluric}_telluric_{round(np.mean(SNR))}_SNR_{tell_type}_{time_dep_tell}_{wav_error}_{order_dep_throughput}_{seed}"
 
     save_data(outdir, run_name, flux_cube, flux_cube_nopca, A_noplanet, just_tellurics)
 

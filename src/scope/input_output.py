@@ -4,6 +4,7 @@ Module to handle the input files.
 
 import argparse
 import io
+import json
 import os
 import warnings
 from datetime import datetime
@@ -40,6 +41,7 @@ parameter_mapping = {
     "e": "pl_orbeccen",
     "peri": "pl_orblper",
     "v_rot_star": "st_vsin",
+    "Kmag": "sy_kmag",
 }
 
 
@@ -426,6 +428,48 @@ def parse_arguments():
     )
 
     return parser.parse_args()
+
+
+def read_crires_data(data_path):
+    """
+    Reads in CRIRES data.
+
+    Inputs
+    ------
+        :data_path: (str) path to the data
+
+    Outputs
+    -------
+        n_orders: (int) number of orders
+        n_pixel: (int) number of pixels
+        wl_cube_model: (array) wavelength cube model
+        snrs: (array) signal-to-noise ratios
+    """
+    with open(data_path, "r") as file:
+        data = json.load(file)
+
+    n_orders = 0  # an integer :)
+    for i in range(len(data["data"]["orders"])):
+        order_len = len(data["data"]["orders"][i]["detectors"])
+        n_orders += order_len
+
+    n_wavs = len(data["data"]["orders"][i]["detectors"][0]["wavelength"])
+
+    wl_grid = np.zeros((n_orders, n_wavs))
+    snr_grid = np.zeros((n_orders, n_wavs))
+
+    for i in range(len(data["data"]["orders"])):
+        order_len = len(data["data"]["orders"][i]["detectors"])
+        for j in range(order_len):
+            wl_grid[i * order_len + j] = data["data"]["orders"][i]["detectors"][j][
+                "wavelength"
+            ]
+
+            snr_grid[i * order_len + j] = data["data"]["orders"][i]["detectors"][j][
+                "plots"
+            ]["snr"]["snr"]
+
+    return n_orders, n_wavs, wl_grid * 1e6, snr_grid
 
 
 def refresh_db():
