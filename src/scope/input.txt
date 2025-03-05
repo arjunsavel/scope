@@ -16,7 +16,7 @@ Planet name:            WASP-166 b
 
 modelname              wasp_166_150seed_ld          # name of the model. used for saving the output files.
 seed                   150               # seed for the random number generator when generating noisy data. set to None for a random seed.
-log_level              INFO              # logging level above which statements are printed. Supported levels are ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
+log_level              DEBUG              # logging level above which statements are printed. Supported levels are ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
 
 # Filepaths
 planet_spectrum_path    /home/asavel/scratch/retrieval_stuff/fm_wasp_77ab_noisy/fm_wasp_77ab_noisy/spectrum_tran_WASP-166b_0.3_c_to_o.pic
@@ -28,7 +28,7 @@ snr_path               /home/asavel/scratch/scope/src/scope/data/snr_IGRINS_LTT-
 Rp                     DATABASE          # planetary radius in Jupiter radii. [DB]
 Mp                     DATABASE          # planetary mass in Jupiter masses. [DB]
 e                      DATABASE          # eccentricity of the planet's orbit. [DB]
-omega                  DATABASE          # argument of periastron of the planet's orbit, in degrees. [DB]
+omega                  0                 # argument of periastron of the planet's orbit, in degrees. [DB]
 b                      DATABASE          # impact parameter of the planet's orbit. [DB]
 Rstar                  DATABASE          # stellar radius, in solar radii. [DB]
 Mstar                  DATABASE          # stellar mass, in solar masses. [DB]
@@ -47,7 +47,7 @@ lambda_misalign        0                 # misalignment angle of the planet's or
 inc                    90.0              # inclination of the planet's orbit with respect to the line of sight, in degrees. only matters if include_rm is set to True. and observation is set to transmission.
 
 # Instrument Parameters
-spectrograph           IGRINS        # name of the spectrograph to simulate. currently spectrographs are ``IGRINS`` and ``CRIRES+``.
+instrument             IGRINS        # name of the spectrograph to simulate. currently spectrographs are ``IGRINS`` and ``CRIRES+``.
 blaze                  True          # whether to include a blaze function or not.
 wav_error              False         # whether to include wavelength solution errors or not.
 order_dep_throughput   True          # whether to include order-dependent throughput variations.
@@ -56,9 +56,9 @@ vary_throughput        True          # whether to include throughput variations.
 
 # Observation Parameters
 observation            transmission      # type of observation to perform. supported observations are ``emission`` and ``transmission``.
-phase_start            0.986222200994206           # phase of the beginning of the observations. 0 is center of transit, 0.5 is secondary eclipse. If DATABASE, just the transit duration. [DB]
-phase_end              1.0137777990057941           # phase of the end of the observations. 0 is center of transit, 0.5 is secondary eclipse. If DATABASE, just the transit duration. [DB]
-n_exposures            0             # number of exposures to simulate. sets the phases of the exposures. if set to 0, the minimum number of exposures that prevent pixel crossing for the provided instrument is used.
+phase_start            DATABASE           # phase of the beginning of the observations. 0 is center of transit, 0.5 is secondary eclipse. If DATABASE, just the transit duration. [DB]
+phase_end              DATABASE		            # phase of the end of the observations. 0 is center of transit, 0.5 is secondary eclipse. If DATABASE, just the transit duration. [DB]
+n_exposures            17             # number of exposures to simulate. sets the phases of the exposures. if set to 0, the minimum number of exposures that prevent pixel crossing for the provided instrument is used.
 star                   True          # whether to include the star in the simulation. In general, you'd like to!
 telluric               True          # whether to include tellurics in the simulation. In general, you'd like to!
 SNR                    250           # signal-to-noise ratio of the observations, per pixel. I.e., what sets the photon counts at the detector.
