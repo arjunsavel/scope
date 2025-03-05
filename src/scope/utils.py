@@ -180,8 +180,9 @@ def calc_limb_darkening(u1, u2, a, b, Rstar, ph, LD):
     """
     if LD:  # apply limb darkening. 1D style!
         x = (a * np.sin(2 * np.pi * ph)) / (Rstar * rsun)
-        mu = np.sqrt(np.clip(1 - x**2 - b**2, 0, 1))
+
         if x**2 <= 1 - b**2:
+            mu = np.sqrt(1 - x**2 - b**2)
             I = 1 - u1 * (1 - mu) - u2 * (1 - mu) ** 2
         else:
             I = 0.0
