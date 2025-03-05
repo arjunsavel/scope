@@ -47,7 +47,8 @@ dependencies = [
     "pymc>=4",
     "schwimmbad",
     "selenium",
-    "requests"
+    "requests",
+    "astroquery"
 ]
 dynamic = ["version"]
 

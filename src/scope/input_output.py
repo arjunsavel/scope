@@ -9,11 +9,14 @@ import warnings
 from datetime import datetime
 
 import pandas as pd
+from astroquery.ipac.nexsci.nasa_exoplanet_archive import NasaExoplanetArchive
 
 from scope.calc_quantities import *
 from scope.logger import *
 
 logger = get_logger()
+
+data_dir = os.path.join(os.path.dirname(__file__), "./data")
 
 
 class ScopeConfigError(Exception):
@@ -426,6 +429,7 @@ def parse_arguments():
     return parser.parse_args()
 
 
+
 def read_crires_data(data_path):
     """
     Reads in CRIRES data.
@@ -462,3 +466,23 @@ def read_crires_data(data_path):
             ]
 
     return n_orders, n_wavs, wl_grid * 1e6, snr_grid
+
+def refresh_db():
+    """
+    Refresh the database with the latest exoplanet data.
+    """
+    # Download the latest exoplanet data
+    # Update the database file
+
+    table = NasaExoplanetArchive.query_criteria(
+        table="pscomppars", select="*", where="pl_name is not null"
+    )
+
+    # Convert to Pandas DataFrame for easier handling
+    df = table.to_pandas()
+
+    # Save to CSV
+    filepath = os.path.join(data_dir, "default_params_exoplanet_archive.csv")
+    df.to_csv(filepath, index=False)
+    return df
+

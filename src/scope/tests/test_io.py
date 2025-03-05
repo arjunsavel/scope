@@ -10,6 +10,7 @@ from scope.input_output import (  # Replace 'your_module' with the actual module
     write_input_file,
     ScopeConfigError,
     parameter_mapping,
+    refresh_db,
 )
 
 test_data_path = os.path.join(os.path.dirname(__file__), "../data")
@@ -210,3 +211,11 @@ def test_database_columns():
 
     for value in parameter_mapping.values():
         assert value in db.columns
+
+
+def test_refresh_db():
+    """
+    just test that a reasonable db comes back
+    """
+    df = refresh_db()
+    assert len(df) > 0 and "pl_name" in df.columns
