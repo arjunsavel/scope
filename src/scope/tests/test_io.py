@@ -202,6 +202,14 @@ def test_calc_n_max_when_input_0(sample_files_second):
     assert data["n_exposures"] > 0 and type(data["n_exposures"]) == int
 
 
+def test_refresh_db():
+    """
+    just test that a reasonable db comes back
+    """
+    df = refresh_db()
+    assert len(df) > 0 and "pl_name" in df.columns
+
+
 def test_database_columns():
     # read in the exoplanet archive data
     input_file_path = os.path.join(
@@ -211,11 +219,3 @@ def test_database_columns():
 
     for value in parameter_mapping.values():
         assert value in db.columns
-
-
-def test_refresh_db():
-    """
-    just test that a reasonable db comes back
-    """
-    df = refresh_db()
-    assert len(df) > 0 and "pl_name" in df.columns
