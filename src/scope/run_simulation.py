@@ -93,6 +93,7 @@ def make_data(
 
     np.random.seed(seed)
     logger.info(f"Seed set to {seed}")
+    logger.debug(f"Mean stellar flux: {np.mean(Fstar_conv)}")
 
     rv_planet, rv_star = calc_rvs(
         v_sys, v_sys_measured, Kp, rv_semiamp_orbit, phases
@@ -143,7 +144,7 @@ def make_data(
                 flux_cube[:, i, :], 90
             )
             flux_cube[:, i, :] *= throughput_factor
-
+    logger.debug(f"Mean flux post-throughput variation: {np.mean(flux_cube)}")
     if tellurics:
         if instrument != "IGRINS":
             raise NotImplementedError(
@@ -174,8 +175,11 @@ def make_data(
         just_tellurics[just_tellurics < 0.0] = 0.0
     flux_cube = detrend_cube(flux_cube, n_order, n_exposure)
     if blaze:
-        flux_cube = add_blaze_function(wlgrid, flux_cube, n_order, n_exposure)
+        flux_cube = add_blaze_function(
+            wlgrid, flux_cube, n_order, n_exposure, instrument=instrument
+        )
         flux_cube[flux_cube < 0.0] = 0.0
+        logger.debug(f"Mean flux post-blaze: {np.mean(flux_cube)}")
     flux_cube[np.isnan(flux_cube)] = 0.0
 
     flux_cube = detrend_cube(flux_cube, n_order, n_exposure)
@@ -255,13 +259,14 @@ def make_data(
         flux_cube /= median_out_of_transit  # todo: check axes work out
 
     if do_pca:
+        logger.debug("mean flux pre-pca: ", np.mean(flux_cube))
         for j in range(n_order):
             flux_cube[j] -= np.mean(flux_cube[j])
             flux_cube[j] /= np.std(flux_cube[j])
             flux_cube[j], pca_noise_matrix[j] = perform_pca(
                 flux_cube[j], n_princ_comp, pca_removal=pca_removal
             )
-
+        logger.debug("mean flux post-pca: ", np.mean(flux_cube))
     else:
         for j in range(n_order):
             for i in range(n_exposure):
@@ -523,7 +528,6 @@ def simulate_observation(
             star_flux, star_wave, v_rot_star, phases, Rstar, inc, lambda_misalign, a, Rp
         )
 
-    # todo: swap out
     Fstar_conv = get_star_spline(
         star_wave, star_flux, wl_model, instrument_kernel, smooth=False
     )
