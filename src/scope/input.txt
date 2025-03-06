@@ -10,11 +10,11 @@
 #·······································:
 Created:                2024-08-15
 Author:                 Arjun Savel!
-Planet name:            WASP-76 b
+Planet name:            WASP-166 b
 
 # Simulation setup
 
-modelname              wasp_166_150seed_ld          # name of the model. used for saving the output files.
+modelname              wasp166_test          # name of the model. used for saving the output files.
 seed                   150               # seed for the random number generator when generating noisy data. set to None for a random seed.
 log_level              DEBUG              # logging level above which statements are printed. Supported levels are ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
 
@@ -33,6 +33,8 @@ b                      DATABASE          # impact parameter of the planet's orbi
 Rstar                  DATABASE          # stellar radius, in solar radii. [DB]
 Mstar                  DATABASE          # stellar mass, in solar masses. [DB]
 Kmag                   DATABASE          # K-band magnitude of the star. [DB]
+Teff_star              DATABASE          # effective temperature of the star, in K. [DB]
+logg_star              DATABASE          # surface gravity of the star, in cm/s^2. [DB]
 kp                     128.1              # expected planetary orbital velocity assuming circular orbit, in km/s. input NULL if you'd like to calculate from orbital parameters.
 v_sys                  0.0          # systemic velocity, in km/s.  [DB]
 v_rot                  NULL              # equatorial rotational velocity. input NULL if you'd like to calculate from orbital parameters.
@@ -48,7 +50,7 @@ lambda_misalign        0                 # misalignment angle of the planet's or
 inc                    90.0              # inclination of the planet's orbit with respect to the line of sight, in degrees. only matters if include_rm is set to True. and observation is set to transmission.
 
 # Instrument Parameters
-instrument             IGRINS        # name of the spectrograph to simulate. currently spectrographs are ``IGRINS`` and ``CRIRES+``.
+instrument             CRIRES+        # name of the spectrograph to simulate. currently spectrographs are ``IGRINS`` and ``CRIRES+``.
 blaze                  True          # whether to include a blaze function or not.
 wav_error              False         # whether to include wavelength solution errors or not.
 order_dep_throughput   True          # whether to include order-dependent throughput variations.
