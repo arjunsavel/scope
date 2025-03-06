@@ -191,11 +191,6 @@ def calc_limb_darkening(u1, u2, a, b, Rstar, ph, LD):
     return I
 
 
-# todo: download atran scripts
-# todo: fit wavelength solution stuff
-# todo: plot the maps
-
-
 @njit
 def perform_pca(input_matrix, n_princ_comp, pca_removal="subtract"):
     """

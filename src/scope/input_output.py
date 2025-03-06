@@ -241,7 +241,11 @@ def parse_input_file(
 
     data = calculate_derived_parameters(data)
 
-    if data["tell_type"] == "data-driven" and data["blaze"] == False:
+    if (
+        data["tell_type"] == "data-driven"
+        and data["blaze"] == False
+        and data["telluric"] == True
+    ):
         raise ScopeConfigError("Data-driven tellurics requires blaze set to True.")
 
     return data

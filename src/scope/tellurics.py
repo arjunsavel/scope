@@ -9,6 +9,10 @@ import numpy as np
 import pandas as pd
 from scipy import interpolate
 
+from scope.logger import get_logger
+
+logger = get_logger()
+
 abs_path = os.path.dirname(__file__)
 
 
@@ -230,4 +234,6 @@ def add_tellurics(
         flux_cube_model = add_tellurics_atran(
             wl_cube_model, flux_cube_model, n_order, n_exp, vary_airmass=vary_airmass
         )
+    logger.debug("Tellurics added.")
+    logger.debug("mean flux post-tellurics: ", np.mean(flux_cube_model))
     return flux_cube_model

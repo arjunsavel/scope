@@ -3,7 +3,10 @@ Add noise to simulated data.
 """
 import numpy as np
 
+from scope.logger import get_logger
 from scope.utils import *
+
+logger = get_logger()
 
 test_data_path = os.path.join(os.path.dirname(__file__), "data")
 
@@ -92,7 +95,8 @@ def add_quadratic_noise(flux_cube_model, wl_grid, SNR, IGRINS=False, **kwargs):
 
     else:
         raise NotImplementedError("Only IGRINS data is currently supported.")
-
+    logger.debug("Added quadratic IGRINS noise to the flux cube model.")
+    logger.debug("mean noisy flux: {}".format(np.mean(noisy_flux)))
     return noisy_flux
 
 
@@ -130,6 +134,9 @@ def add_crires_plus_noise(flux_cube_model, wl_grid, SNR):
             # a few quick checks to make sure that nothing has gone wrong with adding noise
             noisy_flux[order][exposure][noisy_flux[order][exposure] < 0.0] = 0.0
             noisy_flux[order][exposure][~np.isfinite(noisy_flux[order][exposure])] = 0.0
+    logger.debug("Added CRIRES+ noise to the flux cube model.")
+    logger.debug("mean SNR: {}".format(np.mean(SNR)))
+    logger.debug("mean noisy flux: {}".format(np.mean(noisy_flux)))
     return noisy_flux
 
 
