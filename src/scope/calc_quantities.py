@@ -93,12 +93,14 @@ def calc_snr(param, args, data):
             data["P_rot"] * (data["phase_end"] - data["phase_start"]) * 24 * 3600
         )  # in seconds
         exptime = duration / n_exposures - detector_reset_time
+        teff = data["Teff_star"]
+        logg = data["logg_star"]
         # ok this is pretty good lol
 
         if instrument == "IGRINS":
             snr = scrape_igrins_etc(kmag, exptime)
         elif instrument == "CRIRES+":
-            snr = scrape_crires_plus_etc(kmag, exptime)
+            snr = scrape_crires_plus_etc(kmag, teff, logg, exptime)
         else:
             logger.error(f"Unknown instrument {instrument}!")
         # need to construct a JSON object to send to the CRRIES+ SNR calculator.

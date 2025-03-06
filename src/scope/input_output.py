@@ -43,6 +43,8 @@ parameter_mapping = {
     "v_rot_star": "st_vsin",
     "b": "pl_imppar",
     "Kmag": "sy_kmag",
+    "Teff_star": "st_teff",
+    "logg_star": "st_logg",
 }
 
 
@@ -215,6 +217,8 @@ def parse_input_file(
         "Mp",
         "peri",
         "Kmag",
+        "Teff_star",
+        "logg_star",
     ]
 
     # Convert values to appropriate types
